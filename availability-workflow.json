@@ -1,0 +1,76 @@
+{
+  "version": "0.2.0",
+  "type": "workflow",
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "entry",
+      "position": { "x": 100, "y": 100 },
+      "next": [{ "condition": "true", "node": "extract_dates" }]
+    },
+    {
+      "id": "extract_dates",
+      "type": "execute-code",
+      "position": { "x": 300, "y": 100 },
+      "name": "Extract Check-in/Check-out Dates",
+      "code": "// Extract dates from user message using NLP\nconst userMessage = event.payload.text.toLowerCase();\nconst dateRegex = /\\b(\\d{1,2}[\\/-]\\d{1,2}[\\/-]\\d{2,4}|\\d{4}-\\d{2}-\\d{2})\\b/g;\nconst dates = userMessage.match(dateRegex) || [];\n\n// Extract number of guests\nconst guestRegex = /\\b(\\d+)\\s*(guest|person|people|adult)s?\\b/i;\nconst guestMatch = userMessage.match(guestRegex);\nconst guests = guestMatch ? parseInt(guestMatch[1]) : 1;\n\n// Set workflow variables\nworkflow.check_in_date = dates[0] || '';\nworkflow.check_out_date = dates[1] || '';\nworkflow.guests = guests;\n\n// If dates are missing, ask user\nif (!workflow.check_in_date || !workflow.check_out_date) {\n  workflow.missing_info = true;\n} else {\n  workflow.missing_info = false;\n}",
+      "next": [
+        { "condition": "workflow.missing_info === true", "node": "ask_dates" },
+        { "condition": "workflow.missing_info === false", "node": "call_cloudbed_api" }
+      ]
+    },
+    {
+      "id": "ask_dates",
+      "type": "say",
+      "position": { "x": 300, "y": 300 },
+      "text": "I'd be happy to check room availability for you! Please provide:\n\n📅 Check-in date (YYYY-MM-DD)\n📅 Check-out date (YYYY-MM-DD)\n👥 Number of guests\n\nExample: \"Check availability from 2024-03-15 to 2024-03-18 for 2 guests\"",
+      "next": [{ "condition": "true", "node": "wait_for_dates" }]
+    },
+    {
+      "id": "wait_for_dates",
+      "type": "listen",
+      "position": { "x": 300, "y": 450 },
+      "next": [{ "condition": "true", "node": "extract_dates" }]
+    },
+    {
+      "id": "call_cloudbed_api",
+      "type": "execute-code",
+      "position": { "x": 600, "y": 100 },
+      "name": "Call CloudBeds API",
+      "code": "const axios = require('axios');\n\n// CloudBeds API configuration\nconst API_BASE_URL = 'https://hotels.cloudbeds.com/api/v1.1';\nconst API_KEY = workflow.cloudbed_api_key || process.env.CLOUDBED_API_KEY;\nconst PROPERTY_ID = workflow.cloudbed_property_id || process.env.CLOUDBED_PROPERTY_ID;\n\nif (!API_KEY || !PROPERTY_ID) {\n  workflow.error = 'CloudBeds API credentials not configured';\n  return;\n}\n\ntry {\n  // Format dates for API\n  const checkIn = new Date(workflow.check_in_date).toISOString().split('T')[0];\n  const checkOut = new Date(workflow.check_out_date).toISOString().split('T')[0];\n  \n  // Call CloudBeds availability API\n  const response = await axios.get(`${API_BASE_URL}/getAvailability`, {\n    headers: {\n      'Authorization': `Bearer ${API_KEY}`,\n      'Content-Type': 'application/json'\n    },\n    params: {\n      propertyID: PROPERTY_ID,\n      startDate: checkIn,\n      endDate: checkOut,\n      adults: workflow.guests,\n      children: 0\n    }\n  });\n  \n  workflow.availability_data = response.data;\n  workflow.api_success = true;\n  \n} catch (error) {\n  console.error('CloudBeds API Error:', error.response?.data || error.message);\n  workflow.error = error.response?.data?.message || 'Failed to check availability';\n  workflow.api_success = false;\n}",
+      "next": [
+        { "condition": "workflow.api_success === true", "node": "format_availability" },
+        { "condition": "workflow.api_success === false", "node": "api_error" }
+      ]
+    },
+    {
+      "id": "format_availability",
+      "type": "execute-code",
+      "position": { "x": 900, "y": 100 },
+      "name": "Format Availability Response",
+      "code": "const data = workflow.availability_data;\n\nif (!data || !data.data || !data.data.roomTypes) {\n  workflow.formatted_response = '❌ No availability data received from CloudBeds.';\n  return;\n}\n\nconst roomTypes = data.data.roomTypes;\nconst availableRooms = roomTypes.filter(room => room.available > 0);\n\nif (availableRooms.length === 0) {\n  workflow.formatted_response = `😔 Sorry, no rooms are available from ${workflow.check_in_date} to ${workflow.check_out_date} for ${workflow.guests} guest(s).\\n\\nWould you like to try different dates?`;\n  return;\n}\n\n// Format available rooms\nlet response = `🏨 **Available Rooms** (${workflow.check_in_date} to ${workflow.check_out_date})\\n\\n`;\n\navailableRooms.forEach(room => {\n  response += `🛏️ **${room.roomTypeName}**\\n`;\n  response += `   💰 Price: $${room.averagePrice}/night\\n`;\n  response += `   🏠 Available: ${room.available} room(s)\\n`;\n  response += `   👥 Max occupancy: ${room.maxOccupancy} guests\\n\\n`;\n});\n\nresponse += '💬 Would you like to check different dates or need more information?';\n\nworkflow.formatted_response = response;",
+      "next": [{ "condition": "true", "node": "show_availability" }]
+    },
+    {
+      "id": "show_availability",
+      "type": "say",
+      "position": { "x": 900, "y": 300 },
+      "text": "{{workflow.formatted_response}}",
+      "next": [{ "condition": "true", "node": "end_conversation" }]
+    },
+    {
+      "id": "api_error",
+      "type": "say",
+      "position": { "x": 600, "y": 300 },
+      "text": "❌ I'm sorry, there was an issue checking availability with our booking system.\n\nError: {{workflow.error}}\n\nPlease try again later or contact our support team directly.",
+      "next": [{ "condition": "true", "node": "end_conversation" }]
+    },
+    {
+      "id": "end_conversation",
+      "type": "say",
+      "position": { "x": 900, "y": 600 },
+      "text": "Thank you for checking availability with us! Is there anything else I can help you with?",
+      "next": []
+    }
+  ]
+}
