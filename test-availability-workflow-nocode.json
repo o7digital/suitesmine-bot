@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "type": "workflow",
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "say",
+      "position": { "x": 100, "y": 100 },
+      "text": "Je peux vérifier la disponibilité. Merci de fournir:\n\n📅 Check-in (YYYY-MM-DD)\n📅 Check-out (YYYY-MM-DD)\n👥 Nombre de guests\n\nExemple: \"2025-01-10 au 2025-01-12 pour 2 guests\"",
+      "next": [{ "condition": "true", "node": "wait_for_dates" }]
+    },
+    {
+      "id": "wait_for_dates",
+      "type": "listen",
+      "position": { "x": 300, "y": 100 },
+      "next": [{ "condition": "true", "node": "show_availability" }]
+    },
+    {
+      "id": "show_availability",
+      "type": "say",
+      "position": { "x": 600, "y": 100 },
+      "text": "🏨 Disponible (démo):\n\n🛏️ Ocean View Suite — 💰 $450/nuit — 👥 max 4\n🛏️ Garden Villa — 💰 $350/nuit — 👥 max 2\n🛏️ Master Pool Suite — 💰 $650/nuit — 👥 max 6\n\nSouhaitez-vous essayer d'autres dates ou en savoir plus?",
+      "next": [{ "condition": "true", "node": "end_conversation" }]
+    },
+    {
+      "id": "end_conversation",
+      "type": "say",
+      "position": { "x": 900, "y": 100 },
+      "text": "Merci pour votre demande! D'autres questions?",
+      "next": []
+    }
+  ]
+}

@@ -27,7 +27,7 @@ The test version includes mock data for:
 ## Setup
 
 1. Import the workflow into Botpress
-2. Configure CloudBeds API credentials (production only)
+2. Configure Cloudbeds OAuth credentials (production only)
 3. Deploy to your bot
 4. Test with sample queries
 

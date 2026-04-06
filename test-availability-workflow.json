@@ -13,10 +13,10 @@
       "type": "execute-code",
       "position": { "x": 300, "y": 100 },
       "name": "Extract Check-in/Check-out Dates",
-      "code": "// Extract dates from user message using NLP\nconst userMessage = event.payload.text.toLowerCase();\nconst dateRegex = /\\b(\\d{1,2}[\\/-]\\d{1,2}[\\/-]\\d{2,4}|\\d{4}-\\d{2}-\\d{2})\\b/g;\nconst dates = userMessage.match(dateRegex) || [];\n\n// Extract number of guests\nconst guestRegex = /\\b(\\d+)\\s*(guest|person|people|adult)s?\\b/i;\nconst guestMatch = userMessage.match(guestRegex);\nconst guests = guestMatch ? parseInt(guestMatch[1]) : 1;\n\n// Set workflow variables\nworkflow.check_in_date = dates[0] || '';\nworkflow.check_out_date = dates[1] || '';\nworkflow.guests = guests;\n\n// If dates are missing, ask user\nif (!workflow.check_in_date || !workflow.check_out_date) {\n  workflow.missing_info = true;\n} else {\n  workflow.missing_info = false;\n}",
+      "code": "// Extraction des dates et du nombre de voyageurs depuis le message utilisateur\nconst userMessage = (event?.payload?.text || '').toLowerCase();\n\nconst dateRegex = /\\b(\\d{1,2}[\\/-]\\d{1,2}[\\/-]\\d{2,4}|\\d{4}-\\d{2}-\\d{2})\\b/g;\nconst dates = userMessage.match(dateRegex) || [];\n\nconst guestRegex = /\\b(\\d+)\\s*(guest|person|people|adult|invité|invites|personne|personnes|adulte)s?\\b/i;\nconst guestMatch = userMessage.match(guestRegex);\nconst guests = guestMatch ? parseInt(guestMatch[1], 10) : 1;\n\nworkflow.check_in_date = dates[0] || '';\nworkflow.check_out_date = dates[1] || '';\nworkflow.guests = guests;\n\nworkflow.missing_info = !workflow.check_in_date || !workflow.check_out_date;",
       "next": [
         { "condition": "workflow.missing_info === true", "node": "ask_dates" },
-        { "condition": "workflow.missing_info === false", "node": "mock_availability" }
+        { "condition": "workflow.missing_info === false", "node": "call_cloudbed_api" }
       ]
     },
     {
@@ -33,19 +33,22 @@
       "next": [{ "condition": "true", "node": "extract_dates" }]
     },
     {
-      "id": "mock_availability",
+      "id": "call_cloudbed_api",
       "type": "execute-code",
       "position": { "x": 600, "y": 100 },
-      "name": "Mock Availability Data",
-      "code": "// Mock availability data for testing\nconst mockRooms = [\n  {\n    roomTypeName: 'Ocean View Suite',\n    averagePrice: 450,\n    available: 2,\n    maxOccupancy: 4\n  },\n  {\n    roomTypeName: 'Garden Villa',\n    averagePrice: 350,\n    available: 1,\n    maxOccupancy: 2\n  },\n  {\n    roomTypeName: 'Master Pool Suite',\n    averagePrice: 650,\n    available: 1,\n    maxOccupancy: 6\n  }\n];\n\n// Filter rooms based on guest count\nconst availableRooms = mockRooms.filter(room => room.maxOccupancy >= workflow.guests);\n\nworkflow.availability_data = {\n  data: {\n    roomTypes: availableRooms\n  }\n};\nworkflow.api_success = true;",
-      "next": [{ "condition": "true", "node": "format_availability" }]
+      "name": "Mock Availability Data (Test)",
+      "code": "// Test workflow: provide mock availability, no external API required\nconst checkIn = workflow.check_in_date || '2025-03-15';\nconst checkOut = workflow.check_out_date || '2025-03-18';\nconst guests = workflow.guests || 2;\n\n// Keep the same shape as CloudBeds response for compatibility with formatter\nconst mock = {\n  data: {\n    roomTypes: [\n      { roomTypeName: 'Ocean View Suite', averagePrice: 450, available: 2, maxOccupancy: 4 },\n      { roomTypeName: 'Garden Villa', averagePrice: 350, available: 3, maxOccupancy: 2 },\n      { roomTypeName: 'Master Pool Suite', averagePrice: 650, available: 1, maxOccupancy: 6 }\n    ]\n  }\n};\n\nworkflow.check_in_date = checkIn;\nworkflow.check_out_date = checkOut;\nworkflow.guests = guests;\nworkflow.availability_data = mock;\nworkflow.api_success = true;",
+      "next": [
+        { "condition": "workflow.api_success === true", "node": "format_availability" },
+        { "condition": "workflow.api_success === false", "node": "api_error" }
+      ]
     },
     {
       "id": "format_availability",
       "type": "execute-code",
       "position": { "x": 900, "y": 100 },
       "name": "Format Availability Response",
-      "code": "const data = workflow.availability_data;\n\nif (!data || !data.data || !data.data.roomTypes) {\n  workflow.formatted_response = '❌ No availability data received.';\n  return;\n}\n\nconst roomTypes = data.data.roomTypes;\nconst availableRooms = roomTypes.filter(room => room.available > 0);\n\nif (availableRooms.length === 0) {\n  workflow.formatted_response = `😔 Sorry, no rooms are available from ${workflow.check_in_date} to ${workflow.check_out_date} for ${workflow.guests} guest(s).\\n\\nWould you like to try different dates?`;\n  return;\n}\n\n// Format available rooms\nlet response = `🏨 **Available Rooms** (${workflow.check_in_date} to ${workflow.check_out_date})\\n\\n`;\nresponse += `*This is a test version with mock data*\\n\\n`;\n\navailableRooms.forEach(room => {\n  response += `🛏️ **${room.roomTypeName}**\\n`;\n  response += `   💰 Price: $${room.averagePrice}/night\\n`;\n  response += `   🏠 Available: ${room.available} room(s)\\n`;\n  response += `   👥 Max occupancy: ${room.maxOccupancy} guests\\n\\n`;\n});\n\nresponse += '💬 This is a test version. Would you like to check different dates or need more information?';\n\nworkflow.formatted_response = response;",
+      "code": "const data = workflow.availability_data;\n\nif (!data || !data.data || !data.data.roomTypes) {\n  workflow.formatted_response = '❌ No availability data received from CloudBeds.';\n  return;\n}\n\nconst roomTypes = data.data.roomTypes;\nconst availableRooms = roomTypes.filter(room => room.available > 0);\n\nif (availableRooms.length === 0) {\n  workflow.formatted_response = `😔 Sorry, no rooms are available from ${workflow.check_in_date} to ${workflow.check_out_date} for ${workflow.guests} guest(s).\\n\\nWould you like to try different dates?`;\n  return;\n}\n\nlet response = `🏨 **Available Rooms** (${workflow.check_in_date} to ${workflow.check_out_date})\\n\\n`;\n\navailableRooms.forEach(room => {\n  response += `🛏️ **${room.roomTypeName}**\\n`;\n  response += `   💰 Price: $${room.averagePrice}/night\\n`;\n  response += `   🏠 Available: ${room.available} room(s)\\n`;\n  response += `   👥 Max occupancy: ${room.maxOccupancy} guests\\n\\n`;\n});\n\nresponse += '💬 Would you like to check different dates or need more information?';\n\nworkflow.formatted_response = response;",
       "next": [{ "condition": "true", "node": "show_availability" }]
     },
     {
@@ -53,6 +56,13 @@
       "type": "say",
       "position": { "x": 900, "y": 300 },
       "text": "{{workflow.formatted_response}}",
+      "next": [{ "condition": "true", "node": "end_conversation" }]
+    },
+    {
+      "id": "api_error",
+      "type": "say",
+      "position": { "x": 600, "y": 300 },
+      "text": "❌ I'm sorry, there was an issue checking availability with our booking system.\n\nError: {{workflow.error}}\n\nPlease try again later or contact our support team directly.",
       "next": [{ "condition": "true", "node": "end_conversation" }]
     },
     {

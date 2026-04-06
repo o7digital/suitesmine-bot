@@ -23,9 +23,12 @@
 1. Copy content from `availability-workflow.json`
 2. Create a new flow called "Availability Checker"
 3. Paste the JSON content
-4. Configure environment variables:
-   - `CLOUDBED_API_KEY`: Your CloudBeds API key
-   - `CLOUDBED_PROPERTY_ID`: Your property ID
+ 4. Configure environment variables (Cloudbeds OAuth):
+    - `CLOUDBEDS_CLIENT_ID`: Your Cloudbeds client ID
+    - `CLOUDBEDS_CLIENT_SECRET`: Your Cloudbeds client secret
+    - `CLOUDBEDS_PROPERTY_ID`: Your property ID (e.g. 319424)
+    - `CLOUDBEDS_TOKEN_URL` (optional): Defaults to https://hotels.cloudbeds.com/connect/token
+    - `CLOUDBEDS_API_BASE` (optional): Defaults to https://hotels.cloudbeds.com/api/v1.1
 
 ## Step 4: Test the Bot
 
@@ -45,13 +48,37 @@
 1. Use Botpress API to create custom chat interface
 2. Integrate with your WordPress theme
 
-## CloudBeds API Setup (Production Only)
+## Cloudbeds API Setup (Production Only)
 
-1. Login to your CloudBeds account
-2. Go to API settings
-3. Generate API key
-4. Get your Property ID
-5. Add these to Botpress environment variables
+1. Log in to Cloudbeds Connect for your test property: https://hotels.cloudbeds.com/connect/319424
+2. Go to "API Credentials" and create a client (Client ID/Secret)
+3. Note your Property ID (e.g. 319424)
+4. Add the values to your bot environment (see variables above)
+5. The bot will obtain an access token via OAuth before calling the availability API
+
+---
+
+## Déploiement sur Railway (en français)
+
+Cette section couvre l'ajout des variables Cloudbeds quand votre bot tourne sur Railway.
+
+### Variables d'environnement requises
+
+- `CLOUDBEDS_CLIENT_ID` : ID client OAuth Cloudbeds
+- `CLOUDBEDS_CLIENT_SECRET` : Secret client OAuth Cloudbeds
+- `CLOUDBEDS_PROPERTY_ID` : ID propriété Cloudbeds (ex. 319424)
+- `CLOUDBEDS_TOKEN_URL` (optionnel) : défaut `https://hotels.cloudbeds.com/connect/token`
+- `CLOUDBEDS_API_BASE` (optionnel) : défaut `https://hotels.cloudbeds.com/api/v1.1`
+
+### Étapes Railway
+1. Dans Railway → votre service → Variables, ajoutez les clés ci-dessus (copier/coller depuis [.env.example](.env.example)).
+2. Redéployez le service pour propager les variables.
+3. Ouvrez les logs Railway et vérifiez que le bot obtient un token OAuth avant l'appel d'availability.
+4. Testez: « Check availability from 2025-03-15 to 2025-03-18 for 2 guests ».
+
+Remarques:
+- Si vous auto-hébergez Botpress sur Railway, assurez-vous que votre instance Botpress est correctement configurée (base de données, configuration serveur, etc.). Cette doc se concentre sur les variables Cloudbeds nécessaires au workflow.
+- Selon votre stack, vous devrez peut‑être définir `PORT=3000`. Vérifiez la configuration de votre service.
 
 ## Troubleshooting
 
@@ -59,6 +86,12 @@
 - Production version requires valid CloudBeds credentials
 - Check Botpress logs for any errors
 - Verify date formats are recognized correctly
+
+### Quick OAuth Test
+1. Set environment vars (`CLOUDBEDS_CLIENT_ID`, `CLOUDBEDS_CLIENT_SECRET`, `CLOUDBEDS_PROPERTY_ID`)
+2. Redeploy/publish your bot so env changes apply
+3. Ask: "Check availability for 2 guests from 2025-03-15 to 2025-03-18"
+4. If it fails, check Botpress logs for token request/availability errors
 
 ## Next Steps
 
