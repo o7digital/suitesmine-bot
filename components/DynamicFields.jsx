@@ -1,34 +1,14 @@
 "use client";
 
 const fieldMap = {
-  hotel: [
-    { key: "checkIn", label: "Check-in", type: "date", placeholder: "" },
-    { key: "checkOut", label: "Check-out", type: "date", placeholder: "" },
-    { key: "guests", label: "Voyageurs", type: "number", placeholder: "2" },
-  ],
-  real_estate: [
-    { key: "zone", label: "Zone", type: "text", placeholder: "Polanco" },
-    {
-      key: "budget",
-      label: "Budget",
-      type: "text",
-      placeholder: "5,000,000 MXN",
-    },
-    {
-      key: "propertyType",
-      label: "Type",
-      type: "text",
-      placeholder: "Departamento",
-    },
-  ],
   default: [
     { key: "requestType", label: "Type de demande", type: "text", placeholder: "Support" },
     { key: "preferredDate", label: "Date souhaitée", type: "date", placeholder: "" },
   ],
 };
 
-export default function DynamicFields({ businessType, metadata, setMetadata }) {
-  const fields = fieldMap[businessType] ?? fieldMap.default;
+export default function DynamicFields({ metadata, setMetadata }) {
+  const fields = fieldMap.default;
 
   return (
     <div className="rounded-2xl border border-[#e5e9f7] bg-[#f8faff] p-3">

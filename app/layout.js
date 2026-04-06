@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "O7 AI Widget",
-  description: "Premium SaaS widget",
+  title: "Chat Bot",
+  description: "Generic website chat widget",
 };
 
 export default function RootLayout({ children }) {

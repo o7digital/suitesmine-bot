@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquare, Send, X, Sparkles } from "lucide-react";
+import { MessageSquare, Send, X } from "lucide-react";
 import MessageBubble from "@/components/MessageBubble";
 import DynamicFields from "@/components/DynamicFields";
-import { clients } from "@/config/clients";
 import { sendMessage } from "@/lib/api";
 
 const WELCOME_MESSAGE =
@@ -23,8 +22,8 @@ function getAssistantText(response) {
   );
 }
 
-export default function O7Widget({ clientId = "suitesmine" }) {
-  const client = useMemo(() => clients[clientId] ?? clients.suitesmine, [clientId]);
+export default function O7Widget({ clientId = "default", title = "Chat Bot" }) {
+  const widgetTitle = typeof title === "string" && title.trim() ? title : "Chat Bot";
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +42,7 @@ export default function O7Widget({ clientId = "suitesmine" }) {
 
     try {
       const data = await sendMessage({
-        clientId: client.clientId,
+        clientId,
         message,
         metadata,
       });
@@ -81,12 +80,8 @@ export default function O7Widget({ clientId = "suitesmine" }) {
               <div className="absolute right-[-24px] top-[-24px] h-20 w-20 rounded-full bg-white/15 blur-2xl" />
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-base font-semibold tracking-tight">O7 AI Widget</p>
-                  <p className="mt-1 text-xs text-white/85">{client.clientName}</p>
-                  <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1 text-[11px] text-white/90">
-                    <Sparkles className="h-3 w-3" />
-                    {client.businessType}
-                  </p>
+                  <p className="text-base font-semibold tracking-tight">{widgetTitle}</p>
+                  <p className="mt-1 text-xs text-white/85">Online</p>
                 </div>
                 <button
                   aria-label="Fermer"
@@ -108,11 +103,7 @@ export default function O7Widget({ clientId = "suitesmine" }) {
             </div>
 
             <div className="space-y-3 border-t border-[#e6ebfb] bg-white p-3">
-              <DynamicFields
-                businessType={client.businessType}
-                metadata={metadata}
-                setMetadata={setMetadata}
-              />
+              <DynamicFields metadata={metadata} setMetadata={setMetadata} />
               <div className="flex items-end gap-2">
                 <input
                   value={input}
