@@ -22,8 +22,8 @@ function getAssistantText(response) {
   );
 }
 
-export default function O7Widget({ clientId = "default", title = "Chat Bot" }) {
-  const widgetTitle = typeof title === "string" && title.trim() ? title : "Chat Bot";
+export default function O7Widget({ clientId = "default", title = "O7 IA Chat" }) {
+  const widgetTitle = typeof title === "string" && title.trim() ? title : "O7 IA Chat";
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
