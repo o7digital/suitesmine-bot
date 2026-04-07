@@ -2,8 +2,10 @@
 
 const fieldMap = {
   default: [
-    { key: "requestType", label: "Type de demande", type: "text", placeholder: "Support" },
-    { key: "preferredDate", label: "Date souhaitée", type: "date", placeholder: "" },
+    { key: "checkIn", label: "Check-in", type: "date", placeholder: "" },
+    { key: "checkOut", label: "Check-out", type: "date", placeholder: "" },
+    { key: "guests", label: "Voyageurs", type: "number", placeholder: "2" },
+    { key: "roomType", label: "Type de chambre", type: "text", placeholder: "Suite Deluxe" },
   ],
 };
 

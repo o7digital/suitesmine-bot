@@ -8,7 +8,7 @@ import DynamicFields from "@/components/DynamicFields";
 import { sendMessage } from "@/lib/api";
 
 const WELCOME_MESSAGE =
-  "Bonjour, je peux vous aider avec vos demandes, devis, rendez-vous et support.";
+  "Bonjour, je peux vous aider avec les disponibilités, tarifs, réservations et informations sur votre séjour.";
 
 function getAssistantText(response) {
   if (!response) return "Merci, votre demande a bien été reçue.";
@@ -109,7 +109,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Écrivez votre message..."
+                  placeholder="Indiquez vos dates ou posez votre question..."
                   className="h-12 flex-1 rounded-2xl border border-[#e3e8f8] bg-[#f9fbff] px-4 text-sm outline-none placeholder:text-black/35 focus:ring-2 focus:ring-[#8DA2FB]"
                 />
                 <button
