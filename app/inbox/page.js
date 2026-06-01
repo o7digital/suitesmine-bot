@@ -30,18 +30,21 @@ import {
 const clientSkins = {
   suitesmine: {
     label: "Suites Mine",
+    siteUrl: "suitesmine.com",
     accent: "#4169e1",
     soft: "#eaf0ff",
     operator: "#1f2a44",
   },
   lacaqc: {
-    label: "La Casa Que Canta",
+    label: "Client Hotel",
+    siteUrl: "client-hotel.example",
     accent: "#2f6f62",
     soft: "#eaf7f3",
     operator: "#173d36",
   },
   demo: {
     label: "Demo Hotel",
+    siteUrl: "demo-hotel.example",
     accent: "#8a5cf6",
     soft: "#f1ebff",
     operator: "#33215f",
@@ -51,52 +54,48 @@ const clientSkins = {
 const conversations = [
   {
     id: "conv-1024",
-    clientCode: "lacaqc",
-    guest: "Carlos Alberto Camacho Andrade",
-    initials: "CA",
-    channel: "Live chat",
+    clientCode: "suitesmine",
+    guest: "Visiteur site #1024",
+    initials: "VS",
+    channel: "Site widget",
     view: "my-open",
     status: "manual",
-    intent: "Disponibilités",
-    lastMessage: "¡Gracias por contactarnos! Si tiene alguna solicitud especial...",
-    lastSeen: "7d",
-    email: "ccamacho_andrade@hotmail.com",
-    phone: "7551204956",
-    location: "Mexico",
-    lastViewed: "May 25, 2026, 9:56 AM",
+    intent: "Availability",
+    lastMessage: "Bonjour, je cherche une suite disponible pour deux nuits.",
+    lastSeen: "2m",
+    email: "visiteur@example.com",
+    phone: "-",
+    location: "Website visitor",
+    lastViewed: "June 1, 2026, 5:08 PM",
     metadata: {
-      checkIn: "2026-06-14",
-      checkOut: "2026-06-16",
+      clientCode: "suitesmine",
+      source: "website",
+      page: "/rooms",
+      checkIn: "2026-06-12",
+      checkOut: "2026-06-14",
       guests: "2",
       roomType: "Suite Deluxe",
     },
     messages: [
       {
         role: "guest",
-        content: "ben dia",
-        time: "9:35 AM",
+        content: "Bonjour, je cherche une suite disponible pour deux nuits.",
+        time: "5:08 PM",
       },
       {
         role: "system",
-        content:
-          "This message was forwarded as an email to Olivier.steineur@gmail.com, sales.ventas@lacaqc.com, sys+tidio@o7digital.com at 9:40 AM",
-        time: "9:40 AM",
+        content: "Conversation opened from Suites Mine website widget.",
+        time: "5:08 PM",
       },
       {
         role: "system",
-        content: "La Casa Que Canta joined the conversation at 10:01 AM",
-        time: "10:01 AM",
+        content: "Manual takeover enabled. The AI is paused while an operator replies.",
+        time: "5:09 PM",
       },
       {
         role: "operator",
-        content:
-          "¡Gracias por contactarnos!\n\nSi tiene alguna solicitud especial, por favor contáctenos directamente a:\nsales.reservations@lacasquecanta.com",
-        time: "10:01 AM",
-      },
-      {
-        role: "system",
-        content: "An email with unread messages has been sent to the visitor at 10:16 AM",
-        time: "10:16 AM",
+        content: "Bonjour, je reprends la conversation. Je vérifie la disponibilité pour vous.",
+        time: "5:09 PM",
       },
     ],
   },
@@ -108,14 +107,17 @@ const conversations = [
     channel: "Live chat",
     view: "my-open",
     status: "ai",
-    intent: "Facebook",
-    lastMessage: "[https://www.facebook.com/LaCasaQueCanta/photos]",
-    lastSeen: "7d",
+    intent: "Room question",
+    lastMessage: "Est-ce que la Suite Deluxe a une terrasse ?",
+    lastSeen: "5m",
     email: "sheila@example.com",
     phone: "-",
     location: "Unknown",
-    lastViewed: "May 25, 2026, 10:11 AM",
+    lastViewed: "June 1, 2026, 5:05 PM",
     metadata: {
+      clientCode: "suitesmine",
+      source: "website",
+      page: "/suites",
       checkIn: "-",
       checkOut: "-",
       guests: "1",
@@ -124,13 +126,13 @@ const conversations = [
     messages: [
       {
         role: "guest",
-        content: "[https://www.facebook.com/LaCasaQueCanta/photos]",
-        time: "9:58 AM",
+        content: "Est-ce que la Suite Deluxe a une terrasse ?",
+        time: "5:05 PM",
       },
       {
         role: "ai",
-        content: "Merci, je peux transférer cette demande à l'équipe de réservation.",
-        time: "9:58 AM",
+        content: "Je peux vérifier cela pour vous. Souhaitez-vous aussi indiquer vos dates ?",
+        time: "5:05 PM",
       },
     ],
   },
@@ -150,6 +152,9 @@ const conversations = [
     location: "Mexico",
     lastViewed: "May 19, 2026, 3:25 PM",
     metadata: {
+      clientCode: "demo",
+      source: "website",
+      page: "/booking",
       checkIn: "2026-07-08",
       checkOut: "2026-07-11",
       guests: "2",
@@ -177,13 +182,16 @@ const conversations = [
     view: "solved",
     status: "solved",
     intent: "Info",
-    lastMessage: "Facebook; [https://www.facebook.com/...]",
+    lastMessage: "Merci, nous avons bien recu votre demande.",
     lastSeen: "16d",
     email: "odette@example.com",
     phone: "-",
     location: "Canada",
     lastViewed: "May 16, 2026, 8:17 AM",
     metadata: {
+      clientCode: "lacaqc",
+      source: "messenger",
+      page: "-",
       checkIn: "2026-08-02",
       checkOut: "2026-08-05",
       guests: "2",
@@ -192,7 +200,7 @@ const conversations = [
     messages: [
       {
         role: "guest",
-        content: "Facebook; [https://www.facebook.com/...]",
+        content: "Merci, nous avons bien recu votre demande.",
         time: "8:12 AM",
       },
       {
@@ -205,9 +213,9 @@ const conversations = [
 ];
 
 const views = [
-  { id: "unassigned", label: "Unassigned", icon: "👋" },
-  { id: "my-open", label: "My open", icon: "📬" },
-  { id: "solved", label: "Solved", icon: "✅" },
+  { id: "unassigned", label: "Non assigne", icon: "!" },
+  { id: "my-open", label: "Ouvert", icon: "[]" },
+  { id: "solved", label: "Resolue", icon: "✓" },
 ];
 
 function StatusPill({ status }) {
@@ -459,7 +467,7 @@ export default function InboxPage() {
         <section className="flex min-w-0 flex-1 flex-col bg-white">
           <header className="flex h-[72px] items-center justify-between border-b border-[#dde4f1] px-6">
             <div className="flex items-center gap-3">
-              <span className="text-sm text-[#68748b]">Assignee</span>
+              <span className="text-sm text-[#68748b]">Client</span>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e1e7f2] text-xs font-semibold">
                 {skin.label.slice(0, 2)}
               </div>
@@ -480,7 +488,7 @@ export default function InboxPage() {
                 className="h-9 rounded-md px-3 text-sm font-medium text-white"
                 style={{ background: isManual ? "#66718a" : skin.accent }}
               >
-                {isManual ? "Return to AI" : "Take control"}
+                {isManual ? "Rendre a l'IA" : "Prendre la main"}
               </button>
               <button className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-[#f4f6fb]">
                 <MoreVertical className="h-4 w-4" />
@@ -490,7 +498,7 @@ export default function InboxPage() {
 
           <div className="flex h-9 items-center justify-center text-sm" style={{ background: skin.soft, color: skin.accent }}>
             <CircleHelp className="mr-2 h-4 w-4" />
-            The visitor went offline and will be notified about unread messages via email.
+            Conversation recue depuis le site {skin.siteUrl}. La reponse IA est suspendue en mode manuel.
           </div>
 
           <div className="flex-1 overflow-y-auto px-7 py-7">
@@ -520,8 +528,8 @@ export default function InboxPage() {
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={
                   isManual
-                    ? "Write a message or press spacebar for Copilot, / for Macros, ⌘K for actions"
-                    : "Take control to answer manually"
+                    ? "Ecrire une reponse au client..."
+                    : "Prendre la main pour repondre au client"
                 }
                 className="h-16 w-full resize-none text-sm outline-none placeholder:text-[#66718a] disabled:bg-white disabled:text-[#66718a]"
               />
@@ -539,7 +547,7 @@ export default function InboxPage() {
                   style={isManual && draft.trim() ? { background: skin.accent } : undefined}
                 >
                   <Send className="h-4 w-4" />
-                  Reply
+                  Repondre
                 </button>
               </div>
             </div>
