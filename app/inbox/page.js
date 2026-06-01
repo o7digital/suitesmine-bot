@@ -26,7 +26,6 @@ import {
   Wand2,
   Zap,
 } from "lucide-react";
-import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 
 const clientSkins = {
   suitesmine: {
@@ -267,10 +266,8 @@ function MessageBlock({ message, guest, skin }) {
 }
 
 export default function InboxPage() {
-  const { user } = useUser();
-  const role = user?.publicMetadata?.role === "admin" ? "admin" : "client";
-  const scopedClientCode =
-    role === "admin" ? null : (user?.publicMetadata?.clientCode ?? "suitesmine");
+  const role = "admin";
+  const scopedClientCode = null;
   const visibleConversations = useMemo(
     () =>
       scopedClientCode
@@ -296,18 +293,7 @@ export default function InboxPage() {
   if (!selected) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f4f6fb] p-6">
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className="rounded-md bg-[#172033] px-4 py-2 text-sm font-medium text-white">
-              Sign in to open inbox
-            </button>
-          </SignInButton>
-        </SignedOut>
-        <SignedIn>
-          <p className="text-sm text-[#44506b]">
-            No conversation available for this account scope.
-          </p>
-        </SignedIn>
+        <p className="text-sm text-[#44506b]">No conversation available for this account scope.</p>
       </main>
     );
   }
@@ -480,16 +466,6 @@ export default function InboxPage() {
               <span className="text-sm font-medium">{skin.label}</span>
             </div>
             <div className="flex items-center gap-2">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="h-9 rounded-md border border-[#d8e0ef] px-3 text-sm font-medium">
-                    Sign in
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton afterSignOutUrl="/" />
-              </SignedIn>
               <button className="flex h-9 items-center gap-2 rounded-md border border-[#d8e0ef] px-3 text-sm font-medium">
                 <Check className="h-4 w-4 text-[#17623a]" />
                 Solve
