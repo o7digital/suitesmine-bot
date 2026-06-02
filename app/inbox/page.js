@@ -335,7 +335,7 @@ export default function InboxPage() {
   const [activeView, setActiveView] = useState("my-open");
   const [draft, setDraft] = useState("");
 
-  const selected = useMemo(() => {
+  const selectedCandidate = useMemo(() => {
     if (!selectedId) return visibleConversations[0] ?? null;
     return (
       visibleConversations.find((conversation) => conversation.id === selectedId) ??
@@ -343,19 +343,45 @@ export default function InboxPage() {
       null
     );
   }, [selectedId, visibleConversations]);
-  if (!selected) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f6fb] p-6">
-        <p className="text-sm text-[#44506b]">
-          {loadState === "loading"
-            ? "Chargement des conversations..."
-            : loadState === "error"
-              ? "Impossible de charger les conversations Railway."
-              : "Aucune conversation. Envoyez un message depuis le widget de test."}
-        </p>
-      </main>
-    );
-  }
+  const hasRealSelection = Boolean(selectedCandidate);
+  const selected =
+    selectedCandidate ?? {
+      id: "empty",
+      clientCode: "suitesmine",
+      guest: "Aucune conversation",
+      initials: "OC",
+      channel: "Railway",
+      view: activeView,
+      status: "ai",
+      intent: "-",
+      lastMessage:
+        loadState === "loading"
+          ? "Chargement des conversations Railway..."
+          : loadState === "error"
+            ? "Erreur de chargement Railway."
+            : "Envoyez un message depuis le widget de test.",
+      lastSeen: "",
+      email: "-",
+      phone: "-",
+      location: "-",
+      lastViewed: "-",
+      metadata: {
+        source: "railway",
+        state: loadState,
+      },
+      messages: [
+        {
+          role: "system",
+          content:
+            loadState === "loading"
+              ? "Chargement des conversations Railway..."
+              : loadState === "error"
+                ? "Impossible de charger les conversations Railway. Les logs serveur sont actifs pour diagnostiquer."
+                : "Aucune conversation dans cette vue. Envoyez un message depuis le widget Suites Mine pour créer la première conversation.",
+          time: "",
+        },
+      ],
+    };
   const skin = clientSkins[selected.clientCode] ?? clientSkins.suitesmine;
   const currentStatus = selected.status;
   const isManual = currentStatus === "manual";
@@ -506,6 +532,15 @@ export default function InboxPage() {
                 </button>
               );
             })}
+            {filteredConversations.length === 0 && (
+              <div className="rounded-lg border border-dashed border-[#cfd8ea] bg-[#f8faff] px-4 py-5 text-sm leading-6 text-[#5d6880]">
+                {loadState === "loading"
+                  ? "Chargement Railway..."
+                  : loadState === "error"
+                    ? "Erreur Railway. Consulte les logs Vercel."
+                    : "Aucune conversation dans cette vue. Le dashboard reste ouvert."}
+              </div>
+            )}
           </div>
         </section>
 
@@ -520,7 +555,9 @@ export default function InboxPage() {
             </div>
             <div className="flex items-center gap-2">
               <button
+                disabled={!hasRealSelection}
                 onClick={async () => {
+                  if (!hasRealSelection) return;
                   await fetch(`/api/conversations/${selected.id}/status`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -528,13 +565,15 @@ export default function InboxPage() {
                   });
                   loadConversations();
                 }}
-                className="flex h-9 items-center gap-2 rounded-md border border-[#d8e0ef] px-3 text-sm font-medium"
+                className="flex h-9 items-center gap-2 rounded-md border border-[#d8e0ef] px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Check className="h-4 w-4 text-[#17623a]" />
                 Solve
               </button>
               <button
+                disabled={!hasRealSelection}
                 onClick={async () => {
+                  if (!hasRealSelection) return;
                   await fetch(`/api/conversations/${selected.id}/status`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -542,7 +581,7 @@ export default function InboxPage() {
                   });
                   loadConversations();
                 }}
-                className="h-9 rounded-md px-3 text-sm font-medium text-white"
+                className="h-9 rounded-md px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ background: isManual ? "#66718a" : skin.accent }}
               >
                 {isManual ? "Rendre a l'IA" : "Prendre la main"}
@@ -555,7 +594,9 @@ export default function InboxPage() {
 
           <div className="flex h-9 items-center justify-center text-sm" style={{ background: skin.soft, color: skin.accent }}>
             <CircleHelp className="mr-2 h-4 w-4" />
-            Conversation recue depuis le site {skin.siteUrl}. La reponse IA est suspendue en mode manuel.
+            {hasRealSelection
+              ? `Conversation recue depuis le site ${skin.siteUrl}. La reponse IA est suspendue en mode manuel.`
+              : "Dashboard actif. En attente d'une conversation recue depuis le widget."}
           </div>
 
           <div className="flex-1 overflow-y-auto px-7 py-7">
@@ -581,7 +622,7 @@ export default function InboxPage() {
             <div className="px-4 py-3">
               <textarea
                 value={draft}
-                disabled={!isManual}
+                disabled={!hasRealSelection || !isManual}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={
                   isManual
@@ -599,9 +640,9 @@ export default function InboxPage() {
                   <Paperclip className="h-4 w-4" />
                 </div>
                 <button
-                  disabled={!isManual || !draft.trim()}
+                  disabled={!hasRealSelection || !isManual || !draft.trim()}
                   onClick={async () => {
-                    if (!draft.trim()) return;
+                    if (!hasRealSelection || !draft.trim()) return;
                     await fetch(`/api/conversations/${selected.id}/messages`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
