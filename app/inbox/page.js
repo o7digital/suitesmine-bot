@@ -296,17 +296,19 @@ function MessageBlock({ message, guest, skin }) {
 export default function InboxPage() {
   const role = "admin";
   const scopedClientCode = null;
-  const [conversations, setConversations] = useState(demoConversations);
-  const [usingDemo, setUsingDemo] = useState(true);
+  const [conversations, setConversations] = useState([]);
+  const [loadState, setLoadState] = useState("loading");
   const loadConversations = useCallback(async () => {
     try {
       const response = await fetch("/api/conversations", { cache: "no-store" });
-      if (!response.ok) return;
+      if (!response.ok) throw new Error("Unable to load conversations");
       const data = await response.json();
-      if (!data.configured) return;
+      if (!data.configured) throw new Error("Railway is not configured");
       setConversations((data.conversations || []).map(mapConversation));
-      setUsingDemo(false);
-    } catch {}
+      setLoadState("ready");
+    } catch {
+      setLoadState("error");
+    }
   }, []);
 
   useEffect(() => {
@@ -339,7 +341,13 @@ export default function InboxPage() {
   if (!selected) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f4f6fb] p-6">
-        <p className="text-sm text-[#44506b]">No conversation available for this account scope.</p>
+        <p className="text-sm text-[#44506b]">
+          {loadState === "loading"
+            ? "Chargement des conversations..."
+            : loadState === "error"
+              ? "Impossible de charger les conversations Railway."
+              : "Aucune conversation. Envoyez un message depuis le widget de test."}
+        </p>
       </main>
     );
   }
@@ -508,7 +516,6 @@ export default function InboxPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={async () => {
-                  if (usingDemo) return;
                   await fetch(`/api/conversations/${selected.id}/status`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -523,7 +530,6 @@ export default function InboxPage() {
               </button>
               <button
                 onClick={async () => {
-                  if (usingDemo) return;
                   await fetch(`/api/conversations/${selected.id}/status`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -590,7 +596,7 @@ export default function InboxPage() {
                 <button
                   disabled={!isManual || !draft.trim()}
                   onClick={async () => {
-                    if (usingDemo || !draft.trim()) return;
+                    if (!draft.trim()) return;
                     await fetch(`/api/conversations/${selected.id}/messages`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
