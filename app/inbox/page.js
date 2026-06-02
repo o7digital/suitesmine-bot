@@ -298,9 +298,17 @@ export default function InboxPage() {
   const scopedClientCode = null;
   const [conversations, setConversations] = useState([]);
   const [loadState, setLoadState] = useState("loading");
+  const [loadError, setLoadError] = useState("");
+  const [lastSync, setLastSync] = useState("");
   const loadConversations = useCallback(async () => {
     try {
-      const response = await fetch("/api/conversations", { cache: "no-store" });
+      const response = await fetch(`/api/conversations?ts=${Date.now()}`, {
+        cache: "no-store",
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      });
       console.log("[olivia-inbox] browser load conversations status", response.status);
       if (!response.ok) throw new Error("Unable to load conversations");
       const data = await response.json();
@@ -311,14 +319,17 @@ export default function InboxPage() {
       if (!data.configured) throw new Error("Railway is not configured");
       setConversations((data.conversations || []).map(mapConversation));
       setLoadState("ready");
-    } catch {
+      setLoadError("");
+      setLastSync(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } catch (error) {
+      setLoadError(error?.message || "Erreur inconnue");
       setLoadState("error");
     }
   }, []);
 
   useEffect(() => {
     loadConversations();
-    const timer = window.setInterval(loadConversations, 4000);
+    const timer = window.setInterval(loadConversations, 2000);
     return () => window.clearInterval(timer);
   }, [loadConversations]);
 
@@ -420,6 +431,10 @@ export default function InboxPage() {
   const filteredConversations = visibleConversations.filter(
     (conversation) => conversation.view === activeView
   );
+  const displayedConversations =
+    filteredConversations.length > 0 ? filteredConversations : visibleConversations;
+  const showingFallbackList =
+    filteredConversations.length === 0 && visibleConversations.length > 0;
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#f4f6fb] text-[#121827]">
@@ -450,6 +465,14 @@ export default function InboxPage() {
           <div className="mt-3 flex items-center gap-2 text-xs text-[#5f6c86]">
             <span className="rounded-full bg-[#e8edf9] px-2 py-1">{role}</span>
             <span>{scopedClientCode ?? "all-clients"}</span>
+          </div>
+          <div className="mt-3 rounded-md bg-white px-3 py-2 text-xs leading-5 text-[#5f6c86] shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-[#17623a]">Live auto</span>
+              <span>{visibleConversations.length}</span>
+            </div>
+            <div>{lastSync ? `Sync ${lastSync}` : "Synchronisation..."}</div>
+            {loadError && <div className="text-[#b42318]">{loadError}</div>}
           </div>
 
           <section className="mt-8">
@@ -527,14 +550,19 @@ export default function InboxPage() {
           </div>
           <div className="px-5 py-5">
             <h2 className="flex items-center gap-3 text-xl font-semibold">
-              📬 {views.find((view) => view.id === activeView)?.label}
+              📬 {showingFallbackList ? "Toutes" : views.find((view) => view.id === activeView)?.label}
               <span className="rounded-full bg-[#eef3ff] px-2 py-1 text-xs font-medium text-[#5b6b91]">
-                {filteredConversations.length}
+                {displayedConversations.length}
               </span>
             </h2>
           </div>
           <div className="h-[calc(100%-138px)] overflow-y-auto px-3 pb-4">
-            {filteredConversations.map((conversation) => {
+            {showingFallbackList && (
+              <div className="mb-3 rounded-md bg-[#eef3ff] px-3 py-2 text-xs leading-5 text-[#4f5f83]">
+                La vue choisie est vide. Affichage de toutes les conversations live.
+              </div>
+            )}
+            {displayedConversations.map((conversation) => {
               const active = conversation.id === selectedId;
               const conversationSkin = clientSkins[conversation.clientCode] ?? clientSkins.suitesmine;
               const status = conversation.status;
@@ -570,7 +598,7 @@ export default function InboxPage() {
                 </button>
               );
             })}
-            {filteredConversations.length === 0 && (
+            {displayedConversations.length === 0 && (
               <div className="rounded-lg border border-dashed border-[#cfd8ea] bg-[#f8faff] px-4 py-5 text-sm leading-6 text-[#5d6880]">
                 {loadState === "loading"
                   ? "Chargement Railway..."
