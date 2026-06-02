@@ -46,8 +46,10 @@ function hasAny(value, words) {
 }
 
 function isBookingFlow(message, bookingDraft = {}) {
+  const text = normalize(message);
   return (
     bookingDraft.active ||
+    /^\s*[123]\s*$/.test(text) ||
     hasAny(message, [
       "reserv",
       "reserva",
@@ -63,19 +65,24 @@ function isBookingFlow(message, bookingDraft = {}) {
   );
 }
 
+function pickRoomType(value, draftRoomType = "") {
+  const text = normalize(value);
+  if (text.match(/^\s*1\s*$/)) return "Estudio";
+  if (text.match(/^\s*2\s*$/)) return "Suite";
+  if (text.match(/^\s*3\s*$/)) return "Suite Doble";
+  if (hasAny(text, ["suite doble", "double suite", "doble"])) return "Suite Doble";
+  if (hasAny(text, ["estudio", "studio"])) return "Estudio";
+  if (hasAny(text, ["suite"])) return "Suite";
+  return clean(draftRoomType);
+}
+
 function extractBookingDetails({ message, metadata }) {
   const draft = metadata.bookingDraft || {};
   const text = clean(message);
   const normalized = normalize(text);
   const email = text.match(/[^\s@]+@[^\s@]+\.[^\s@]+/)?.[0] || clean(draft.email);
   const phone = text.match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || clean(draft.phone);
-  const roomType = hasAny(text, ["suite doble", "double suite", "doble"])
-    ? "Suite Doble"
-    : hasAny(text, ["suite"])
-      ? "Suite"
-      : hasAny(text, ["estudio", "studio"])
-        ? "Estudio"
-        : clean(draft.roomType);
+  const roomType = pickRoomType(text, draft.roomType);
 
   let name = clean(draft.name);
   if (!name && email) {
