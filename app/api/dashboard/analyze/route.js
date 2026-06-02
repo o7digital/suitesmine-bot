@@ -11,9 +11,9 @@ function json(data, status = 200) {
 }
 
 export async function POST(request) {
-  const token = process.env.HF_TOKEN;
+  const token = process.env.HF_TOKEN || process.env.HUGGING_FACE_TOKEN;
   if (!token) {
-    return json({ error: "HF_TOKEN is not configured" }, 503);
+    return json({ error: "HF_TOKEN or HUGGING_FACE_TOKEN is not configured" }, 503);
   }
 
   const payload = await request.json().catch(() => ({}));

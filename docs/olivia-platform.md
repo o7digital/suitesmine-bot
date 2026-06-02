@@ -234,6 +234,8 @@ Hugging Face tokens must stay server-side. Do not expose them in widgets or brow
 
 ```env
 HF_TOKEN=
+# Accepted alias:
+HUGGING_FACE_TOKEN=
 HF_DASHBOARD_MODEL=openai/gpt-oss-20b:fastest
 ```
 

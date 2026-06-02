@@ -7,7 +7,7 @@ function configured(name) {
 export async function GET() {
   return Response.json({
     huggingFace: {
-      configured: configured("HF_TOKEN"),
+      configured: configured("HF_TOKEN") || configured("HUGGING_FACE_TOKEN"),
       model: process.env.HF_DASHBOARD_MODEL || "openai/gpt-oss-20b:fastest",
     },
     mailbox: {
