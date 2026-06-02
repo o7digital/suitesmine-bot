@@ -33,6 +33,124 @@ function clean(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function normalize(value) {
+  return clean(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function hasAny(value, words) {
+  const text = normalize(value);
+  return words.some((word) => text.includes(word));
+}
+
+function isBookingFlow(message, bookingDraft = {}) {
+  return (
+    bookingDraft.active ||
+    hasAny(message, [
+      "reserv",
+      "reserva",
+      "booking",
+      "book",
+      "pago",
+      "payment",
+      "link",
+      "confirm",
+      "estudio",
+      "suite",
+    ])
+  );
+}
+
+function extractBookingDetails({ message, metadata }) {
+  const draft = metadata.bookingDraft || {};
+  const text = clean(message);
+  const normalized = normalize(text);
+  const email = text.match(/[^\s@]+@[^\s@]+\.[^\s@]+/)?.[0] || clean(draft.email);
+  const phone = text.match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || clean(draft.phone);
+  const roomType = hasAny(text, ["suite doble", "double suite", "doble"])
+    ? "Suite Doble"
+    : hasAny(text, ["suite"])
+      ? "Suite"
+      : hasAny(text, ["estudio", "studio"])
+        ? "Estudio"
+        : clean(draft.roomType);
+
+  let name = clean(draft.name);
+  if (!name && email) {
+    const beforeEmail = text.slice(0, text.indexOf(email));
+    name = beforeEmail
+      .replace(/\b(estudio|studio|suite doble|double suite|suite)\b/gi, "")
+      .replace(/\b\d+[.)]?\b/g, "")
+      .replace(/[,:;-]+/g, " ")
+      .trim();
+  }
+
+  if (!name && !email && !phone && !roomType && !hasAny(text, ["reserv", "booking", "pago", "payment", "link"])) {
+    name = text;
+  }
+
+  return {
+    name,
+    email,
+    phone,
+    checkIn: clean(metadata.checkIn) || clean(draft.checkIn),
+    checkOut: clean(metadata.checkOut) || clean(draft.checkOut),
+    guests: clean(metadata.guests) || clean(draft.guests),
+    roomType,
+    wantsPayment: hasAny(normalized, ["pago", "payment", "link"]),
+  };
+}
+
+function bookingReply(language, details, rates) {
+  const missing = [];
+  if (!details.name) missing.push(language === "en" ? "first and last name" : "nombre y apellido");
+  if (!details.email) missing.push(language === "en" ? "email" : "email");
+  if (!details.phone) missing.push(language === "en" ? "phone" : "telefono");
+  if (!details.checkIn || !details.checkOut) missing.push(language === "en" ? "dates" : "fechas");
+  if (!details.guests) missing.push(language === "en" ? "number of guests" : "numero de huespedes");
+  if (!details.roomType) missing.push(language === "en" ? "room category" : "categoria de habitacion");
+
+  if (missing.length) {
+    const known =
+      language === "en"
+        ? `I already have: ${[
+            details.checkIn && `check-in ${details.checkIn}`,
+            details.checkOut && `check-out ${details.checkOut}`,
+            details.guests && `${details.guests} guest(s)`,
+            details.roomType && details.roomType,
+          ]
+            .filter(Boolean)
+            .join(", ")}.`
+        : `Ya tengo: ${[
+            details.checkIn && `llegada ${details.checkIn}`,
+            details.checkOut && `salida ${details.checkOut}`,
+            details.guests && `${details.guests} huesped(es)`,
+            details.roomType && details.roomType,
+          ]
+            .filter(Boolean)
+            .join(", ")}.`;
+
+    return language === "en"
+      ? `${known}\n\nTo continue the booking, please send: ${missing.join(", ")}.`
+      : `${known}\n\nPara continuar la reserva, envieme: ${missing.join(", ")}.`;
+  }
+
+  const selected = rates.find((rate) => normalize(rate.roomTypeName) === normalize(details.roomType));
+  const priceLine = selected
+    ? language === "en"
+      ? `Rate: ${selected.roomRateDetailed?.[0]?.rate ?? selected.roomRate} MXN per night, total ${selected.totalRate} MXN.`
+      : `Tarifa: ${selected.roomRateDetailed?.[0]?.rate ?? selected.roomRate} MXN por noche, total ${selected.totalRate} MXN.`
+    : "";
+
+  if (language === "en") {
+    return `Booking summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nNext step: the system must validate availability and generate the payment link. Once payment is validated, confirmation and ticket will be sent to ${details.email}.`;
+  }
+
+  return `Resumen de reserva:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nSiguiente paso: el sistema debe validar disponibilidad y generar el link de pago. Cuando el pago este validado, la confirmacion y el ticket se enviaran a ${details.email}.`;
+}
+
 async function getCloudbedsRates({ checkIn, checkOut }) {
   const apiKey = process.env.CLOUDBEDS_API_KEY;
   if (!apiKey || !checkIn || !checkOut) return [];
@@ -93,6 +211,16 @@ export async function POST(request) {
 
     const rates = await getCloudbedsRates({ checkIn, checkOut });
     const ratesText = formatRatesForPrompt(rates);
+    const bookingDetails = extractBookingDetails({ message, metadata: { ...metadata, checkIn, checkOut, guests } });
+
+    if (isBookingFlow(message, bookingDraft)) {
+      return json({
+        reply: bookingReply(language, bookingDetails, rates),
+        mode: "booking",
+        rates,
+        bookingDraft: { active: true, ...bookingDetails },
+      });
+    }
 
     if (!process.env.OPENAI_API_KEY) {
       return json({
