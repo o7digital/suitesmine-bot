@@ -25,7 +25,7 @@ export async function GET() {
       provider: "ga4-data-api",
     },
     database: {
-      configured: configured("DATABASE_URL"),
+      configured: configured("DATABASE_URL") || configured("DATABASE_PUBLIC_URL"),
       provider: "postgres",
     },
     clerk: {

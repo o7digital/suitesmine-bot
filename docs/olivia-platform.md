@@ -159,9 +159,10 @@ Railway exposes a Postgres connection string. Configure it server-side in the lo
 
 ```env
 DATABASE_URL=
+DATABASE_PUBLIC_URL=
 ```
 
-Do not expose `DATABASE_URL` in widgets or browser code.
+Use `DATABASE_URL` for services running inside Railway. Use `DATABASE_PUBLIC_URL` for local development and Vercel because Railway private DNS is unavailable outside Railway. Do not expose either variable in widgets or browser code.
 
 Initialize the Railway database once with:
 
