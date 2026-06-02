@@ -299,6 +299,20 @@ Clerk should enforce these roles:
 
 Every server-side query must filter by the Clerk user tenant scope. Hiding another client in the UI is not sufficient.
 
+The first protected routes are:
+
+```text
+/inbox
+/api/dashboard/*
+/api/integrations/*
+```
+
+The public widget endpoint remains accessible without a Clerk session:
+
+```text
+/api/olivia/chat
+```
+
 ## Privacy and CRM
 
 Before storing personal information for CRM use:
