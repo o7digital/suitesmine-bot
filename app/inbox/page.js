@@ -335,6 +335,38 @@ export default function InboxPage() {
   const [activeView, setActiveView] = useState("my-open");
   const [draft, setDraft] = useState("");
 
+  const viewCounts = useMemo(
+    () =>
+      views.reduce((counts, view) => {
+        counts[view.id] = visibleConversations.filter(
+          (conversation) => conversation.view === view.id
+        ).length;
+        return counts;
+      }, {}),
+    [visibleConversations]
+  );
+
+  useEffect(() => {
+    if (visibleConversations.length === 0) return;
+    const activeHasConversations = visibleConversations.some(
+      (conversation) => conversation.view === activeView
+    );
+    if (activeHasConversations) return;
+    const nextView =
+      views.find((view) =>
+        visibleConversations.some((conversation) => conversation.view === view.id)
+      )?.id ?? "my-open";
+    setActiveView(nextView);
+  }, [activeView, visibleConversations]);
+
+  useEffect(() => {
+    if (visibleConversations.length === 0) return;
+    const selectedStillExists = visibleConversations.some(
+      (conversation) => conversation.id === selectedId
+    );
+    if (!selectedStillExists) setSelectedId(visibleConversations[0].id);
+  }, [selectedId, visibleConversations]);
+
   const selectedCandidate = useMemo(() => {
     if (!selectedId) return visibleConversations[0] ?? null;
     return (
@@ -443,7 +475,10 @@ export default function InboxPage() {
                   }`}
                 >
                   <span>{view.icon}</span>
-                  {view.label}
+                  <span className="flex-1 text-left">{view.label}</span>
+                  <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs">
+                    {viewCounts[view.id] ?? 0}
+                  </span>
                 </button>
               ))}
             </div>
@@ -493,6 +528,9 @@ export default function InboxPage() {
           <div className="px-5 py-5">
             <h2 className="flex items-center gap-3 text-xl font-semibold">
               📬 {views.find((view) => view.id === activeView)?.label}
+              <span className="rounded-full bg-[#eef3ff] px-2 py-1 text-xs font-medium text-[#5b6b91]">
+                {filteredConversations.length}
+              </span>
             </h2>
           </div>
           <div className="h-[calc(100%-138px)] overflow-y-auto px-3 pb-4">
