@@ -1,38 +1,27 @@
-# SuitesMine Bot - CloudBeds Availability Checker
+# Olivia Platform
 
-A Botpress workflow for checking room availability through CloudBeds API.
+Reusable multi-site AI assistant, channel manager and owner dashboard.
 
-## Files
+The first implementation serves Suites Mine hospitality workflows with OpenAI and Cloudbeds. The target platform supports multiple client websites, skins, knowledge bases, operator inboxes and business integrations.
 
-- `availability-workflow.json` - Production workflow with CloudBeds API integration
-- `test-availability-workflow.json` - Test workflow with mock data (no API required)
-- `botpress-config.json` - Botpress bot configuration
-- `deployment-guide.md` - Step-by-step deployment instructions
+## Documentation
 
-## Features
+Start with [docs/README.md](./docs/README.md).
 
-- ✅ Natural language date extraction
-- ✅ Guest count detection
-- ✅ Room availability checking
-- ✅ Price and occupancy display
-- ❌ Booking functionality (removed as requested)
+## Current Routes
 
-## Test Version
+- Inbox UI: `/inbox`
+- Olivia API: `/api/olivia/chat`
 
-The test version includes mock data for:
-- Ocean View Suite ($450/night, max 4 guests)
-- Garden Villa ($350/night, max 2 guests)
-- Master Pool Suite ($650/night, max 6 guests)
+## Local Setup
 
-## Setup
+```bash
+npm install
+npm run dev
+```
 
-1. Import the workflow into Botpress
-2. Configure Cloudbeds OAuth credentials (production only)
-3. Deploy to your bot
-4. Test with sample queries
+Keep secrets in `.env.local`. Do not commit them.
 
-## Sample Queries
+## Historical Files
 
-- "Check availability from 2024-03-15 to 2024-03-18 for 2 guests"
-- "Do you have rooms available March 15-18?"
-- "Availability for 4 people next weekend"
+The repository still contains earlier Botpress and Cloudbeds workflow files for reference. New platform work should follow the architecture documented in `docs/`.
