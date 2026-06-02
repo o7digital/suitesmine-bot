@@ -138,6 +138,7 @@ function bookingReply(language, details, rates) {
   }
 
   const selected = rates.find((rate) => normalize(rate.roomTypeName) === normalize(details.roomType));
+  const bookingUrl = buildCloudbedsBookingUrl({ language, details });
   const priceLine = selected
     ? language === "en"
       ? `Rate: ${selected.roomRateDetailed?.[0]?.rate ?? selected.roomRate} MXN per night, total ${selected.totalRate} MXN.`
@@ -145,10 +146,27 @@ function bookingReply(language, details, rates) {
     : "";
 
   if (language === "en") {
-    return `Booking summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nNext step: the system must validate availability and generate the payment link. Once payment is validated, confirmation and ticket will be sent to ${details.email}.`;
+    return `Booking summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nCloudbeds booking link:\n${bookingUrl}\n\nNext step: open the link to finalize the reservation and payment in Cloudbeds. Once payment is validated, confirmation and ticket will be sent to ${details.email}.`;
   }
 
-  return `Resumen de reserva:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nSiguiente paso: el sistema debe validar disponibilidad y generar el link de pago. Cuando el pago este validado, la confirmacion y el ticket se enviaran a ${details.email}.`;
+  return `Resumen de reserva:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nLink de reserva Cloudbeds:\n${bookingUrl}\n\nSiguiente paso: abrir el link para finalizar la reserva y el pago en Cloudbeds. Cuando el pago este validado, la confirmacion y el ticket se enviaran a ${details.email}.`;
+}
+
+function buildCloudbedsBookingUrl({ language, details }) {
+  const base =
+    language === "en"
+      ? "https://hotels.cloudbeds.com/en/reservation/DzS8Bc"
+      : "https://hotels.cloudbeds.com/es/reservation/DzS8Bc";
+  const url = new URL(base);
+  url.searchParams.set("currency", "mxn");
+  if (details.checkIn) url.searchParams.set("checkin", details.checkIn);
+  if (details.checkOut) url.searchParams.set("checkout", details.checkOut);
+  if (details.guests) {
+    url.searchParams.set("guests", details.guests);
+    url.searchParams.set("adults", details.guests);
+  }
+  url.searchParams.set("kids", "0");
+  return url.toString();
 }
 
 async function getCloudbedsRates({ checkIn, checkOut }) {
