@@ -1,73 +1,63 @@
-// Simple Cloudbeds OAuth + availability test script
+// Simple Cloudbeds API key + rates/availability test script
 // Usage:
-//   CLOUDBEDS_CLIENT_ID=... CLOUDBEDS_CLIENT_SECRET=... node scripts/cloudbeds-test.js
+//   CLOUDBEDS_API_KEY=... node scripts/cloudbeds-test.js
 // Optional:
-//   CLOUDBEDS_PROPERTY_ID=319424 CLOUDBEDS_TOKEN_URL=... CLOUDBEDS_API_BASE=...
+//   CLOUDBEDS_PROPERTY_ID=319424 CHECK_IN=2026-06-09 CHECK_OUT=2026-06-12 GUESTS=2
 
-const TOKEN_URL = process.env.CLOUDBEDS_TOKEN_URL || 'https://hotels.cloudbeds.com/connect/token';
-const API_BASE_URL = process.env.CLOUDBEDS_API_BASE || 'https://hotels.cloudbeds.com/api/v1.1';
-const CLIENT_ID = process.env.CLOUDBEDS_CLIENT_ID;
-const CLIENT_SECRET = process.env.CLOUDBEDS_CLIENT_SECRET;
+const API_BASE_URL = process.env.CLOUDBEDS_API_BASE || 'https://api.cloudbeds.com/api/v1.2';
+const API_KEY = process.env.CLOUDBEDS_API_KEY;
 const PROPERTY_ID = process.env.CLOUDBEDS_PROPERTY_ID || '319424';
+const CHECK_IN = process.env.CHECK_IN || '2026-06-09';
+const CHECK_OUT = process.env.CHECK_OUT || '2026-06-12';
+const GUESTS = Number(process.env.GUESTS || '2');
 
-if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.error('Missing CLOUDBEDS_CLIENT_ID or CLOUDBEDS_CLIENT_SECRET env vars');
+if (!API_KEY) {
+  console.error('Missing CLOUDBEDS_API_KEY env var');
   process.exit(1);
 }
 
-async function getToken() {
-  const body = new URLSearchParams();
-  body.set('grant_type', 'client_credentials');
-  body.set('client_id', CLIENT_ID);
-  body.set('client_secret', CLIENT_SECRET);
-
-  const res = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
-  });
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(`Token error ${res.status}: ${JSON.stringify(json)}`);
-  }
-  return json.access_token || json.token || json.accessToken;
-}
-
-async function getAvailability(accessToken) {
-  const startDate = '2026-03-15';
-  const endDate = '2026-03-18';
-  const adults = 2;
-
-  const url = new URL(`${API_BASE_URL}/getAvailability`);
+async function cloudbedsGet(path, params = {}) {
+  const url = new URL(`${API_BASE_URL}/${path}`);
   url.searchParams.set('propertyID', PROPERTY_ID);
-  url.searchParams.set('startDate', startDate);
-  url.searchParams.set('endDate', endDate);
-  url.searchParams.set('adults', String(adults));
-  url.searchParams.set('children', '0');
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, String(value));
+  });
 
   const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` }
+    headers: { 'x-api-key': API_KEY }
   });
+
   const json = await res.json();
   if (!res.ok) {
-    throw new Error(`Availability error ${res.status}: ${JSON.stringify(json)}`);
+    throw new Error(`${path} error ${res.status}: ${JSON.stringify(json)}`);
   }
   return json;
 }
 
+async function getRatePlans() {
+  return cloudbedsGet('getRatePlans', {
+    startDate: CHECK_IN,
+    endDate: CHECK_OUT,
+    detailedRates: true
+  });
+}
+
 (async () => {
   try {
-    console.log('Requesting access token...');
-    const token = await getToken();
-    console.log('Access token OK');
+    console.log(`Cloudbeds property ${PROPERTY_ID}`);
+    console.log(`Checking ${CHECK_IN} -> ${CHECK_OUT} for ${GUESTS} guest(s)`);
 
-    console.log('Querying availability...');
-    const avail = await getAvailability(token);
-    // Print a concise summary
-    const roomTypes = avail?.data?.roomTypes || [];
+    const rates = await getRatePlans();
+    const roomTypes = Array.isArray(rates?.data) ? rates.data : rates?.data?.propertyRates?.[0]?.roomTypes || [];
+
     console.log(`Room types returned: ${roomTypes.length}`);
-    roomTypes.slice(0, 5).forEach((r, i) => {
-      console.log(`#${i + 1} ${r.roomTypeName} | available=${r.available} | avgPrice=${r.averagePrice}`);
+    roomTypes.forEach((room, index) => {
+      const ratePlan = room.ratePlans?.[0];
+      const total = room.totalRate ?? ratePlan?.totalRate ?? 'n/a';
+      const nightly = room.roomRateDetailed?.[0]?.rate ?? ratePlan?.roomRates?.[0]?.rate ?? 'n/a';
+      console.log(
+        `#${index + 1} ${room.roomTypeName} | id=${room.roomTypeID} | available=${room.roomsAvailable} | nightly=${nightly} | total=${total}`
+      );
     });
   } catch (e) {
     console.error(e.message);
