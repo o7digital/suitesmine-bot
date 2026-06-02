@@ -338,7 +338,7 @@ export default function InboxPage() {
       scopedClientCode
         ? conversations.filter((conversation) => conversation.clientCode === scopedClientCode)
         : conversations,
-    [scopedClientCode]
+    [conversations, scopedClientCode]
   );
   const initialSelectedId = visibleConversations[0]?.id ?? null;
 
