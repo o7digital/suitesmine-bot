@@ -42,7 +42,7 @@ The first hospitality implementation is Suites Mine. The same platform must also
 ```text
 Client website widget
   -> Olivia public API
-  -> conversation store
+  -> Railway Postgres conversation store
   -> AI orchestrator
        -> client profile and FAQ
        -> OpenAI guest-facing response
@@ -78,6 +78,8 @@ Example:
 ```
 
 The backend must resolve configuration from `clientCode`. Never put API secrets inside the website widget.
+
+The first configuration source is `config/clients.js`. Railway Postgres will become the persistent source when the onboarding editor is implemented.
 
 ## Required Persistent Data
 
@@ -148,6 +150,18 @@ When an operator clicks `Rendre a l'IA`:
 1. Set status to `ai`.
 2. Persist a system event.
 3. Allow Olivia to answer the next visitor message.
+
+## Railway Postgres
+
+Railway Postgres is the persistent store for the multi-site channel manager. It must store client profiles, Clerk tenant mappings, conversations, messages, visitor profiles, consent records and OAuth refresh tokens.
+
+Railway exposes a Postgres connection string. Configure it server-side in the local environment and in the Vercel Preview environment:
+
+```env
+DATABASE_URL=
+```
+
+Do not expose `DATABASE_URL` in widgets or browser code.
 
 ## Owner Dashboard
 
@@ -220,11 +234,57 @@ Hugging Face tokens must stay server-side. Do not expose them in widgets or brow
 
 ```env
 HF_TOKEN=
-HF_DASHBOARD_MODEL=
-HF_INFERENCE_ENDPOINT=
+HF_DASHBOARD_MODEL=openai/gpt-oss-20b:fastest
 ```
 
 The exact model must be selected after testing Spanish, English and French conversations. Model selection should be based on quality, latency and cost, not only popularity.
+
+The first server-side endpoint is:
+
+```text
+POST /api/dashboard/analyze
+```
+
+It returns an operator-oriented analysis: summary, intent, sentiment, urgency, tags, suggested reply and missing information.
+
+## Mailbox Connector
+
+The mailbox must belong to the client whenever possible. For Suites Mine, use a Suites Mine inbox rather than a personal o7 mailbox. Gmail must be connected through OAuth; never store a mailbox password.
+
+Required variables:
+
+```env
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=
+```
+
+The mailbox connector still needs Railway Postgres before OAuth refresh tokens and imported emails can be stored safely.
+
+## Google Analytics 4
+
+Olivia needs two GA4 layers:
+
+1. Website tracking with `gtag` or Google Tag Manager on every client website.
+2. Dashboard reporting with the GA4 Data API so owners can see visits, pages, sources and conversion events.
+
+Required dashboard variables:
+
+```env
+GA4_PROPERTY_ID=
+GOOGLE_SERVICE_ACCOUNT_EMAIL=
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY=
+```
+
+The service account must have read access to the relevant GA4 property.
+
+## Integration Status
+
+Use this endpoint to see which server-side integrations are configured:
+
+```text
+GET /api/integrations/status
+```
 
 ## Authentication and Permissions
 

@@ -1,3 +1,5 @@
+import { getClientProfile } from "@/config/clients";
+
 export const runtime = "nodejs";
 
 const CORS_HEADERS = {
@@ -5,21 +7,6 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
-
-const HOTEL_CONTEXT = `
-Suites Mine, Rio Ebro 64, Colonia Cuauhtemoc, CDMX 06500, Mexico.
-Contact: contacto@suitesmine.com, +52 55 3666 8535.
-Suites Mine is an aparthotel/alternative lodging service, not a traditional 24-hour hotel.
-Regular check-in: 2:00 pm to 12:30 am next day. Rooftop: 10:30 am to 10:00 pm.
-No pets. No children under 6. Parking is free but subject to availability.
-Rooms: Estudio up to 3 guests, Suite up to 3 guests, Suite Doble up to 4 guests.
-Studios have partial kitchenette. Suites have fuller kitchen. Suite Doble is larger with 2 queen beds.
-No air conditioning; fans, water air coolers and heaters can be requested.
-Luggage storage is free on check-in/check-out day from 9:00 am to 10:00 pm.
-Long stays: 10% discount from 7 consecutive nights, 20% from 30 consecutive nights.
-Payment: Mexican pesos cash, Visa, MasterCard, Carnet, American Express; phone reservations may use bank transfer or payment link.
-Invoices: most reservations can be invoiced with Mexican SAT tax details.
-`;
 
 function json(data, status = 200) {
   return Response.json(data, { status, headers: CORS_HEADERS });
@@ -221,10 +208,33 @@ function fallbackReply(language, metadata) {
   return "Puedo ayudarle con la reserva. Por favor indiqueme nombre y apellido, email, telefono, llegada, salida, numero de huespedes y categoria preferida: Estudio, Suite o Suite Doble.";
 }
 
+function genericFallbackReply(language, client) {
+  if (language === "en") {
+    return `I am ${client.roleLabel.en || "Olivia AI Assistant"}. I can answer questions about ${client.clientName}. Please tell me how I can help.`;
+  }
+  if (language === "fr") {
+    return `Je suis ${client.roleLabel.fr || "Olivia IA Assistante"}. Je peux répondre à vos questions sur ${client.clientName}. Comment puis-je vous aider ?`;
+  }
+  return `Soy ${client.roleLabel.es || "Olivia IA Asistente"}. Puedo responder sus preguntas sobre ${client.clientName}. ¿Como puedo ayudarle?`;
+}
+
+function languageName(language) {
+  return (
+    {
+      en: "English",
+      es: "Spanish",
+      fr: "French",
+      it: "Italian",
+    }[language] || "Spanish"
+  );
+}
+
 export async function POST(request) {
   try {
     const payload = await request.json();
     const language = clean(payload.language) || "es";
+    const clientCode = clean(payload.clientCode || payload.clientId) || "default";
+    const client = getClientProfile(clientCode);
     const message = clean(payload.message);
     const metadata = payload.metadata || {};
     const checkIn = clean(metadata.checkIn);
@@ -234,11 +244,12 @@ export async function POST(request) {
 
     if (!message) return json({ error: "Missing message" }, 400);
 
-    const rates = await getCloudbedsRates({ checkIn, checkOut });
+    const isSuitesMine = client.clientCode === "suitesmine";
+    const rates = isSuitesMine ? await getCloudbedsRates({ checkIn, checkOut }) : [];
     const ratesText = formatRatesForPrompt(rates);
     const bookingDetails = extractBookingDetails({ message, metadata: { ...metadata, checkIn, checkOut, guests } });
 
-    if (isBookingFlow(message, bookingDraft)) {
+    if (isSuitesMine && isBookingFlow(message, bookingDraft)) {
       return json({
         reply: bookingReply(language, bookingDetails, rates),
         mode: "booking",
@@ -249,17 +260,22 @@ export async function POST(request) {
 
     if (!process.env.OPENAI_API_KEY) {
       return json({
-        reply: fallbackReply(language, { checkIn, checkOut }),
+        reply: isSuitesMine
+          ? fallbackReply(language, { checkIn, checkOut })
+          : genericFallbackReply(language, client),
         mode: "fallback",
+        clientCode: client.clientCode,
         rates,
       });
     }
 
     const system = `
-You are Olivia IA, a hotel hostess AI for Suites Mine.
-Respond in ${language === "en" ? "English" : "Spanish"}.
-Use the website and FAQ context below. Be concise, helpful, and natural.
+You are ${client.roleLabel[language] || client.roleLabel.en || "Olivia AI Assistant"} for ${client.clientName}.
+Respond in ${languageName(language)}.
+Use the approved website and FAQ context below. Be concise, helpful, and natural.
+Do not invent information that is not present in the approved context.
 If dates/guests are already provided in metadata, do not ask for them again.
+${isSuitesMine ? `
 If the guest wants to reserve, collect only missing fields:
 first and last name, email, phone, check-in, check-out, guests, room category.
 Ask for room category, never room number. Valid categories: Estudio/Studio, Suite, Suite Doble/Double Suite.
@@ -267,12 +283,12 @@ If all booking fields are present, summarize the booking and say the next step i
 After payment is validated, confirmation and ticket will be sent by email.
 Do not invent a confirmed reservation number, payment status, or payment link.
 If the guest asks for a payment link, say the system will generate it after availability validation.
+` : ""}
 
-Hotel context:
-${HOTEL_CONTEXT}
+Client context:
+${client.knowledge}
 
-Live Cloudbeds rates for selected dates:
-${ratesText}
+${isSuitesMine ? `Live Cloudbeds rates for selected dates:\n${ratesText}` : ""}
 `;
 
     const user = {
@@ -306,7 +322,9 @@ ${ratesText}
     const data = await res.json();
     if (!res.ok) {
       return json({
-        reply: fallbackReply(language, { checkIn, checkOut }),
+        reply: isSuitesMine
+          ? fallbackReply(language, { checkIn, checkOut })
+          : genericFallbackReply(language, client),
         mode: "openai-error",
         error: data?.error?.message || "OpenAI error",
         rates,
@@ -318,7 +336,7 @@ ${ratesText}
       data.output?.flatMap((item) => item.content || []).find((part) => part.type === "output_text")?.text ||
       fallbackReply(language, { checkIn, checkOut });
 
-    return json({ reply, mode: "openai", rates });
+    return json({ reply, mode: "openai", clientCode: client.clientCode, rates });
   } catch (error) {
     return json({ error: error.message || "Unexpected error" }, 500);
   }

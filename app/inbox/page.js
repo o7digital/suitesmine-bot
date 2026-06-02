@@ -26,30 +26,18 @@ import {
   Wand2,
   Zap,
 } from "lucide-react";
+import { clients } from "@/config/clients";
 
-const clientSkins = {
-  suitesmine: {
-    label: "Suites Mine",
-    siteUrl: "suitesmine.com",
-    accent: "#4169e1",
-    soft: "#eaf0ff",
-    operator: "#1f2a44",
-  },
-  lacaqc: {
-    label: "Client Hotel",
-    siteUrl: "client-hotel.example",
-    accent: "#2f6f62",
-    soft: "#eaf7f3",
-    operator: "#173d36",
-  },
-  demo: {
-    label: "Demo Hotel",
-    siteUrl: "demo-hotel.example",
-    accent: "#8a5cf6",
-    soft: "#f1ebff",
-    operator: "#33215f",
-  },
-};
+const clientSkins = Object.fromEntries(
+  Object.entries(clients).map(([clientCode, client]) => [
+    clientCode,
+    {
+      label: client.clientName,
+      siteUrl: client.siteUrl,
+      ...client.skin,
+    },
+  ])
+);
 
 const conversations = [
   {
