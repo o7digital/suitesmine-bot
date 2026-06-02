@@ -1,10 +1,25 @@
 import { isDatabaseConfigured } from "@/lib/db";
-import { addMessage, upsertConversation } from "@/lib/conversations";
+import { addMessage, findVisitorConversation, upsertConversation } from "@/lib/conversations";
 
 export const runtime = "nodejs";
 
 function clean(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+export async function GET(request) {
+  if (!isDatabaseConfigured()) return Response.json({ configured: false, messages: [] });
+  const url = new URL(request.url);
+  const clientCode = clean(url.searchParams.get("clientCode")) || "default";
+  const visitorId = clean(url.searchParams.get("visitorId"));
+  if (!visitorId) return Response.json({ error: "visitorId is required" }, { status: 400 });
+
+  const conversation = await findVisitorConversation(clientCode, visitorId);
+  return Response.json({
+    configured: true,
+    status: conversation?.status || "ai",
+    messages: conversation?.messages || [],
+  });
 }
 
 export async function POST(request) {
@@ -38,4 +53,20 @@ export async function POST(request) {
   });
 
   return Response.json({ conversation, message });
+}
+
+export async function PATCH(request) {
+  if (!isDatabaseConfigured()) return Response.json({ error: "Conversation storage is not configured" }, { status: 503 });
+  const payload = await request.json().catch(() => ({}));
+  const conversation = await findVisitorConversation(payload.clientCode, payload.visitorId);
+  if (!conversation) return Response.json({ error: "Conversation not found" }, { status: 404 });
+  if (conversation.status !== "ai") return Response.json({ skipped: true, status: conversation.status });
+
+  const message = await addMessage({
+    conversationId: conversation.id,
+    role: "ai",
+    content: payload.content,
+    model: payload.model,
+  });
+  return Response.json({ message });
 }

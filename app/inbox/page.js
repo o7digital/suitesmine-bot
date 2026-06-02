@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AtSign,
   Bot,
@@ -39,7 +39,7 @@ const clientSkins = Object.fromEntries(
   ])
 );
 
-const conversations = [
+const demoConversations = [
   {
     id: "conv-1024",
     clientCode: "suitesmine",
@@ -200,6 +200,38 @@ const conversations = [
   },
 ];
 
+function formatTime(value) {
+  return value ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+}
+
+function mapConversation(conversation) {
+  const messages = (conversation.messages || []).map((message) => ({
+    ...message,
+    role: message.role === "visitor" ? "guest" : message.role,
+    time: formatTime(message.createdAt),
+  }));
+  const lastMessage = [...messages].reverse().find((message) => message.role !== "system");
+  const guest = conversation.visitor_name || `Visiteur ${conversation.visitor_id.slice(0, 8)}`;
+  return {
+    id: conversation.id,
+    clientCode: conversation.client_code,
+    guest,
+    initials: guest.slice(0, 2).toUpperCase(),
+    channel: conversation.source || "Site widget",
+    view: conversation.status === "solved" ? "solved" : "my-open",
+    status: conversation.status,
+    intent: conversation.metadata?.intent || "-",
+    lastMessage: lastMessage?.content || "-",
+    lastSeen: formatTime(conversation.updated_at),
+    email: conversation.email || "-",
+    phone: conversation.phone || "-",
+    location: "-",
+    lastViewed: conversation.metadata?.page || "-",
+    metadata: conversation.metadata || {},
+    messages,
+  };
+}
+
 const views = [
   { id: "unassigned", label: "Non assigne", icon: "!" },
   { id: "my-open", label: "Ouvert", icon: "[]" },
@@ -264,6 +296,25 @@ function MessageBlock({ message, guest, skin }) {
 export default function InboxPage() {
   const role = "admin";
   const scopedClientCode = null;
+  const [conversations, setConversations] = useState(demoConversations);
+  const [usingDemo, setUsingDemo] = useState(true);
+  const loadConversations = useCallback(async () => {
+    try {
+      const response = await fetch("/api/conversations", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (!data.configured) return;
+      setConversations((data.conversations || []).map(mapConversation));
+      setUsingDemo(false);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    loadConversations();
+    const timer = window.setInterval(loadConversations, 4000);
+    return () => window.clearInterval(timer);
+  }, [loadConversations]);
+
   const visibleConversations = useMemo(
     () =>
       scopedClientCode
@@ -275,7 +326,6 @@ export default function InboxPage() {
 
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [activeView, setActiveView] = useState("my-open");
-  const [manualOverrides, setManualOverrides] = useState({ "conv-1024": true });
   const [draft, setDraft] = useState("");
 
   const selected = useMemo(() => {
@@ -294,11 +344,7 @@ export default function InboxPage() {
     );
   }
   const skin = clientSkins[selected.clientCode] ?? clientSkins.suitesmine;
-  const currentStatus = manualOverrides[selected.id]
-    ? "manual"
-    : selected.status === "solved"
-      ? "solved"
-      : selected.status;
+  const currentStatus = selected.status;
   const isManual = currentStatus === "manual";
   const filteredConversations = visibleConversations.filter(
     (conversation) => conversation.view === activeView
@@ -414,9 +460,7 @@ export default function InboxPage() {
             {filteredConversations.map((conversation) => {
               const active = conversation.id === selectedId;
               const conversationSkin = clientSkins[conversation.clientCode] ?? clientSkins.suitesmine;
-              const status = manualOverrides[conversation.id]
-                ? "manual"
-                : conversation.status;
+              const status = conversation.status;
 
               return (
                 <button
@@ -462,17 +506,31 @@ export default function InboxPage() {
               <span className="text-sm font-medium">{skin.label}</span>
             </div>
             <div className="flex items-center gap-2">
-              <button className="flex h-9 items-center gap-2 rounded-md border border-[#d8e0ef] px-3 text-sm font-medium">
+              <button
+                onClick={async () => {
+                  if (usingDemo) return;
+                  await fetch(`/api/conversations/${selected.id}/status`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: "solved" }),
+                  });
+                  loadConversations();
+                }}
+                className="flex h-9 items-center gap-2 rounded-md border border-[#d8e0ef] px-3 text-sm font-medium"
+              >
                 <Check className="h-4 w-4 text-[#17623a]" />
                 Solve
               </button>
               <button
-                onClick={() =>
-                  setManualOverrides((prev) => ({
-                    ...prev,
-                    [selected.id]: !isManual,
-                  }))
-                }
+                onClick={async () => {
+                  if (usingDemo) return;
+                  await fetch(`/api/conversations/${selected.id}/status`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: isManual ? "ai" : "manual" }),
+                  });
+                  loadConversations();
+                }}
                 className="h-9 rounded-md px-3 text-sm font-medium text-white"
                 style={{ background: isManual ? "#66718a" : skin.accent }}
               >
@@ -531,6 +589,16 @@ export default function InboxPage() {
                 </div>
                 <button
                   disabled={!isManual || !draft.trim()}
+                  onClick={async () => {
+                    if (usingDemo || !draft.trim()) return;
+                    await fetch(`/api/conversations/${selected.id}/messages`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ content: draft }),
+                    });
+                    setDraft("");
+                    loadConversations();
+                  }}
                   className="flex h-9 items-center gap-2 rounded-md px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#dce2ed]"
                   style={isManual && draft.trim() ? { background: skin.accent } : undefined}
                 >

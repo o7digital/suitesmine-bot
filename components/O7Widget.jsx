@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare, Send, X } from "lucide-react";
 import MessageBubble from "@/components/MessageBubble";
 import DynamicFields from "@/components/DynamicFields";
-import { sendMessage } from "@/lib/api";
+import { getVisitorConversation, persistAssistantMessage, persistConversationMessage, sendMessage } from "@/lib/api";
 
 const WELCOME_MESSAGE =
   "Bonjour, je peux vous aider avec les disponibilités, tarifs, réservations et informations sur votre séjour.";
@@ -31,6 +31,32 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [messages, setMessages] = useState([
     { role: "assistant", content: WELCOME_MESSAGE },
   ]);
+  const visitorId = useRef("");
+  const receivedIds = useRef(new Set());
+
+  useEffect(() => {
+    visitorId.current =
+      window.localStorage.getItem("oliviaVisitorId") || window.crypto.randomUUID();
+    window.localStorage.setItem("oliviaVisitorId", visitorId.current);
+
+    const poll = async () => {
+      try {
+        const data = await getVisitorConversation({ clientCode: clientId, visitorId: visitorId.current });
+        const incoming = (data.messages || []).filter(
+          (message) => message.role === "operator" && !receivedIds.current.has(message.id)
+        );
+        incoming.forEach((message) => receivedIds.current.add(message.id));
+        if (incoming.length) {
+          setMessages((prev) => [
+            ...prev,
+            ...incoming.map((message) => ({ role: "assistant", content: message.content })),
+          ]);
+        }
+      } catch {}
+    };
+    const timer = window.setInterval(poll, 4000);
+    return () => window.clearInterval(timer);
+  }, [clientId]);
 
   const handleSend = async () => {
     const message = input.trim();
@@ -41,16 +67,40 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
     setIsLoading(true);
 
     try {
+      let storedConversation = null;
+      try {
+        storedConversation = await persistConversationMessage({
+          clientCode: clientId,
+          visitorId: visitorId.current,
+          content: message,
+          metadata,
+          source: "website",
+        });
+      } catch {}
+
+      if (storedConversation?.conversation?.status === "manual") {
+        return;
+      }
+
       const data = await sendMessage({
         clientId,
         message,
         metadata,
       });
+      const assistantContent = getAssistantText(data);
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: getAssistantText(data) },
+        { role: "assistant", content: assistantContent },
       ]);
+      try {
+        await persistAssistantMessage({
+          clientCode: clientId,
+          visitorId: visitorId.current,
+          content: assistantContent,
+          model: data.model,
+        });
+      } catch {}
     } catch {
       setMessages((prev) => [
         ...prev,
