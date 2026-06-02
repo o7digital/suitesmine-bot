@@ -163,6 +163,23 @@ DATABASE_URL=
 
 Do not expose `DATABASE_URL` in widgets or browser code.
 
+Initialize the Railway database once with:
+
+```bash
+psql "$DATABASE_URL" -f db/schema.sql
+```
+
+The first persistent endpoints are:
+
+```text
+POST /api/widget/conversations
+GET  /api/conversations
+POST /api/conversations/:id/messages
+POST /api/conversations/:id/status
+```
+
+Only `POST /api/widget/conversations` is public. The channel manager routes require a Clerk session.
+
 ## Owner Dashboard
 
 Each website owner needs a dashboard filtered by their `clientCode`. Admin users can access all clients.
