@@ -301,8 +301,13 @@ export default function InboxPage() {
   const loadConversations = useCallback(async () => {
     try {
       const response = await fetch("/api/conversations", { cache: "no-store" });
+      console.log("[olivia-inbox] browser load conversations status", response.status);
       if (!response.ok) throw new Error("Unable to load conversations");
       const data = await response.json();
+      console.log("[olivia-inbox] browser conversations payload", {
+        configured: data.configured,
+        count: data.conversations?.length || 0,
+      });
       if (!data.configured) throw new Error("Railway is not configured");
       setConversations((data.conversations || []).map(mapConversation));
       setLoadState("ready");

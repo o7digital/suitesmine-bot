@@ -7,6 +7,10 @@ const allowedStatuses = new Set(["ai", "manual", "solved"]);
 
 export async function POST(request, { params }) {
   const { userId } = await auth();
+  console.log("[olivia-inbox] POST /api/conversations/:id/status auth", {
+    hasUser: Boolean(userId),
+    conversationId: params.id,
+  });
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const payload = await request.json().catch(() => ({}));
@@ -18,6 +22,10 @@ export async function POST(request, { params }) {
     id: params.id,
     status: payload.status,
     operatorId: userId,
+  });
+  console.log("[olivia-inbox] POST /api/conversations/:id/status updated", {
+    found: Boolean(conversation),
+    status: conversation?.status || null,
   });
   if (!conversation) return Response.json({ error: "Conversation not found" }, { status: 404 });
 
