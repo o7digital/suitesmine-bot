@@ -20,6 +20,28 @@ function clean(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+async function callOliviaV2(payload) {
+  const baseUrl = clean(process.env.OLIVIA_V2_URL).replace(/\/$/, "");
+  if (!baseUrl) return null;
+
+  const response = await fetch(`${baseUrl}/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...payload,
+      clientCode: payload.clientCode || payload.clientId,
+    }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`Olivia v2 failed with ${response.status}: ${detail}`);
+  }
+
+  return response.json();
+}
+
 function normalize(value) {
   return clean(value)
     .toLowerCase()
@@ -232,6 +254,14 @@ function languageName(language) {
 export async function POST(request) {
   try {
     const payload = await request.json();
+
+    try {
+      const v2Response = await callOliviaV2(payload);
+      if (v2Response) return json(v2Response);
+    } catch (error) {
+      console.error("[olivia] v2 fallback to legacy route", error);
+    }
+
     const language = clean(payload.language) || "es";
     const clientCode = clean(payload.clientCode || payload.clientId) || "default";
     const client = getClientProfile(clientCode);
