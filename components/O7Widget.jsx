@@ -7,12 +7,18 @@ import MessageBubble from "@/components/MessageBubble";
 import DynamicFields from "@/components/DynamicFields";
 import { getVisitorConversation, persistAssistantMessage, persistConversationMessage, sendMessage } from "@/lib/api";
 
-const WELCOME_MESSAGE =
-  "Bonjour, je peux vous aider avec les disponibilités, tarifs, réservations et informations sur votre séjour.";
 const CONSENT_KEY = "oliviaAiConsent:v1";
 
-const consentCopy = {
+const widgetCopy = {
   fr: {
+    welcome: "Bonjour, je peux vous aider avec les disponibilités, tarifs, réservations et informations sur votre séjour.",
+    placeholder: "Indiquez vos dates ou posez votre question...",
+    online: "En ligne",
+    close: "Fermer",
+    openChat: "Ouvrir le chat",
+    closeChat: "Fermer le chat",
+    fallback: "Merci, votre demande a bien été reçue.",
+    error: "Je rencontre un souci temporaire. Pouvez-vous réessayer dans quelques instants ?",
     title: "Avis de confidentialité",
     body:
       "Olivia AI peut traiter vos messages et informations de contact afin de répondre à votre demande, qualifier votre besoin, permettre une reprise humaine et produire des statistiques de service. Vos données sont traitées selon les règles applicables à votre région, notamment RGPD, LFPDPPP ou lois locales de protection des données.",
@@ -22,6 +28,14 @@ const consentCopy = {
     blocked: "Pour utiliser Olivia AI, vous devez accepter l'avis de confidentialité."
   },
   es: {
+    welcome: "Hola, puedo ayudarte con disponibilidad, tarifas, reservas e informacion sobre tu estancia.",
+    placeholder: "Indica tus fechas o haz tu pregunta...",
+    online: "En linea",
+    close: "Cerrar",
+    openChat: "Abrir chat",
+    closeChat: "Cerrar chat",
+    fallback: "Gracias, tu solicitud fue recibida correctamente.",
+    error: "Tengo un problema temporal. Puedes intentarlo de nuevo en unos instantes?",
     title: "Aviso de privacidad",
     body:
       "Olivia AI puede tratar tus mensajes y datos de contacto para responder tu solicitud, calificar tu necesidad, permitir toma de control humana y generar estadisticas de servicio. Tus datos se procesan bajo las reglas de privacidad aplicables a tu region, incluyendo RGPD, LFPDPPP o leyes locales de proteccion de datos.",
@@ -31,6 +45,14 @@ const consentCopy = {
     blocked: "Para usar Olivia AI debes aceptar el aviso de privacidad."
   },
   en: {
+    welcome: "Hello, I can help with availability, rates, bookings and information about your stay.",
+    placeholder: "Enter your dates or ask your question...",
+    online: "Online",
+    close: "Close",
+    openChat: "Open chat",
+    closeChat: "Close chat",
+    fallback: "Thanks, your request has been received.",
+    error: "I am having a temporary issue. Please try again in a moment.",
     title: "Privacy notice",
     body:
       "Olivia AI may process your messages and contact details to answer your request, qualify your need, enable human takeover and produce service statistics. Your data is processed under privacy rules applicable to your region, including GDPR, LFPDPPP or local data protection laws.",
@@ -41,15 +63,19 @@ const consentCopy = {
   }
 };
 
-function getAssistantText(response) {
-  if (!response) return "Merci, votre demande a bien été reçue.";
+function normalizeLanguage(value) {
+  return ["es", "en", "fr"].includes(value) ? value : "fr";
+}
+
+function getAssistantText(response, fallback) {
+  if (!response) return fallback;
   if (typeof response === "string") return response;
   return (
     response.reply ||
     response.response ||
     response.message ||
     response.output ||
-    "Merci, votre demande a bien été reçue."
+    fallback
   );
 }
 
@@ -59,15 +85,18 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [consent, setConsent] = useState("pending");
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [metadata, setMetadata] = useState({});
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: WELCOME_MESSAGE },
-  ]);
+  const [metadata, setMetadata] = useState({ language: "fr" });
+  const [messages, setMessages] = useState([]);
   const visitorId = useRef("");
   const receivedIds = useRef(new Set());
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const language = normalizeLanguage(params.get("lang"));
+
     setConsent(window.localStorage.getItem(CONSENT_KEY) || "pending");
+    setMetadata((prev) => ({ ...prev, language, pageUrl: params.get("context") || window.location.href }));
+    setMessages([{ role: "assistant", content: widgetCopy[language].welcome }]);
   }, []);
 
   useEffect(() => {
@@ -96,8 +125,8 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
     return () => window.clearInterval(timer);
   }, [clientId, consent]);
 
-  const language = metadata.language || "fr";
-  const copy = consentCopy[language] || consentCopy.fr;
+  const language = normalizeLanguage(metadata.language);
+  const copy = widgetCopy[language] || widgetCopy.fr;
 
   const acceptConsent = () => {
     window.localStorage.setItem(CONSENT_KEY, "accepted");
@@ -147,7 +176,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
         message,
         metadata,
       });
-      const assistantContent = getAssistantText(data);
+      const assistantContent = getAssistantText(data, copy.fallback);
 
       setMessages((prev) => [
         ...prev,
@@ -167,7 +196,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
         {
           role: "assistant",
           content:
-            "Je rencontre un souci temporaire. Pouvez-vous réessayer dans quelques instants ?",
+            copy.error,
         },
       ]);
     } finally {
@@ -191,10 +220,10 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-base font-semibold tracking-tight">{widgetTitle}</p>
-                  <p className="mt-1 text-xs text-white/85">Online</p>
+                  <p className="mt-1 text-xs text-white/85">{copy.online}</p>
                 </div>
                 <button
-                  aria-label="Fermer"
+                  aria-label={copy.close}
                   onClick={() => setIsOpen(false)}
                   className="rounded-xl bg-white/15 p-2 transition hover:bg-white/25"
                 >
@@ -235,7 +264,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   disabled={consent !== "accepted"}
-                  placeholder="Indiquez vos dates ou posez votre question..."
+                  placeholder={copy.placeholder}
                   className="h-12 flex-1 rounded-2xl border border-[#e3e8f8] bg-[#f9fbff] px-4 text-sm outline-none placeholder:text-black/35 focus:ring-2 focus:ring-[#8DA2FB]"
                 />
                 <button
@@ -252,7 +281,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
       </AnimatePresence>
 
       <button
-        aria-label={isOpen ? "Fermer le chat" : "Ouvrir le chat"}
+        aria-label={isOpen ? copy.closeChat : copy.openChat}
         onClick={() => setIsOpen((v) => !v)}
         className="ml-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#202431] to-[#8DA2FB] text-white shadow-[0_22px_60px_-20px_rgba(0,0,0,0.45)] transition hover:scale-[1.02]"
       >

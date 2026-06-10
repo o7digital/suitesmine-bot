@@ -1,21 +1,39 @@
 "use client";
 
-const fieldMap = {
-  default: [
-    { key: "checkIn", label: "Check-in", type: "date", placeholder: "" },
-    { key: "checkOut", label: "Check-out", type: "date", placeholder: "" },
-    { key: "guests", label: "Voyageurs", type: "number", placeholder: "2" },
-    { key: "roomType", label: "Type de chambre", type: "text", placeholder: "Suite Deluxe" },
-  ],
+const copyByLanguage = {
+  fr: {
+    metadata: "Metadata",
+    guests: "Voyageurs",
+    roomType: "Type de chambre",
+    roomPlaceholder: "Suite Deluxe",
+  },
+  es: {
+    metadata: "Datos",
+    guests: "Huespedes",
+    roomType: "Tipo de habitacion",
+    roomPlaceholder: "Suite Deluxe",
+  },
+  en: {
+    metadata: "Metadata",
+    guests: "Guests",
+    roomType: "Room type",
+    roomPlaceholder: "Deluxe Suite",
+  },
 };
 
 export default function DynamicFields({ metadata, setMetadata }) {
-  const fields = fieldMap.default;
+  const copy = copyByLanguage[metadata.language] || copyByLanguage.fr;
+  const fields = [
+    { key: "checkIn", label: "Check-in", type: "date", placeholder: "" },
+    { key: "checkOut", label: "Check-out", type: "date", placeholder: "" },
+    { key: "guests", label: copy.guests, type: "number", placeholder: "2" },
+    { key: "roomType", label: copy.roomType, type: "text", placeholder: copy.roomPlaceholder },
+  ];
 
   return (
     <div className="rounded-2xl border border-[#e5e9f7] bg-[#f8faff] p-3">
       <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-black/45">
-        Metadata
+        {copy.metadata}
       </p>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
