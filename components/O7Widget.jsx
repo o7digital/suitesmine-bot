@@ -79,9 +79,9 @@ function getAssistantText(response, fallback) {
   );
 }
 
-export default function O7Widget({ clientId = "default", title = "O7 IA Chat" }) {
-  const widgetTitle = typeof title === "string" && title.trim() ? title : "O7 IA Chat";
-  const [isOpen, setIsOpen] = useState(false);
+export default function O7Widget({ clientId = "default", title = "Olivia AI", embedded = false }) {
+  const widgetTitle = typeof title === "string" && title.trim() ? title : "Olivia AI";
+  const [isOpen, setIsOpen] = useState(embedded);
   const [consent, setConsent] = useState("pending");
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +89,12 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [messages, setMessages] = useState([]);
   const visitorId = useRef("");
   const receivedIds = useRef(new Set());
+
+  useEffect(() => {
+    if (embedded) {
+      setIsOpen(true);
+    }
+  }, [embedded]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -205,7 +211,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className={embedded ? "h-screen w-full" : "fixed bottom-6 right-6 z-50"}>
       <AnimatePresence>
         {isOpen && (
           <motion.section
@@ -213,9 +219,13 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="mb-4 flex h-[680px] w-[420px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[32px] border border-[#d9e1fa] bg-white shadow-[0_40px_110px_-42px_rgba(32,36,49,0.45)]"
+            className={
+              embedded
+                ? "flex h-screen w-full flex-col overflow-hidden bg-white"
+                : "mb-4 flex h-[680px] w-[420px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[32px] border border-[#d9e1fa] bg-white shadow-[0_40px_110px_-42px_rgba(32,36,49,0.45)]"
+            }
           >
-            <header className="relative overflow-hidden bg-gradient-to-br from-[#202431] to-[#8DA2FB] px-5 py-4 text-white">
+            {!embedded && <header className="relative overflow-hidden bg-gradient-to-br from-[#202431] to-[#8DA2FB] px-5 py-4 text-white">
               <div className="absolute right-[-24px] top-[-24px] h-20 w-20 rounded-full bg-white/15 blur-2xl" />
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -230,7 +240,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                   <X className="h-4 w-4" />
                 </button>
               </div>
-            </header>
+            </header>}
 
             <div className="flex-1 space-y-3 overflow-y-auto bg-gradient-to-b from-[#f6f7fb] to-white px-4 py-4">
               {consent !== "accepted" && (
@@ -280,13 +290,15 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
         )}
       </AnimatePresence>
 
-      <button
-        aria-label={isOpen ? copy.closeChat : copy.openChat}
-        onClick={() => setIsOpen((v) => !v)}
-        className="ml-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#202431] to-[#8DA2FB] text-white shadow-[0_22px_60px_-20px_rgba(0,0,0,0.45)] transition hover:scale-[1.02]"
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
-      </button>
+      {!embedded && (
+        <button
+          aria-label={isOpen ? copy.closeChat : copy.openChat}
+          onClick={() => setIsOpen((v) => !v)}
+          className="ml-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#202431] to-[#8DA2FB] text-white shadow-[0_22px_60px_-20px_rgba(0,0,0,0.45)] transition hover:scale-[1.02]"
+        >
+          {isOpen ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
+        </button>
+      )}
     </div>
   );
 }
