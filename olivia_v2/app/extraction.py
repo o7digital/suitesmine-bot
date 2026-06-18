@@ -52,10 +52,10 @@ def pick_room_type(message: str, draft_room_type: str | None = None) -> str | No
 
 
 def value_after_step(message: str, step: int) -> str:
-    match = re.search(rf"(?:^|\s){step}[.)]?\s*([\s\S]*?)(?=\s\d[.)]?\s|$)", message, flags=re.I)
+    match = re.search(rf"(?:^|\s){step}[.)]?\s+([\s\S]*?)(?=\s\d[.)]?\s+|$)", message, flags=re.I)
     if not match:
         return ""
-    return re.sub(r"^[:.-]\s*", "", match.group(1).strip()).rstrip(",; ")
+    return re.sub(r"^[:.-]\s*", "", match.group(1).strip()).rstrip(",.; ")
 
 
 def extract_fields(message: str, metadata: ChatMetadata) -> CollectedFields:

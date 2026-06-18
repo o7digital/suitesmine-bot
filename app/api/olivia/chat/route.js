@@ -86,8 +86,8 @@ function pickRoomType(value, draftRoomType = "") {
 }
 
 function valueAfterStep(text, step) {
-  const match = text.match(new RegExp(`(?:^|\\s)${step}[.)]?\\s*([\\s\\S]*?)(?=\\s\\d[.)]?\\s|$)`, "i"));
-  return clean(match?.[1] || "").replace(/^[:.-]\s*/, "").replace(/[,\s]+$/, "");
+  const match = text.match(new RegExp(`(?:^|\\s)${step}[.)]?\\s+([\\s\\S]*?)(?=\\s\\d[.)]?\\s+|$)`, "i"));
+  return clean(match?.[1] || "").replace(/^[:.-]\s*/, "").replace(/[,. ;\s]+$/, "");
 }
 
 function extractBookingDetails({ message, metadata }) {
