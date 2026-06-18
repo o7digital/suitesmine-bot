@@ -85,15 +85,26 @@ function pickRoomType(value, draftRoomType = "") {
   return clean(draftRoomType);
 }
 
+function valueAfterStep(text, step) {
+  const match = text.match(new RegExp(`(?:^|\\s)${step}[.)]?\\s*([\\s\\S]*?)(?=\\s\\d[.)]?\\s|$)`, "i"));
+  return clean(match?.[1] || "").replace(/^[:.-]\s*/, "").replace(/[,\s]+$/, "");
+}
+
 function extractBookingDetails({ message, metadata }) {
   const draft = metadata.bookingDraft || {};
   const text = clean(message);
   const normalized = normalize(text);
-  const email = text.match(/[^\s@]+@[^\s@]+\.[^\s@]+/)?.[0] || clean(draft.email);
-  const phone = text.match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || clean(draft.phone);
-  const roomType = pickRoomType(text, draft.roomType);
+  const structuredName = valueAfterStep(text, 1);
+  const structuredEmail = valueAfterStep(text, 2).match(/[^\s@]+@[^\s@]+\.[^\s@,.;]+/)?.[0] || "";
+  const structuredPhone = valueAfterStep(text, 3).match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || "";
+  const email = structuredEmail || text.match(/[^\s@]+@[^\s@]+\.[^\s@,.;]+/)?.[0] || clean(draft.email);
+  const phone = structuredPhone || text.match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || clean(draft.phone);
+  const roomType = pickRoomType(valueAfterStep(text, 5) || text, draft.roomType);
 
   let name = clean(draft.name);
+  if (!name && structuredName && !structuredName.includes("@")) {
+    name = structuredName;
+  }
   if (!name && email) {
     const beforeEmail = text.slice(0, text.indexOf(email));
     name = beforeEmail

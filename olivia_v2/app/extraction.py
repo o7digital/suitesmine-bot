@@ -51,13 +51,25 @@ def pick_room_type(message: str, draft_room_type: str | None = None) -> str | No
     return clean(draft_room_type) or None
 
 
+def value_after_step(message: str, step: int) -> str:
+    match = re.search(rf"(?:^|\s){step}[.)]?\s*([\s\S]*?)(?=\s\d[.)]?\s|$)", message, flags=re.I)
+    if not match:
+        return ""
+    return re.sub(r"^[:.-]\s*", "", match.group(1).strip()).rstrip(",; ")
+
+
 def extract_fields(message: str, metadata: ChatMetadata) -> CollectedFields:
     draft = metadata.bookingDraft or {}
-    email = re.search(r"[^\s@]+@[^\s@]+\.[^\s@]+", message)
-    phone = re.search(r"(?:\+?\d[\d\s().-]{6,}\d)", message)
-    room_type = pick_room_type(message, draft.get("roomType"))
+    structured_name = value_after_step(message, 1)
+    structured_email = re.search(r"[^\s@]+@[^\s@]+\.[^\s@,.;]+", value_after_step(message, 2))
+    structured_phone = re.search(r"(?:\+?\d[\d\s().-]{6,}\d)", value_after_step(message, 3))
+    email = structured_email or re.search(r"[^\s@]+@[^\s@]+\.[^\s@,.;]+", message)
+    phone = structured_phone or re.search(r"(?:\+?\d[\d\s().-]{6,}\d)", message)
+    room_type = pick_room_type(value_after_step(message, 5) or message, draft.get("roomType"))
 
     name = clean(draft.get("name"))
+    if not name and structured_name and "@" not in structured_name:
+        name = structured_name
     if not name and email:
         before_email = message[: email.start()]
         name = re.sub(r"\b(estudio|studio|suite doble|double suite|suite)\b", "", before_email, flags=re.I)
@@ -88,4 +100,3 @@ def missing_booking_fields(fields: CollectedFields) -> list[str]:
         if not getattr(fields, key):
             missing.append(label)
     return missing
-
