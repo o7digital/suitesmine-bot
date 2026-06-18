@@ -162,10 +162,10 @@ function bookingReply(language, details, rates) {
     : "";
 
   if (language === "en") {
-    return `Booking summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nCloudbeds booking link:\n${bookingUrl}\n\nNext step: open the link to finalize the reservation and payment in Cloudbeds. Once payment is validated, confirmation and ticket will be sent to ${details.email}.`;
+    return `Request summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nCloudbeds availability link:\n${bookingUrl}\n\nBefore discussing payment, please check live availability and the real rate in Cloudbeds. If Cloudbeds shows availability, you can continue the booking there. Payment and confirmation only apply after availability is validated.`;
   }
 
-  return `Resumen de reserva:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nLink de reserva Cloudbeds:\n${bookingUrl}\n\nSiguiente paso: abrir el link para finalizar la reserva y el pago en Cloudbeds. Cuando el pago este validado, la confirmacion y el ticket se enviaran a ${details.email}.`;
+  return `Resumen de solicitud:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nLink para revisar disponibilidad Cloudbeds:\n${bookingUrl}\n\nAntes de hablar de pago, revise disponibilidad y tarifa real en Cloudbeds. Si Cloudbeds muestra disponibilidad, puede continuar ahi con la reserva. El pago y la confirmacion solo aplican despues de validar disponibilidad.`;
 }
 
 function buildCloudbedsBookingUrl({ language, details }) {
@@ -309,8 +309,8 @@ ${isSuitesMine ? `
 If the guest wants to reserve, collect only missing fields:
 first and last name, email, phone, check-in, check-out, guests, room category.
 Ask for room category, never room number. Valid categories: Estudio/Studio, Suite, Suite Doble/Double Suite.
-If all booking fields are present, summarize the booking and say the next step is payment.
-After payment is validated, confirmation and ticket will be sent by email.
+If all booking fields are present, summarize the request and send the Cloudbeds link only to check live availability and the real rate first.
+Do not tell the guest to pay, finalize payment, or expect confirmation until Cloudbeds availability has been validated.
 Do not invent a confirmed reservation number, payment status, or payment link.
 If the guest asks for a payment link, say the system will generate it after availability validation.
 ` : ""}

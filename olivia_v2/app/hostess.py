@@ -109,14 +109,14 @@ def local_booking_reply(language: str, fields, missing: list[str], rates: list[d
         price = f"\nTarifa estimada: {selected.get('totalRate', 'n/a')} MXN total."
     if language == "en":
         return (
-            "payment_handoff",
-            "send_cloudbeds_booking_link",
-            f"Booking summary:\n\nName: {fields.name}\nEmail: {fields.email}\nPhone: {fields.phone}\nCheck-in: {fields.checkIn}\nCheck-out: {fields.checkOut}\nGuests: {fields.guests}\nCategory: {fields.roomType}{price}\n\nCloudbeds link:\n{booking_url}\n\nNext step: open the link to finalize the reservation and payment. Confirmation is sent after payment validation.",
+            "availability_check",
+            "send_cloudbeds_availability_link",
+            f"Request summary:\n\nName: {fields.name}\nEmail: {fields.email}\nPhone: {fields.phone}\nCheck-in: {fields.checkIn}\nCheck-out: {fields.checkOut}\nGuests: {fields.guests}\nCategory: {fields.roomType}{price}\n\nCloudbeds availability link:\n{booking_url}\n\nBefore discussing payment, please check live availability and the real rate in Cloudbeds. If Cloudbeds shows availability, you can continue the booking there. Payment and confirmation only apply after availability is validated.",
         )
     return (
-        "payment_handoff",
-        "send_cloudbeds_booking_link",
-        f"Resumen de reserva:\n\nNombre: {fields.name}\nEmail: {fields.email}\nTelefono: {fields.phone}\nLlegada: {fields.checkIn}\nSalida: {fields.checkOut}\nHuespedes: {fields.guests}\nCategoria: {fields.roomType}{price}\n\nLink Cloudbeds:\n{booking_url}\n\nSiguiente paso: abrir el link para finalizar la reserva y el pago. La confirmacion se envia despues de validar el pago.",
+        "availability_check",
+        "send_cloudbeds_availability_link",
+        f"Resumen de solicitud:\n\nNombre: {fields.name}\nEmail: {fields.email}\nTelefono: {fields.phone}\nLlegada: {fields.checkIn}\nSalida: {fields.checkOut}\nHuespedes: {fields.guests}\nCategoria: {fields.roomType}{price}\n\nLink para revisar disponibilidad Cloudbeds:\n{booking_url}\n\nAntes de hablar de pago, revise disponibilidad y tarifa real en Cloudbeds. Si Cloudbeds muestra disponibilidad, puede continuar ahi con la reserva. El pago y la confirmacion solo aplican despues de validar disponibilidad.",
     )
 
 
