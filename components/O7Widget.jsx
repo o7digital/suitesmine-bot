@@ -2,112 +2,169 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageSquare, Send, X } from "lucide-react";
+import { MessageCircle, Send, Sparkles, X } from "lucide-react";
 import MessageBubble from "@/components/MessageBubble";
 import DynamicFields from "@/components/DynamicFields";
 import { getVisitorConversation, persistAssistantMessage, persistConversationMessage, sendMessage } from "@/lib/api";
 
-const CONSENT_KEY = "oliviaAiConsent:v1";
+const WELCOME_MESSAGE =
+  "Bonjour, je suis votre concierge Suites Mine. Je peux vous aider avec les disponibilités, tarifs, réservations et informations sur votre séjour.";
 
-const widgetCopy = {
-  fr: {
-    welcome: "Bonjour, je peux vous aider avec les disponibilités, tarifs, réservations et informations sur votre séjour.",
-    placeholder: "Indiquez vos dates ou posez votre question...",
-    online: "En ligne",
-    close: "Fermer",
-    openChat: "Ouvrir le chat",
-    closeChat: "Fermer le chat",
-    fallback: "Merci, votre demande a bien été reçue.",
-    error: "Je rencontre un souci temporaire. Pouvez-vous réessayer dans quelques instants ?",
-    title: "Avis de confidentialité",
-    body:
-      "Olivia AI peut traiter vos messages et informations de contact afin de répondre à votre demande, qualifier votre besoin, permettre une reprise humaine et produire des statistiques de service. Vos données sont traitées selon les règles applicables à votre région, notamment RGPD, LFPDPPP ou lois locales de protection des données.",
-    note: "Avis informatif uniquement. Les conditions finales restent celles du site ou du contrat du client.",
-    accept: "J'accepte",
-    decline: "Refuser",
-    blocked: "Pour utiliser Olivia AI, vous devez accepter l'avis de confidentialité."
+const siteCopy = {
+  default: {
+    fr: {
+      welcome: WELCOME_MESSAGE,
+      online: "Concierge disponible",
+      placeholder: "Posez votre question...",
+      send: "Envoyer",
+      loading: "Un instant...",
+      error: "Je rencontre un souci temporaire. Pouvez-vous réessayer dans quelques instants ?",
+      open: "Ouvrir le chat",
+      close: "Fermer le chat",
+    },
+    es: {
+      welcome: "Hola, soy Olivia. Puedo ayudarle con su solicitud.",
+      online: "Concierge disponible",
+      placeholder: "Escriba su pregunta...",
+      send: "Enviar",
+      loading: "Un momento...",
+      error: "Tengo un problema temporal. Puede intentarlo de nuevo en unos instantes?",
+      open: "Abrir chat",
+      close: "Cerrar chat",
+    },
+    en: {
+      welcome: "Hello, I am Olivia. I can help with your request.",
+      online: "Concierge available",
+      placeholder: "Ask your question...",
+      send: "Send",
+      loading: "One moment...",
+      error: "I am having a temporary issue. Please try again in a moment.",
+      open: "Open chat",
+      close: "Close chat",
+    },
+    zh: {
+      welcome: "您好，我是 Olivia，可以协助您处理咨询。",
+      online: "在线服务",
+      placeholder: "请输入您的问题...",
+      send: "发送",
+      loading: "请稍等...",
+      error: "暂时出现问题，请稍后再试。",
+      open: "打开聊天",
+      close: "关闭聊天",
+    },
   },
-  es: {
-    welcome: "Hola, puedo ayudarte con disponibilidad, tarifas, reservas e informacion sobre tu estancia.",
-    placeholder: "Indica tus fechas o haz tu pregunta...",
-    online: "En linea",
-    close: "Cerrar",
-    openChat: "Abrir chat",
-    closeChat: "Cerrar chat",
-    fallback: "Gracias, tu solicitud fue recibida correctamente.",
-    error: "Tengo un problema temporal. Puedes intentarlo de nuevo en unos instantes?",
-    title: "Aviso de privacidad",
-    body:
-      "Olivia AI puede tratar tus mensajes y datos de contacto para responder tu solicitud, calificar tu necesidad, permitir toma de control humana y generar estadisticas de servicio. Tus datos se procesan bajo las reglas de privacidad aplicables a tu region, incluyendo RGPD, LFPDPPP o leyes locales de proteccion de datos.",
-    note: "Aviso solo informativo. Los terminos finales siguen siendo los del sitio o contrato del cliente.",
-    accept: "Acepto",
-    decline: "Rechazar",
-    blocked: "Para usar Olivia AI debes aceptar el aviso de privacidad."
+  suitesmine: {
+    es: {
+      welcome:
+        "Buenas tardes, soy Olivia, anfitriona digital de Suites Mine. Puedo revisar fechas, orientar sobre categorias y preparar su solicitud de reserva.",
+      online: "Hotesse digitale disponible",
+      placeholder: "Pregunte por fechas, tarifas o reserva...",
+      send: "Enviar",
+      loading: "Un momento...",
+      error: "Tengo un problema temporal. Puede intentarlo de nuevo en unos instantes?",
+      open: "Abrir Olivia IA Concierge",
+      close: "Cerrar Olivia IA Concierge",
+      actions: [
+        ["Disponibilidad", "Quiero revisar disponibilidad"],
+        ["Reservar", "Deseo reservar"],
+        ["Habitaciones", "Quiero ver habitaciones"],
+        ["Contacto", "Necesito contacto"],
+      ],
+    },
+    en: {
+      welcome:
+        "Good afternoon, I am Olivia, Suites Mine's digital hostess. I can review dates, guide you through room categories and prepare your booking request.",
+      online: "Digital hostess available",
+      placeholder: "Ask about dates, rates or booking...",
+      send: "Send",
+      loading: "One moment...",
+      error: "I am having a temporary issue. Please try again in a moment.",
+      open: "Open Olivia AI Concierge",
+      close: "Close Olivia AI Concierge",
+      actions: [
+        ["Availability", "I want to check availability"],
+        ["Book", "I want to book"],
+        ["Rooms", "I want to see rooms"],
+        ["Contact", "I need contact information"],
+      ],
+    },
+    zh: {
+      welcome: "下午好，我是 Olivia，Suites Mine 的数字礼宾。我可以帮您查询日期、介绍房型并准备预订申请。",
+      online: "数字礼宾在线",
+      placeholder: "询问日期、价格或预订...",
+      send: "发送",
+      loading: "请稍等...",
+      error: "暂时出现问题，请稍后再试。",
+      open: "打开 Olivia AI 礼宾",
+      close: "关闭 Olivia AI 礼宾",
+      actions: [
+        ["查房态", "我想查询可订日期"],
+        ["预订", "我想预订"],
+        ["房型", "我想查看房型"],
+        ["联系", "我需要联系方式"],
+      ],
+    },
   },
-  en: {
-    welcome: "Hello, I can help with availability, rates, bookings and information about your stay.",
-    placeholder: "Enter your dates or ask your question...",
-    online: "Online",
-    close: "Close",
-    openChat: "Open chat",
-    closeChat: "Close chat",
-    fallback: "Thanks, your request has been received.",
-    error: "I am having a temporary issue. Please try again in a moment.",
-    title: "Privacy notice",
-    body:
-      "Olivia AI may process your messages and contact details to answer your request, qualify your need, enable human takeover and produce service statistics. Your data is processed under privacy rules applicable to your region, including GDPR, LFPDPPP or local data protection laws.",
-    note: "Informational notice only. Final terms remain those of the client site or contract.",
-    accept: "I accept",
-    decline: "Decline",
-    blocked: "To use Olivia AI, please accept the privacy notice."
-  }
 };
 
 function normalizeLanguage(value) {
-  return ["es", "en", "fr"].includes(value) ? value : "fr";
+  return ["es", "en", "fr", "zh"].includes(value) ? value : "fr";
 }
 
-function getAssistantText(response, fallback) {
-  if (!response) return fallback;
+function getPageLanguage() {
+  if (typeof window === "undefined") return "fr";
+  const params = new URLSearchParams(window.location.search);
+  const queryLanguage = params.get("lang");
+  if (queryLanguage) return normalizeLanguage(queryLanguage);
+  const path = window.location.pathname.toLowerCase();
+  if (path.startsWith("/en")) return "en";
+  if (path.startsWith("/zh")) return "zh";
+  if (path.startsWith("/es")) return "es";
+  return "es";
+}
+
+function getCopy(clientId, language) {
+  return siteCopy[clientId]?.[language] || siteCopy[clientId]?.es || siteCopy.default[language] || siteCopy.default.fr;
+}
+
+function getAssistantText(response) {
+  if (!response) return "Merci, votre demande a bien été reçue.";
   if (typeof response === "string") return response;
   return (
     response.reply ||
     response.response ||
     response.message ||
     response.output ||
-    fallback
+    "Merci, votre demande a bien été reçue."
   );
 }
 
-export default function O7Widget({ clientId = "default", title = "Olivia AI", embedded = false }) {
-  const widgetTitle = typeof title === "string" && title.trim() ? title : "Olivia AI";
-  const [isOpen, setIsOpen] = useState(embedded);
-  const [consent, setConsent] = useState("pending");
+export default function O7Widget({ clientId = "default", title = "O7 IA Chat" }) {
+  const widgetTitle = typeof title === "string" && title.trim() ? title : "O7 IA Chat";
+  const [language, setLanguage] = useState("es");
+  const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [metadata, setMetadata] = useState({ language: "fr" });
-  const [messages, setMessages] = useState([]);
+  const [metadata, setMetadata] = useState({});
+  const [messages, setMessages] = useState([
+    { role: "assistant", content: WELCOME_MESSAGE },
+  ]);
   const visitorId = useRef("");
   const receivedIds = useRef(new Set());
+  const copy = getCopy(clientId, language);
 
   useEffect(() => {
-    if (embedded) {
-      setIsOpen(true);
-    }
-  }, [embedded]);
+    const detectedLanguage = getPageLanguage();
+    setLanguage(detectedLanguage);
+    setMetadata((prev) => ({
+      ...prev,
+      language: detectedLanguage,
+      pageUrl: window.location.href,
+    }));
+    setMessages([{ role: "assistant", content: getCopy(clientId, detectedLanguage).welcome }]);
+  }, [clientId]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const language = normalizeLanguage(params.get("lang"));
-
-    setConsent(window.localStorage.getItem(CONSENT_KEY) || "pending");
-    setMetadata((prev) => ({ ...prev, language, pageUrl: params.get("context") || window.location.href }));
-    setMessages([{ role: "assistant", content: widgetCopy[language].welcome }]);
-  }, []);
-
-  useEffect(() => {
-    if (consent !== "accepted") return undefined;
-
     visitorId.current =
       window.localStorage.getItem("oliviaVisitorId") || window.crypto.randomUUID();
     window.localStorage.setItem("oliviaVisitorId", visitorId.current);
@@ -129,35 +186,13 @@ export default function O7Widget({ clientId = "default", title = "Olivia AI", em
     };
     const timer = window.setInterval(poll, 4000);
     return () => window.clearInterval(timer);
-  }, [clientId, consent]);
+  }, [clientId]);
 
-  const language = normalizeLanguage(metadata.language);
-  const copy = widgetCopy[language] || widgetCopy.fr;
-
-  const acceptConsent = () => {
-    window.localStorage.setItem(CONSENT_KEY, "accepted");
-    setConsent("accepted");
-  };
-
-  const declineConsent = () => {
-    window.localStorage.setItem(CONSENT_KEY, "declined");
-    setConsent("declined");
-  };
-
-  const handleSend = async () => {
-    const message = input.trim();
+  const handleSend = async (overrideMessage = "") => {
+    const message = (overrideMessage || input).trim();
     if (!message || isLoading) return;
-    if (consent !== "accepted") {
-      setMessages((prev) => [...prev, { role: "assistant", content: copy.blocked }]);
-      return;
-    }
-    if (!visitorId.current) {
-      visitorId.current =
-        window.localStorage.getItem("oliviaVisitorId") || window.crypto.randomUUID();
-      window.localStorage.setItem("oliviaVisitorId", visitorId.current);
-    }
 
-    setInput("");
+    if (!overrideMessage) setInput("");
     setMessages((prev) => [...prev, { role: "user", content: message }]);
     setIsLoading(true);
 
@@ -182,7 +217,7 @@ export default function O7Widget({ clientId = "default", title = "Olivia AI", em
         message,
         metadata,
       });
-      const assistantContent = getAssistantText(data, copy.fallback);
+      const assistantContent = getAssistantText(data);
 
       setMessages((prev) => [
         ...prev,
@@ -201,8 +236,7 @@ export default function O7Widget({ clientId = "default", title = "Olivia AI", em
         ...prev,
         {
           role: "assistant",
-          content:
-            copy.error,
+          content: copy.error,
         },
       ]);
     } finally {
@@ -211,7 +245,7 @@ export default function O7Widget({ clientId = "default", title = "Olivia AI", em
   };
 
   return (
-    <div className={embedded ? "h-screen w-full" : "fixed bottom-6 right-6 z-50"}>
+    <div className="fixed bottom-5 right-5 z-50 sm:bottom-6 sm:right-6">
       <AnimatePresence>
         {isOpen && (
           <motion.section
@@ -219,68 +253,68 @@ export default function O7Widget({ clientId = "default", title = "Olivia AI", em
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className={
-              embedded
-                ? "flex h-screen w-full flex-col overflow-hidden bg-white"
-                : "mb-4 flex h-[680px] w-[420px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[32px] border border-[#d9e1fa] bg-white shadow-[0_40px_110px_-42px_rgba(32,36,49,0.45)]"
-            }
+            className="mb-4 flex h-[min(720px,calc(100vh-7rem))] w-[430px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[24px] border border-[#ded7c9] bg-[#fffdf8] shadow-[0_32px_90px_-45px_rgba(43,43,43,0.65)]"
           >
-            {!embedded && <header className="relative overflow-hidden bg-gradient-to-br from-[#202431] to-[#8DA2FB] px-5 py-4 text-white">
-              <div className="absolute right-[-24px] top-[-24px] h-20 w-20 rounded-full bg-white/15 blur-2xl" />
+            <header className="relative overflow-hidden border-b border-[#ded7c9] bg-[#2b2b2b] px-5 py-4 text-white">
+              <div className="absolute inset-x-0 bottom-0 h-px bg-[#c8aa70]" />
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-base font-semibold tracking-tight">{widgetTitle}</p>
-                  <p className="mt-1 text-xs text-white/85">{copy.online}</p>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10">
+                    <Sparkles className="h-4 w-4 text-[#f4d99a]" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold tracking-tight">{widgetTitle}</p>
+                    <p className="mt-1 text-xs text-white/75">{copy.online}</p>
+                  </div>
                 </div>
                 <button
                   aria-label={copy.close}
                   onClick={() => setIsOpen(false)}
-                  className="rounded-xl bg-white/15 p-2 transition hover:bg-white/25"
+                  className="rounded-full bg-white/10 p-2 transition hover:bg-white/18"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
-            </header>}
+            </header>
 
-            <div className="flex-1 space-y-3 overflow-y-auto bg-gradient-to-b from-[#f6f7fb] to-white px-4 py-4">
-              {consent !== "accepted" && (
-                <div className="rounded-3xl border border-[#d9e1fa] bg-white p-4 text-sm text-[#202431] shadow-sm">
-                  <p className="font-semibold">{copy.title}</p>
-                  <p className="mt-2 leading-relaxed text-black/70">{copy.body}</p>
-                  <p className="mt-2 text-xs text-black/45">{copy.note}</p>
-                  <div className="mt-4 flex gap-2">
-                    <button onClick={acceptConsent} className="rounded-2xl bg-[#202431] px-4 py-2 text-sm font-semibold text-white">
-                      {copy.accept}
-                    </button>
-                    <button onClick={declineConsent} className="rounded-2xl border border-black/10 px-4 py-2 text-sm text-black/70">
-                      {copy.decline}
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div className="flex-1 space-y-3 overflow-y-auto bg-[#f7f2e9] px-4 py-4">
               {messages.map((msg, idx) => (
                 <MessageBubble key={`${msg.role}-${idx}`} role={msg.role}>
                   {msg.content}
                 </MessageBubble>
               ))}
-              {isLoading && <MessageBubble role="assistant">...</MessageBubble>}
+              {copy.actions?.length ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {copy.actions.map(([label, prompt]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => handleSend(prompt)}
+                      className="rounded-lg border border-[#8a754f] px-3 py-2 text-xs font-bold uppercase tracking-wide text-[#2b2b2b] transition hover:bg-[#efe4cd]"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {isLoading && <MessageBubble role="assistant">{copy.loading}</MessageBubble>}
             </div>
 
-            <div className="space-y-3 border-t border-[#e6ebfb] bg-white p-3">
-              <DynamicFields metadata={metadata} setMetadata={setMetadata} />
+            <div className="space-y-3 border-t border-[#ded7c9] bg-[#fffdf8] p-3">
+              <DynamicFields metadata={metadata} setMetadata={setMetadata} language={language} />
               <div className="flex items-end gap-2">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  disabled={consent !== "accepted"}
                   placeholder={copy.placeholder}
-                  className="h-12 flex-1 rounded-2xl border border-[#e3e8f8] bg-[#f9fbff] px-4 text-sm outline-none placeholder:text-black/35 focus:ring-2 focus:ring-[#8DA2FB]"
+                  className="h-12 flex-1 rounded-xl border border-[#ded7c9] bg-white px-4 text-sm text-[#2b2b2b] outline-none placeholder:text-[#8c806d] focus:ring-2 focus:ring-[#c8aa70]"
                 />
                 <button
+                  aria-label={copy.send}
                   onClick={handleSend}
-                  disabled={isLoading || consent !== "accepted"}
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#202431] to-[#8DA2FB] text-white shadow-[0_14px_36px_-18px_rgba(0,0,0,0.45)] disabled:opacity-60"
+                  disabled={isLoading}
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2b2b2b] text-white shadow-[0_16px_32px_-22px_rgba(0,0,0,0.75)] transition hover:bg-[#3a352d] disabled:opacity-60"
                 >
                   <Send className="h-4 w-4" />
                 </button>
@@ -290,15 +324,13 @@ export default function O7Widget({ clientId = "default", title = "Olivia AI", em
         )}
       </AnimatePresence>
 
-      {!embedded && (
-        <button
-          aria-label={isOpen ? copy.closeChat : copy.openChat}
-          onClick={() => setIsOpen((v) => !v)}
-          className="ml-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#202431] to-[#8DA2FB] text-white shadow-[0_22px_60px_-20px_rgba(0,0,0,0.45)] transition hover:scale-[1.02]"
-        >
-          {isOpen ? <X className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
-        </button>
-      )}
+      <button
+        aria-label={isOpen ? copy.close : copy.open}
+        onClick={() => setIsOpen((v) => !v)}
+        className="ml-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#2b2b2b] text-white shadow-[0_22px_60px_-24px_rgba(0,0,0,0.75)] ring-1 ring-[#c8aa70]/35 transition hover:scale-[1.02]"
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+      </button>
     </div>
   );
 }
