@@ -2,7 +2,7 @@ import json
 from urllib.parse import urlencode
 
 from olivia_v2.app.clients import ClientProfile
-from olivia_v2.app.extraction import extract_fields, missing_booking_fields
+from olivia_v2.app.extraction import extract_fields, is_multiple_room_request, missing_booking_fields
 from olivia_v2.app.language import language_name
 from olivia_v2.app.openai_service import OpenAIService
 from olivia_v2.app.schemas import ChatRequest, OliviaResponse
@@ -132,6 +132,35 @@ async def build_hostess_response(
     fields = extract_fields(request.message, request.metadata)
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
+
+    if client.code == "suitesmine" and is_multiple_room_request(request.message):
+        if language == "en":
+            reply = (
+                "For multiple-room requests, please contact the administration via WhatsApp "
+                "or by phone at +52 55 36 66 8585."
+            )
+        elif language == "fr":
+            reply = (
+                "Pour les demandes de plusieurs chambres, contactez l'administration via WhatsApp "
+                "ou par telephone au +52 55 36 66 8585."
+            )
+        else:
+            reply = (
+                "Para solicitudes de varias habitaciones, contacte a la administracion via WhatsApp "
+                "o por telefono al +52 55 36 66 8585."
+            )
+        return OliviaResponse(
+            reply=reply,
+            clientCode=client.code,
+            language=language,
+            intent="handoff",
+            phase="human_handoff",
+            nextAction="offer_human_operator",
+            handoffRecommended=True,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+        )
 
     if intent == "booking" and client.code == "suitesmine":
         phase, next_action, reply = local_booking_reply(language, fields, missing, rates)

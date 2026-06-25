@@ -18,6 +18,12 @@ def has_any(value: object, words: list[str]) -> bool:
     return any(word in text for word in words)
 
 
+def is_multiple_room_request(message: str) -> bool:
+    text = normalize(message)
+    match = re.search(r"\b(\d+)\s*(?:habitaciones?|cuartos?|rooms?|chambres?)\b", text)
+    return bool(match and int(match.group(1)) > 1)
+
+
 def detect_intent(message: str, metadata: ChatMetadata) -> str:
     text = normalize(message)
     draft = metadata.bookingDraft or {}
