@@ -133,21 +133,24 @@ async def build_hostess_response(
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
 
-    if client.code == "suitesmine" and is_multiple_room_request(request.message):
+    guest_count = int(request.metadata.guests or 0)
+    if client.code == "suitesmine" and (
+        guest_count > 4 or is_multiple_room_request(request.message)
+    ):
         if language == "en":
             reply = (
-                "For multiple-room requests, please contact the administration via WhatsApp "
-                "or by phone at +52 55 36 66 8585."
+                "For special requests, please contact the hotel directly via WhatsApp "
+                "or by phone at +52 55 36 66 85 85."
             )
         elif language == "fr":
             reply = (
-                "Pour les demandes de plusieurs chambres, contactez l'administration via WhatsApp "
-                "ou par telephone au +52 55 36 66 8585."
+                "Pour les demandes particulieres, contactez directement l'hotel via WhatsApp "
+                "ou par telephone au +52 55 36 66 85 85."
             )
         else:
             reply = (
-                "Para solicitudes de varias habitaciones, contacte a la administracion via WhatsApp "
-                "o por telefono al +52 55 36 66 8585."
+                "Para solicitudes especiales, contacte directamente al hotel via WhatsApp "
+                "o por telefono al +52 55 36 66 85 85."
             )
         return OliviaResponse(
             reply=reply,

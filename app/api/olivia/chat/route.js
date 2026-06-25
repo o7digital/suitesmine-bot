@@ -79,6 +79,11 @@ function isMultipleRoomRequest(message) {
   return Boolean(match && Number(match[1]) > 1);
 }
 
+function isSpecialBookingRequest(payload) {
+  const guests = Number(payload?.metadata?.guests || 0);
+  return guests > 4 || isMultipleRoomRequest(payload?.message);
+}
+
 function pickRoomType(value, draftRoomType = "") {
   const text = normalize(value);
   if (text.match(/^\s*1\s*$/)) return "Estudio";
@@ -273,11 +278,11 @@ export async function POST(request) {
     const requestedLanguage = clean(payload.language) || "es";
     const requestedClientCode = clean(payload.clientCode || payload.clientId) || "default";
 
-    if (requestedClientCode === "suitesmine" && isMultipleRoomRequest(payload.message)) {
+    if (requestedClientCode === "suitesmine" && isSpecialBookingRequest(payload)) {
       const replies = {
-        en: "For multiple-room requests, please contact the administration via WhatsApp or by phone at +52 55 36 66 8585.",
-        fr: "Pour les demandes de plusieurs chambres, contactez l'administration via WhatsApp ou par telephone au +52 55 36 66 8585.",
-        es: "Para solicitudes de varias habitaciones, contacte a la administracion via WhatsApp o por telefono al +52 55 36 66 8585.",
+        en: "For special requests, please contact the hotel directly via WhatsApp or by phone at +52 55 36 66 85 85.",
+        fr: "Pour les demandes particulieres, contactez directement l'hotel via WhatsApp ou par telephone au +52 55 36 66 85 85.",
+        es: "Para solicitudes especiales, contacte directamente al hotel via WhatsApp o por telefono al +52 55 36 66 85 85.",
       };
       return json({
         reply: replies[requestedLanguage] || replies.es,
