@@ -2,7 +2,12 @@ import json
 from urllib.parse import urlencode
 
 from olivia_v2.app.clients import ClientProfile
-from olivia_v2.app.extraction import extract_fields, is_multiple_room_request, missing_booking_fields
+from olivia_v2.app.extraction import (
+    extract_fields,
+    is_large_group_request,
+    is_multiple_room_request,
+    missing_booking_fields,
+)
 from olivia_v2.app.language import language_name
 from olivia_v2.app.openai_service import OpenAIService
 from olivia_v2.app.schemas import ChatRequest, OliviaResponse
@@ -133,9 +138,9 @@ async def build_hostess_response(
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
 
-    guest_count = int(request.metadata.guests or 0)
     if client.code == "suitesmine" and (
-        guest_count > 4 or is_multiple_room_request(request.message)
+        is_large_group_request(request.message)
+        or is_multiple_room_request(request.message)
     ):
         if language == "en":
             reply = (

@@ -80,8 +80,14 @@ function isMultipleRoomRequest(message) {
 }
 
 function isSpecialBookingRequest(payload) {
-  const guests = Number(payload?.metadata?.guests || 0);
-  return guests > 4 || isMultipleRoomRequest(payload?.message);
+  const message = normalize(payload?.message);
+  const guestMatch = message.match(
+    /\b(\d+)\s*(?:personas?|huespedes?|guests?|people|personnes?|voyageurs?)\b/,
+  );
+  return (
+    Boolean(guestMatch && Number(guestMatch[1]) > 4) ||
+    isMultipleRoomRequest(payload?.message)
+  );
 }
 
 function pickRoomType(value, draftRoomType = "") {

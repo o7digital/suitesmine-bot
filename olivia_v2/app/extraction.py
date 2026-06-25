@@ -24,6 +24,15 @@ def is_multiple_room_request(message: str) -> bool:
     return bool(match and int(match.group(1)) > 1)
 
 
+def is_large_group_request(message: str) -> bool:
+    text = normalize(message)
+    match = re.search(
+        r"\b(\d+)\s*(?:personas?|huespedes?|guests?|people|personnes?|voyageurs?)\b",
+        text,
+    )
+    return bool(match and int(match.group(1)) > 4)
+
+
 def detect_intent(message: str, metadata: ChatMetadata) -> str:
     text = normalize(message)
     draft = metadata.bookingDraft or {}
