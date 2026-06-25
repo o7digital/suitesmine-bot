@@ -74,6 +74,11 @@ function isBookingFlow(message, bookingDraft = {}) {
   );
 }
 
+function isMultipleRoomRequest(message) {
+  const match = normalize(message).match(/\b(\d+)\s*(?:habitaciones?|cuartos?|rooms?|chambres?)\b/);
+  return Boolean(match && Number(match[1]) > 1);
+}
+
 function pickRoomType(value, draftRoomType = "") {
   const text = normalize(value);
   if (text.match(/^\s*1\s*$/)) return "Estudio";
@@ -265,6 +270,23 @@ function languageName(language) {
 export async function POST(request) {
   try {
     const payload = await request.json();
+    const requestedLanguage = clean(payload.language) || "es";
+    const requestedClientCode = clean(payload.clientCode || payload.clientId) || "default";
+
+    if (requestedClientCode === "suitesmine" && isMultipleRoomRequest(payload.message)) {
+      const replies = {
+        en: "For multiple-room requests, please contact the administration via WhatsApp or by phone at +52 55 36 66 8585.",
+        fr: "Pour les demandes de plusieurs chambres, contactez l'administration via WhatsApp ou par telephone au +52 55 36 66 8585.",
+        es: "Para solicitudes de varias habitaciones, contacte a la administracion via WhatsApp o por telefono al +52 55 36 66 8585.",
+      };
+      return json({
+        reply: replies[requestedLanguage] || replies.es,
+        mode: "handoff",
+        handoffRecommended: true,
+        clientCode: requestedClientCode,
+        rates: [],
+      });
+    }
 
     try {
       const v2Response = await callOliviaV2(payload);
