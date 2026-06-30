@@ -208,6 +208,15 @@ function formatTime(value) {
   return value ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 }
 
+function formatConversationDate(value) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
 function mapConversation(conversation) {
   const messages = (conversation.messages || []).map((message) => ({
     ...message,
@@ -218,6 +227,7 @@ function mapConversation(conversation) {
   const guest = conversation.visitor_name || `Visiteur ${conversation.visitor_id.slice(0, 8)}`;
   return {
     id: conversation.id,
+    createdAt: conversation.created_at,
     clientCode: conversation.client_code,
     guest,
     initials: guest.slice(0, 2).toUpperCase(),
@@ -570,6 +580,7 @@ export default function InboxPage() {
   const selected =
     selectedCandidate ?? {
       id: "empty",
+      createdAt: null,
       clientCode: "suitesmine",
       guest: "Aucune conversation",
       initials: "OC",
@@ -868,7 +879,7 @@ export default function InboxPage() {
           <div className="flex-1 overflow-y-auto px-7 py-7">
             <div className="mb-7 flex items-center gap-8 text-sm text-[#172033]">
               <div className="h-px flex-1 bg-[#dfe5f1]" />
-              May 25, 2026
+              {formatConversationDate(selected.createdAt)}
               <div className="h-px flex-1 bg-[#dfe5f1]" />
             </div>
             <div className="space-y-6">
