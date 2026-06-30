@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Guía de usuario — O7 Console</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #172033; font-family: Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; }
+    .cover { display: flex; min-height: 250mm; flex-direction: column; justify-content: center; padding: 20mm; color: white; background: linear-gradient(145deg,#16295d,#3159c9 60%,#7095ed); page-break-after: always; }
+    .cover .mark { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; font-size: 26px; background: rgba(255,255,255,.15); }
+    .cover h1 { margin: 24px 0 8px; font-size: 34pt; line-height: 1.05; }
+    .cover p { max-width: 520px; font-size: 14pt; color: rgba(255,255,255,.84); }
+    .cover small { margin-top: 50px; color: rgba(255,255,255,.7); }
+    h2 { margin: 0 0 8px; color: #173b8f; font-size: 20pt; }
+    h3 { margin: 20px 0 7px; font-size: 13pt; }
+    p { margin: 6px 0 10px; }
+    ul, ol { margin: 7px 0 14px; padding-left: 22px; }
+    li { margin: 4px 0; }
+    .section { page-break-before: always; }
+    .lead { color: #5f6c86; font-size: 11.5pt; }
+    figure { margin: 16px 0; page-break-inside: avoid; }
+    figure img { display: block; width: 100%; border: 1px solid #d8e0ef; border-radius: 8px; }
+    figcaption { margin-top: 6px; color: #66718a; font-size: 8.5pt; }
+    .callout { margin: 16px 0; padding: 14px 16px; border-left: 4px solid #3159c9; border-radius: 6px; background: #eef3ff; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { padding: 14px; border: 1px solid #dde4f1; border-radius: 8px; background: #f8faff; }
+    .card strong { display: block; margin-bottom: 3px; color: #173b8f; }
+    footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #dde4f1; color: #7a869d; font-size: 8pt; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="mark">✦</div>
+    <h1>Guía de usuario<br>O7 Console</h1>
+    <p>Conversaciones, automatizaciones de IA, clientes, estadísticas y seguridad en un único espacio.</p>
+    <small>Versión para clientes · 30 de junio de 2026</small>
+  </section>
+
+  <section>
+    <h2>Bienvenido a O7 Console</h2>
+    <p class="lead">O7 Console centraliza las conversaciones del sitio web, la intervención manual, el seguimiento de visitantes, las estadísticas y las integraciones.</p>
+    <div class="callout">Cada cliente dispone de su propio espacio y solo puede ver las conversaciones y estadísticas asociadas con su sitio.</div>
+    <h3>Navegación principal</h3>
+    <div class="grid">
+      <div class="card"><strong>Inbox</strong>Leer, retomar y cerrar conversaciones.</div>
+      <div class="card"><strong>Automatizaciones</strong>Consultar las funciones gestionadas por la IA.</div>
+      <div class="card"><strong>Clientes</strong>Encontrar visitantes y datos de contacto.</div>
+      <div class="card"><strong>Estadísticas</strong>Supervisar la actividad y conectar GA4.</div>
+      <div class="card"><strong>Copiloto IA</strong>Generar un informe de las conversaciones.</div>
+      <div class="card"><strong>Configuración</strong>Gestionar integraciones, perfil y 2FA.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>1. Bandeja de entrada</h2>
+    <figure><img src="user-guide-assets/01-inbox.png"><figcaption>Bandeja de entrada y detalle de una conversación.</figcaption></figure>
+    <ul>
+      <li>Seleccione una conversación en la columna central.</li>
+      <li><b>Prendre la main</b> pausa la IA y permite que un operador responda.</li>
+      <li><b>Rendre à l’IA</b> reactiva las respuestas automáticas.</li>
+      <li><b>Solve</b> cierra una conversación terminada.</li>
+      <li>El panel derecho muestra los datos de contacto, el contexto de reserva y la última página visitada.</li>
+    </ul>
+    <div class="grid">
+      <div class="card"><strong>AI</strong>Conversación atendida automáticamente.</div>
+      <div class="card"><strong>Manual</strong>Un operador ha tomado el control.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>2. Automatizaciones de IA</h2>
+    <figure><img src="user-guide-assets/02-automatisations.png"><figcaption>Automatizaciones activas para el sitio.</figcaption></figure>
+    <ul>
+      <li>respuesta automática a nuevas conversaciones;</li>
+      <li>recopilación de la información necesaria para una reserva;</li>
+      <li>transferencia cuando un visitante solicita un operador;</li>
+      <li>consentimiento obligatorio antes del envío de datos.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>3. Clientes y visitantes</h2>
+    <figure><img src="user-guide-assets/03-clients.png"><figcaption>Directorio de visitantes conocidos.</figcaption></figure>
+    <p>La sección <b>Clients</b> reúne a los visitantes con su correo electrónico, teléfono y estado de conversación. Permite encontrar rápidamente una solicitud sin recorrer toda la bandeja de entrada.</p>
+  </section>
+
+  <section class="section">
+    <h2>4. Estadísticas y Google Analytics</h2>
+    <figure><img src="user-guide-assets/04-statistiques.png"><figcaption>Indicadores de conversación y conexión con GA4.</figcaption></figure>
+    <p>El panel muestra el total de conversaciones, las solicitudes abiertas, las conversaciones atendidas por la IA y las intervenciones manuales.</p>
+    <div class="callout">Google Analytics 4 permite relacionar el tráfico del sitio, las aperturas del chat y las solicitudes de reserva.</div>
+  </section>
+
+  <section class="section">
+    <h2>5. Copiloto de IA</h2>
+    <figure><img src="user-guide-assets/05-copilote.png"><figcaption>Generación de un informe operativo.</figcaption></figure>
+    <p>El Copiloto de IA analiza las conversaciones recientes y prepara un resumen con las intenciones, el sentimiento, la urgencia, la información pendiente y una respuesta sugerida.</p>
+    <p>Pulse <b>Analyser maintenant</b> para iniciar un nuevo análisis.</p>
+  </section>
+
+  <section class="section">
+    <h2>6. Configuración y seguridad</h2>
+    <figure><img src="user-guide-assets/06-parametres.png"><figcaption>Estado de las integraciones y acceso al perfil seguro.</figcaption></figure>
+    <p>Esta página muestra el estado del buzón de correo, Google Analytics, la base de datos, Clerk, OpenAI y Cloudbeds.</p>
+    <div class="callout"><b>Seguridad:</b> abra el perfil seguro durante el primer inicio de sesión para verificar su correo electrónico y activar la autenticación de dos factores (2FA).</div>
+  </section>
+
+  <section class="section">
+    <h2>7. Consentimiento del visitante</h2>
+    <figure><img src="user-guide-assets/07-consentement-widget.png"><figcaption>El widget bloquea el envío antes de la aceptación.</figcaption></figure>
+    <p>Antes de enviar su primer mensaje, el visitante debe aceptar compartir sus mensajes y datos de contacto con el establecimiento. Mientras no marque la casilla, las acciones y el botón de envío permanecen desactivados.</p>
+    <p>El consentimiento se aplica a todos los idiomas y a todas las identidades visuales del widget.</p>
+  </section>
+
+  <section class="section">
+    <h2>Buenas prácticas</h2>
+    <ol>
+      <li>Active el 2FA al crear la cuenta.</li>
+      <li>Deje que la IA responda las solicitudes habituales.</li>
+      <li>Utilice <b>Prendre la main</b> para casos sensibles o particulares.</li>
+      <li>Cierre las solicitudes terminadas con <b>Solve</b>.</li>
+      <li>Consulte regularmente las estadísticas y el Copiloto de IA.</li>
+    </ol>
+    <div class="callout">Para cualquier solicitud de configuración, acceso o integración, contacte con el administrador de su espacio O7 Console.</div>
+    <footer>O7 Console · Guía de usuario para clientes · 30 de junio de 2026</footer>
+  </section>
+</body>
+</html>

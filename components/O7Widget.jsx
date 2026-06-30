@@ -19,6 +19,7 @@ const siteCopy = {
       send: "Envoyer",
       loading: "Un instant...",
       error: "Je rencontre un souci temporaire. Pouvez-vous réessayer dans quelques instants ?",
+      consent: "J’accepte que mes messages et coordonnées soient partagés avec cet établissement afin de traiter ma demande.",
       open: "Ouvrir le chat",
       close: "Fermer le chat",
     },
@@ -29,6 +30,7 @@ const siteCopy = {
       send: "Enviar",
       loading: "Un momento...",
       error: "Tengo un problema temporal. Puede intentarlo de nuevo en unos instantes?",
+      consent: "Acepto compartir mis mensajes y datos de contacto con este establecimiento para atender mi solicitud.",
       open: "Abrir chat",
       close: "Cerrar chat",
     },
@@ -39,6 +41,7 @@ const siteCopy = {
       send: "Send",
       loading: "One moment...",
       error: "I am having a temporary issue. Please try again in a moment.",
+      consent: "I agree to share my messages and contact details with this property so it can process my request.",
       open: "Open chat",
       close: "Close chat",
     },
@@ -49,6 +52,7 @@ const siteCopy = {
       send: "发送",
       loading: "请稍等...",
       error: "暂时出现问题，请稍后再试。",
+      consent: "我同意与该酒店分享我的消息和联系方式，以便处理我的请求。",
       open: "打开聊天",
       close: "关闭聊天",
     },
@@ -146,6 +150,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [metadata, setMetadata] = useState({});
+  const [hasConsent, setHasConsent] = useState(false);
   const [messages, setMessages] = useState([
     { role: "assistant", content: WELCOME_MESSAGE },
   ]);
@@ -155,16 +160,21 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
 
   useEffect(() => {
     const detectedLanguage = getPageLanguage();
+    const savedConsent = window.localStorage.getItem(`oliviaConsent:${clientId}`) === "accepted";
+    setHasConsent(savedConsent);
     setLanguage(detectedLanguage);
     setMetadata((prev) => ({
       ...prev,
       language: detectedLanguage,
       pageUrl: window.location.href,
+      dataConsent: savedConsent,
+      dataConsentAt: savedConsent ? window.localStorage.getItem(`oliviaConsentAt:${clientId}`) : undefined,
     }));
     setMessages([{ role: "assistant", content: getCopy(clientId, detectedLanguage).welcome }]);
   }, [clientId]);
 
   useEffect(() => {
+    if (!hasConsent) return undefined;
     visitorId.current =
       window.localStorage.getItem("oliviaVisitorId") || window.crypto.randomUUID();
     window.localStorage.setItem("oliviaVisitorId", visitorId.current);
@@ -186,11 +196,11 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
     };
     const timer = window.setInterval(poll, 4000);
     return () => window.clearInterval(timer);
-  }, [clientId]);
+  }, [clientId, hasConsent]);
 
   const handleSend = async (overrideMessage = "") => {
     const message = (overrideMessage || input).trim();
-    if (!message || isLoading) return;
+    if (!message || isLoading || !hasConsent) return;
 
     if (!overrideMessage) setInput("");
     setMessages((prev) => [...prev, { role: "user", content: message }]);
@@ -290,7 +300,8 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                       key={label}
                       type="button"
                       onClick={() => handleSend(prompt)}
-                      className="rounded-lg border border-[#8a754f] px-3 py-2 text-xs font-bold uppercase tracking-wide text-[#2b2b2b] transition hover:bg-[#efe4cd]"
+                      disabled={!hasConsent || isLoading}
+                      className="rounded-lg border border-[#8a754f] px-3 py-2 text-xs font-bold uppercase tracking-wide text-[#2b2b2b] transition hover:bg-[#efe4cd] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {label}
                     </button>
@@ -301,6 +312,31 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
             </div>
 
             <div className="space-y-3 border-t border-[#ded7c9] bg-[#fffdf8] p-3">
+              <label className="flex cursor-pointer items-start gap-2 rounded-lg bg-[#f7f2e9] p-3 text-xs leading-5 text-[#5f5546]">
+                <input
+                  type="checkbox"
+                  checked={hasConsent}
+                  onChange={(event) => {
+                    const accepted = event.target.checked;
+                    const acceptedAt = accepted ? new Date().toISOString() : "";
+                    setHasConsent(accepted);
+                    setMetadata((prev) => ({
+                      ...prev,
+                      dataConsent: accepted,
+                      dataConsentAt: acceptedAt || undefined,
+                    }));
+                    if (accepted) {
+                      window.localStorage.setItem(`oliviaConsent:${clientId}`, "accepted");
+                      window.localStorage.setItem(`oliviaConsentAt:${clientId}`, acceptedAt);
+                    } else {
+                      window.localStorage.removeItem(`oliviaConsent:${clientId}`);
+                      window.localStorage.removeItem(`oliviaConsentAt:${clientId}`);
+                    }
+                  }}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[#2b2b2b]"
+                />
+                <span>{copy.consent || siteCopy.default[language].consent}</span>
+              </label>
               <DynamicFields metadata={metadata} setMetadata={setMetadata} language={language} />
               <div className="flex items-end gap-2">
                 <input
@@ -313,7 +349,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                 <button
                   aria-label={copy.send}
                   onClick={handleSend}
-                  disabled={isLoading}
+                  disabled={isLoading || !hasConsent}
                   className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2b2b2b] text-white shadow-[0_16px_32px_-22px_rgba(0,0,0,0.75)] transition hover:bg-[#3a352d] disabled:opacity-60"
                 >
                   <Send className="h-4 w-4" />

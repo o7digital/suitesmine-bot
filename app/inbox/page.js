@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AtSign,
+  BarChart3,
   Bot,
   Check,
   ChevronDown,
@@ -10,6 +11,7 @@ import {
   Clock3,
   Command,
   Inbox,
+  ExternalLink,
   LayoutDashboard,
   Mail,
   MessageCircle,
@@ -19,6 +21,7 @@ import {
   Search,
   Send,
   Settings,
+  ShieldCheck,
   Sparkles,
   Tag,
   UserRound,
@@ -26,6 +29,7 @@ import {
   Wand2,
   Zap,
 } from "lucide-react";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { clients } from "@/config/clients";
 
 const clientSkins = Object.fromEntries(
@@ -293,16 +297,185 @@ function MessageBlock({ message, guest, skin }) {
   );
 }
 
+const navigationItems = [
+  { id: "inbox", label: "Boîte de réception", icon: Inbox },
+  { id: "automation", label: "Automatisations IA", icon: Bot },
+  { id: "customers", label: "Clients", icon: UsersRound },
+  { id: "analytics", label: "Statistiques", icon: LayoutDashboard },
+  { id: "copilot", label: "Copilote IA", icon: Sparkles },
+];
+
+function WorkspacePanel({ section, conversations, integrations, onClose }) {
+  const [analysis, setAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const open = conversations.filter((item) => item.status !== "solved");
+  const manual = conversations.filter((item) => item.status === "manual");
+  const ai = conversations.filter((item) => item.status === "ai");
+  const uniqueVisitors = new Map(conversations.map((item) => [item.guest, item]));
+  const title = navigationItems.find((item) => item.id === section)?.label || "Paramètres";
+
+  const runAnalysis = async () => {
+    const transcript = conversations
+      .slice(0, 20)
+      .flatMap((conversation) =>
+        conversation.messages.map((message) => `${message.role}: ${message.content}`)
+      )
+      .join("\n");
+    if (!transcript) return;
+    setAnalyzing(true);
+    try {
+      const response = await fetch("/api/dashboard/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript, language: "fr" }),
+      });
+      const data = await response.json();
+      setAnalysis(data.analysis || { summary: data.error || "Analyse indisponible." });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  return (
+    <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f7f9fd]">
+      <header className="flex h-[72px] items-center justify-between border-b border-[#dde4f1] bg-white px-7">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#66718a]">O7 Console</p>
+          <h1 className="text-xl font-semibold">{title}</h1>
+        </div>
+        <button onClick={onClose} className="rounded-md border border-[#d8e0ef] px-3 py-2 text-sm font-medium">
+          Retour à l’Inbox
+        </button>
+      </header>
+
+      <div className="flex-1 overflow-y-auto p-7">
+        {section === "analytics" && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-4 gap-4">
+              {[
+                ["Conversations", conversations.length],
+                ["Ouvertes", open.length],
+                ["Gérées par l’IA", ai.length],
+                ["Reprises manuellement", manual.length],
+              ].map(([label, value]) => (
+                <article key={label} className="rounded-xl border border-[#dde4f1] bg-white p-5">
+                  <p className="text-sm text-[#66718a]">{label}</p>
+                  <p className="mt-2 text-3xl font-semibold">{value}</p>
+                </article>
+              ))}
+            </div>
+            <article className="rounded-xl border border-[#dde4f1] bg-white p-6">
+              <div className="flex items-start justify-between gap-5">
+                <div>
+                  <h2 className="flex items-center gap-2 text-lg font-semibold"><BarChart3 className="h-5 w-5" /> Google Analytics 4</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#66718a]">
+                    Reliez la propriété GA4 de chaque site pour comparer trafic, ouvertures du chat et demandes de réservation.
+                  </p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${integrations?.analytics?.configured ? "bg-[#e9f8ef] text-[#17623a]" : "bg-[#fff3dc] text-[#8a5200]"}`}>
+                  {integrations?.analytics?.configured ? "Connecté" : "À connecter"}
+                </span>
+              </div>
+              <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#3159c9] px-4 py-2 text-sm font-semibold text-white">
+                Ouvrir Google Analytics <ExternalLink className="h-4 w-4" />
+              </a>
+              {!integrations?.analytics?.configured && (
+                <p className="mt-4 text-xs text-[#66718a]">Configuration serveur requise : GA4_PROPERTY_ID et compte de service Google.</p>
+              )}
+            </article>
+          </div>
+        )}
+
+        {section === "customers" && (
+          <div className="overflow-hidden rounded-xl border border-[#dde4f1] bg-white">
+            <div className="border-b border-[#e8edf5] p-5">
+              <h2 className="text-lg font-semibold">{uniqueVisitors.size} clients et visiteurs</h2>
+            </div>
+            {[...uniqueVisitors.values()].map((visitor) => (
+              <div key={visitor.guest} className="grid grid-cols-[1.4fr_1.5fr_1fr_1fr] gap-4 border-b border-[#eef1f6] px-5 py-4 text-sm last:border-0">
+                <span className="font-medium">{visitor.guest}</span>
+                <span className="truncate text-[#66718a]">{visitor.email}</span>
+                <span className="text-[#66718a]">{visitor.phone}</span>
+                <StatusPill status={visitor.status} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {section === "automation" && (
+          <div className="grid max-w-4xl grid-cols-2 gap-5">
+            {[
+              ["Réponse automatique", "L’IA répond aux nouvelles conversations tant qu’un opérateur ne prend pas la main.", true],
+              ["Collecte de réservation", "Dates, nombre de voyageurs, catégorie, nom, email et téléphone.", true],
+              ["Escalade humaine", "Transfert immédiat lorsqu’un visiteur demande explicitement une personne.", true],
+              ["Consentement données", "Le widget bloque l’envoi tant que le visiteur n’a pas accepté le partage.", true],
+            ].map(([name, description, enabled]) => (
+              <article key={name} className="rounded-xl border border-[#dde4f1] bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold">{name}</h2>
+                  <span className={`h-6 w-11 rounded-full p-1 ${enabled ? "bg-[#3159c9]" : "bg-[#cfd6e4]"}`}><span className="block h-4 w-4 translate-x-5 rounded-full bg-white" /></span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-[#66718a]">{description}</p>
+              </article>
+            ))}
+          </div>
+        )}
+
+        {section === "copilot" && (
+          <article className="max-w-4xl rounded-xl border border-[#dde4f1] bg-white p-6">
+            <h2 className="text-lg font-semibold">Brief opérationnel IA</h2>
+            <p className="mt-2 text-sm text-[#66718a]">Résume les conversations récentes, intentions, urgence et informations manquantes.</p>
+            <button disabled={analyzing || !conversations.length} onClick={runAnalysis} className="mt-5 rounded-md bg-[#3159c9] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+              {analyzing ? "Analyse en cours…" : "Analyser maintenant"}
+            </button>
+            {analysis && <pre className="mt-5 whitespace-pre-wrap rounded-lg bg-[#f4f7fc] p-5 text-sm leading-6">{JSON.stringify(analysis, null, 2)}</pre>}
+          </article>
+        )}
+
+        {section === "settings" && (
+          <div className="grid max-w-4xl grid-cols-2 gap-5">
+            <article className="rounded-xl border border-[#dde4f1] bg-white p-6">
+              <ShieldCheck className="h-6 w-6 text-[#3159c9]" />
+              <h2 className="mt-4 text-lg font-semibold">Compte et sécurité</h2>
+              <p className="mt-2 text-sm leading-6 text-[#66718a]">Gérez votre email, vos sessions et activez l’authentification à deux facteurs dans votre profil Clerk.</p>
+              <div className="mt-5 flex items-center gap-3"><UserButton userProfileMode="modal" showName /><span className="text-sm">Ouvrir mon profil sécurisé</span></div>
+            </article>
+            {["mailbox", "analytics", "database", "clerk", "openai", "cloudbeds"].map((key) => (
+              <article key={key} className="rounded-xl border border-[#dde4f1] bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold capitalize">{key}</h2>
+                  <span className={`rounded-full px-2 py-1 text-xs font-semibold ${integrations?.[key]?.configured ? "bg-[#e9f8ef] text-[#17623a]" : "bg-[#fff3dc] text-[#8a5200]"}`}>
+                    {integrations?.[key]?.configured ? "Connecté" : "À configurer"}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function InboxPage() {
+  const { user } = useUser();
   const role = "admin";
-  const scopedClientCode = null;
+  const [scopedClientCode, setScopedClientCode] = useState(undefined);
   const [conversations, setConversations] = useState([]);
   const [loadState, setLoadState] = useState("loading");
   const [loadError, setLoadError] = useState("");
   const [lastSync, setLastSync] = useState("");
+  const [activeSection, setActiveSection] = useState("inbox");
+  const [integrations, setIntegrations] = useState(null);
+  useEffect(() => {
+    setScopedClientCode(new URLSearchParams(window.location.search).get("client")?.trim() || null);
+  }, []);
   const loadConversations = useCallback(async () => {
+    if (scopedClientCode === undefined) return;
     try {
-      const response = await fetch(`/api/conversations?ts=${Date.now()}`, {
+      const params = new URLSearchParams({ ts: Date.now().toString() });
+      if (scopedClientCode) params.set("clientCode", scopedClientCode);
+      const response = await fetch(`/api/conversations?${params.toString()}`, {
         cache: "no-store",
         credentials: "include",
         headers: {
@@ -325,13 +498,20 @@ export default function InboxPage() {
       setLoadError(error?.message || "Erreur inconnue");
       setLoadState("error");
     }
-  }, []);
+  }, [scopedClientCode]);
 
   useEffect(() => {
     loadConversations();
     const timer = window.setInterval(loadConversations, 2000);
     return () => window.clearInterval(timer);
   }, [loadConversations]);
+
+  useEffect(() => {
+    fetch("/api/integrations/status")
+      .then((response) => response.json())
+      .then(setIntegrations)
+      .catch(() => setIntegrations({}));
+  }, []);
 
   const visibleConversations = useMemo(
     () =>
@@ -443,27 +623,47 @@ export default function InboxPage() {
           <div className="mb-6 flex h-9 w-9 items-center justify-center rounded-md bg-white shadow-sm">
             <MessageCircle className="h-5 w-5 text-[#3159c9]" />
           </div>
-          <nav className="flex flex-1 flex-col gap-2">
-            {[Inbox, Bot, UsersRound, LayoutDashboard, Sparkles].map((Icon, index) => (
+          <nav aria-label="Navigation principale" className="flex flex-1 flex-col gap-2">
+            {navigationItems.map(({ id, label, icon: Icon }) => (
               <button
-                key={index}
+                key={id}
+                type="button"
+                title={label}
+                aria-label={label}
+                aria-current={activeSection === id ? "page" : undefined}
+                onClick={() => setActiveSection(id)}
                 className={`flex h-11 w-11 items-center justify-center rounded-md transition ${
-                  index === 0 ? "bg-[#dce8ff] text-[#173b8f]" : "text-[#61708b] hover:bg-white"
+                  activeSection === id ? "bg-[#dce8ff] text-[#173b8f]" : "text-[#61708b] hover:bg-white"
                 }`}
               >
                 <Icon className="h-5 w-5" />
               </button>
             ))}
           </nav>
-          <button className="flex h-11 w-11 items-center justify-center rounded-md text-[#61708b] hover:bg-white">
+          <button
+            type="button"
+            title="Paramètres et sécurité"
+            aria-label="Paramètres et sécurité"
+            onClick={() => setActiveSection("settings")}
+            className={`flex h-11 w-11 items-center justify-center rounded-md ${activeSection === "settings" ? "bg-[#dce8ff] text-[#173b8f]" : "text-[#61708b] hover:bg-white"}`}
+          >
             <Settings className="h-5 w-5" />
           </button>
         </aside>
 
+        {activeSection !== "inbox" ? (
+          <WorkspacePanel
+            section={activeSection}
+            conversations={visibleConversations}
+            integrations={integrations}
+            onClose={() => setActiveSection("inbox")}
+          />
+        ) : (
+        <>
         <aside className="w-[238px] shrink-0 border-r border-[#dde4f1] bg-[#f4f7fc] px-5 py-5">
           <h1 className="text-xl font-semibold">Inbox</h1>
           <div className="mt-3 flex items-center gap-2 text-xs text-[#5f6c86]">
-            <span className="rounded-full bg-[#e8edf9] px-2 py-1">{role}</span>
+            <span className="rounded-full bg-[#e8edf9] px-2 py-1">{user?.firstName || role}</span>
             <span>{scopedClientCode ?? "all-clients"}</span>
           </div>
           <div className="mt-3 rounded-md bg-white px-3 py-2 text-xs leading-5 text-[#5f6c86] shadow-sm">
@@ -776,6 +976,8 @@ export default function InboxPage() {
             </button>
           </div>
         </aside>
+        </>
+        )}
       </div>
     </main>
   );
