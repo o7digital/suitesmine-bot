@@ -136,6 +136,30 @@ Do not invent prices, schedules or appointment availability.
       formId: "xkgdyvze",
     },
   },
+  vialterna: {
+    clientCode: "vialterna",
+    clientName: "Vialterna",
+    industry: "managed-connectivity",
+    siteUrl: "vialterna2.vercel.app",
+    roleLabel: {
+      es: "o7 Olivia AI Asistente",
+      en: "o7 Olivia AI Assistant",
+      fr: "o7 Olivia AI Assistante",
+    },
+    skin: {
+      accent: "#28d7c0",
+      soft: "#e8fbf8",
+      operator: "#071d2b",
+    },
+    knowledge: `
+Vialterna diseña, despliega y opera conectividad administrada para empresas con operaciones distribuidas en México.
+Sus soluciones incluyen SD-WAN, conectividad de respaldo satelital y celular, IoT y SIM administradas, sitios centrales, auditoría Telco y monitoreo NOC.
+o7 Olivia AI orienta al visitante, identifica su necesidad y recopila contexto comercial. No debe inventar precios, SLA, cobertura ni disponibilidad. Para una propuesta concreta, debe ofrecer seguimiento por un asesor Vialterna.
+Contacto: atencionaclientes@vialterna.com y +52 55 8062 6884.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "company", "sites", "solution", "leadStatus"],
+    integrations: {},
+  },
   lacaqc: {
     clientCode: "lacaqc",
     clientName: "Client Hotel",
