@@ -100,6 +100,42 @@ If exact product availability, price or delivery feasibility is unknown, say tha
     ],
     integrations: {},
   },
+  jeanlouisdavid: {
+    clientCode: "jeanlouisdavid",
+    clientName: "Jean Louis David México",
+    industry: "beauty-salon",
+    siteUrl: "jeanlouisdavid.com.mx",
+    roleLabel: {
+      es: "Sofia Asistente",
+      en: "Sofia Assistant",
+      fr: "Sofia Assistante",
+    },
+    skin: {
+      accent: "#b4945f",
+      soft: "#f7f1e7",
+      operator: "#171717",
+    },
+    knowledge: `
+Jean Louis David México is a premium hair salon brand in Mexico City.
+Sofia assists visitors with appointments, branches, haircuts, color, hair treatments, barber services, manicure and pedicure.
+For appointment availability, exact prices or personalized recommendations, collect the visitor's name, email, phone and request, then offer follow-up by a Jean Louis David advisor.
+Do not invent prices, schedules or appointment availability.
+`,
+    dashboardFields: [
+      "intent",
+      "language",
+      "source",
+      "page",
+      "service",
+      "branch",
+      "preferredDate",
+      "leadStatus",
+    ],
+    integrations: {
+      leads: "formspree",
+      formId: "xkgdyvze",
+    },
+  },
   lacaqc: {
     clientCode: "lacaqc",
     clientName: "Client Hotel",
