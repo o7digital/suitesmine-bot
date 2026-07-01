@@ -130,8 +130,24 @@ function extractBookingDetails({ message, metadata }) {
       .trim();
   }
 
-  if (!name && !email && !phone && !roomType && !hasAny(text, ["reserv", "booking", "pago", "payment", "link"])) {
-    name = text;
+  const possibleName = text
+    .replace(/\b(hola|hello|bonjour|soy|i am|je suis|me llamo|my name is)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (
+    !name &&
+    !email &&
+    !phone &&
+    !roomType &&
+    /^[\p{L}' -]{2,80}$/u.test(possibleName) &&
+    possibleName.split(/\s+/).length <= 4 &&
+    !hasAny(possibleName, [
+      "busco", "quiero", "necesito", "invertir", "inversion", "informacion",
+      "looking", "want", "need", "invest", "information",
+      "cherche", "veux", "besoin", "investir", "information",
+    ])
+  ) {
+    name = possibleName;
   }
 
   return {
