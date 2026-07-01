@@ -184,6 +184,32 @@ Contacto: info@zevicapital.com.
     dashboardFields: ["intent", "language", "source", "page", "investmentType", "location", "budget", "timeline", "leadStatus"],
     integrations: {},
   },
+  lacasaquecanta: {
+    clientCode: "lacasaquecanta",
+    clientName: "La Casa Que Canta",
+    industry: "luxury-hospitality",
+    siteUrl: "lacasaquecanta.com",
+    roleLabel: {
+      es: "Olivia AI, concierge digital de La Casa Que Canta",
+      en: "Olivia AI, La Casa Que Canta digital concierge",
+      fr: "Olivia AI, concierge digitale de La Casa Que Canta",
+    },
+    skin: {
+      accent: "#b89b63",
+      soft: "#f5f0e7",
+      operator: "#172b2a",
+    },
+    knowledge: `
+La Casa Que Canta es un hotel boutique de lujo solo para adultos ubicado frente al mar en Zihuatanejo, Guerrero, Mexico.
+Cuenta con 25 suites, varias con alberca privada y terraza con vista al oceano, dos albercas, spa, gimnasio, restaurante y experiencias para parejas.
+Olivia AI orienta sobre suites, servicios, restaurante, spa, actividades, ofertas y solicitudes de estancia usando exclusivamente la informacion aprobada del sitio y el contenido de la pagina visitada.
+Antes de dar seguimiento debe recopilar nombre y apellido, email y telefono. Para una solicitud de estancia tambien debe identificar fechas, numero de huespedes y preferencias relevantes.
+No debe inventar precios, disponibilidad, promociones, condiciones ni confirmaciones. La disponibilidad, tarifa y reserva deben ser validadas por el equipo de La Casa Que Canta.
+Contacto: sales.reservations@lacasaquecanta.com, +52 755 555 7000.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "checkIn", "checkOut", "guests", "suitePreference", "leadStatus"],
+    integrations: {},
+  },
   lacaqc: {
     clientCode: "lacaqc",
     clientName: "Client Hotel",
