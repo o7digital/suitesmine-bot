@@ -195,6 +195,41 @@ function bookingReply(language, details, rates) {
   return `Resumen de solicitud:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nLink para revisar disponibilidad Cloudbeds:\n${bookingUrl}\n\nAntes de hablar de pago, revise disponibilidad y tarifa real en Cloudbeds. Si Cloudbeds muestra disponibilidad, puede continuar ahi con la reserva. El pago y la confirmacion solo aplican despues de validar disponibilidad.`;
 }
 
+function missingContactFields(details) {
+  return [
+    !details.name && "name",
+    !details.email && "email",
+    !details.phone && "phone",
+  ].filter(Boolean);
+}
+
+function contactFieldLabels(language, missing) {
+  const labels = {
+    en: { name: "first and last name", email: "email", phone: "phone" },
+    fr: { name: "prénom et nom", email: "email", phone: "téléphone" },
+    es: { name: "nombre y apellido", email: "email", phone: "teléfono" },
+  }[language] || { name: "nombre y apellido", email: "email", phone: "teléfono" };
+  return missing.map((field) => labels[field]);
+}
+
+function contactQualificationReply(language, client, details, message) {
+  const missing = missingContactFields(details);
+  if (!missing.length) return "";
+  const labels = contactFieldLabels(language, missing).join(", ");
+  const leadIn = clean(message)
+    ? {
+        en: `I can help with ${client.clientName}. To give proper follow-up, please send: ${labels}.`,
+        fr: `Je peux vous aider avec ${client.clientName}. Pour assurer le bon suivi, envoyez-moi : ${labels}.`,
+        es: `Puedo ayudarle con ${client.clientName}. Para darle seguimiento correctamente, envíeme: ${labels}.`,
+      }
+    : {
+        en: `Hello, I am ${client.roleLabel.en || "Olivia AI"}. Please send ${labels} so I can assist you.`,
+        fr: `Bonjour, je suis ${client.roleLabel.fr || "Olivia AI"}. Envoyez-moi ${labels} afin que je puisse vous aider.`,
+        es: `Hola, soy ${client.roleLabel.es || "Olivia AI"}. Envíeme ${labels} para poder atenderle.`,
+      };
+  return (leadIn[language] || leadIn.es);
+}
+
 function buildCloudbedsBookingUrl({ language, details }) {
   const base =
     language === "en"
@@ -332,6 +367,23 @@ export async function POST(request) {
       });
     }
 
+    if (!isSuitesMine) {
+      const contactReply = contactQualificationReply(language, client, bookingDetails, message);
+      if (contactReply) {
+        return json({
+          reply: contactReply,
+          mode: "lead-qualification",
+          clientCode: client.clientCode,
+          collected: {
+            name: bookingDetails.name || null,
+            email: bookingDetails.email || null,
+            phone: bookingDetails.phone || null,
+          },
+          missingFields: missingContactFields(bookingDetails),
+        });
+      }
+    }
+
     if (!process.env.OPENAI_API_KEY) {
       return json({
         reply: isSuitesMine
@@ -349,6 +401,7 @@ Respond in ${languageName(language)}.
 Use the approved website and FAQ context below. Be concise, helpful, and natural.
 Do not invent information that is not present in the approved context.
 If dates/guests are already provided in metadata, do not ask for them again.
+For every non-hotel client, qualify the visitor as a business lead: keep track of first and last name, email and phone, then collect the minimum project context useful for the client.
 ${isSuitesMine ? `
 If the guest wants to reserve, collect only missing fields:
 first and last name, email, phone, check-in, check-out, guests, room category.
@@ -361,6 +414,10 @@ If the guest asks for a payment link, say the system will generate it after avai
 
 Client context:
 ${client.knowledge}
+
+Page context provided by the visited site, if any:
+${clean(metadata.pageTitle) ? `Title: ${clean(metadata.pageTitle)}` : ""}
+${clean(metadata.pageContent).slice(0, 5000)}
 
 ${isSuitesMine ? `Live Cloudbeds rates for selected dates:\n${ratesText}` : ""}
 `;

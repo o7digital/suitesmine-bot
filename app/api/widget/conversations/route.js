@@ -21,6 +21,24 @@ function clean(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function extractContactDetails(text = "", metadata = {}) {
+  const source = `${text}\n${metadata?.name || ""}\n${metadata?.firstName || ""} ${metadata?.lastName || ""}\n${metadata?.email || ""}\n${metadata?.phone || ""}`;
+  const email = clean(metadata?.email) || source.match(/[^\s@]+@[^\s@]+\.[^\s@,.;]+/)?.[0] || "";
+  const phone = clean(metadata?.phone) || source.match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || "";
+  const explicitName = clean(metadata?.name) || [clean(metadata?.firstName), clean(metadata?.lastName)].filter(Boolean).join(" ");
+  let name = explicitName;
+  if (!name && email) {
+    name = source
+      .slice(0, source.indexOf(email))
+      .replace(/(?:\+?\d[\d\s().-]{6,}\d)/g, " ")
+      .replace(/\b(hola|hello|bonjour|soy|i am|je suis|me llamo|my name is|nombre|name|email|telefono|phone|tel)\b/gi, " ")
+      .replace(/[,:;|]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  return { visitorName: name, email, phone };
+}
+
 export async function GET(request) {
   if (!isDatabaseConfigured()) return json({ configured: false, messages: [] });
   const url = new URL(request.url);
@@ -48,12 +66,13 @@ export async function POST(request) {
     return json({ error: "visitorId and content are required" }, 400);
   }
 
+  const extracted = extractContactDetails(content, payload.metadata);
   const conversation = await upsertConversation({
     clientCode: payload.clientCode,
     visitorId,
-    visitorName: payload.visitorName,
-    email: payload.email,
-    phone: payload.phone,
+    visitorName: payload.visitorName || extracted.visitorName,
+    email: payload.email || extracted.email,
+    phone: payload.phone || extracted.phone,
     source: payload.source,
     language: payload.language,
     metadata: payload.metadata,

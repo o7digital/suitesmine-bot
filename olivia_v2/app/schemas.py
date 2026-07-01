@@ -21,6 +21,8 @@ class ChatMetadata(BaseModel):
     guests: str | int | None = None
     roomType: str | None = None
     pageUrl: str | None = None
+    pageTitle: str | None = None
+    pageContent: str | None = None
     bookingDraft: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -57,4 +59,3 @@ class OliviaResponse(BaseModel):
     bookingUrl: str | None = None
     rates: list[dict[str, Any]] = Field(default_factory=list)
     mode: str = "olivia-v2"
-

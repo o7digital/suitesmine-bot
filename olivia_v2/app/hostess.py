@@ -80,6 +80,38 @@ def localized_missing_fields(language: str, missing: list[str]) -> list[str]:
     return [language_labels.get(field, field) for field in missing]
 
 
+def missing_contact_fields(fields) -> list[str]:
+    missing = []
+    if not fields.name:
+        missing.append("name")
+    if not fields.email:
+        missing.append("email")
+    if not fields.phone:
+        missing.append("phone")
+    return missing
+
+
+def contact_qualification_reply(language: str, client: ClientProfile, fields, message: str) -> tuple[str, list[str]] | None:
+    missing = missing_contact_fields(fields)
+    if not missing:
+        return None
+    labels = localized_missing_fields(language, missing)
+    if language == "en":
+        return (
+            f"I can help with {client.name}. To give proper follow-up, please send: {', '.join(labels)}.",
+            missing,
+        )
+    if language == "fr":
+        return (
+            f"Je peux vous aider avec {client.name}. Pour assurer le bon suivi, envoyez-moi : {', '.join(labels)}.",
+            missing,
+        )
+    return (
+        f"Puedo ayudarle con {client.name}. Para darle seguimiento correctamente, envíeme: {', '.join(labels)}.",
+        missing,
+    )
+
+
 def local_booking_reply(language: str, fields, missing: list[str], rates: list[dict]) -> tuple[str, str, str]:
     if missing:
         readable_missing = localized_missing_fields(language, missing)
@@ -185,19 +217,40 @@ async def build_hostess_response(
             rates=rates,
         )
 
+    if client.code != "suitesmine":
+        contact_reply = contact_qualification_reply(language, client, fields, request.message)
+        if contact_reply:
+            reply, contact_missing = contact_reply
+            return OliviaResponse(
+                reply=reply,
+                clientCode=client.code,
+                language=language,
+                intent="lead",
+                phase="qualification",
+                nextAction="collect_contact_details",
+                handoffRecommended=False,
+                collected=fields,
+                missingFields=contact_missing,
+                rates=[],
+            )
+
     system = f"""
 You are {client.role_label.get(language) or client.role_label.get("en")}, a proactive AI hostess, not a generic chatbot.
 Speak in {language_name(language)}.
 Mission:
 - welcome the visitor naturally;
 - understand their need;
-- collect only useful missing details;
+- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;
 - answer from approved client context only;
 - keep responses concise and operational;
 - recommend human handoff for urgent, sensitive, unclear or unsupported requests.
 
 Client context:
 {client.knowledge}
+
+Page context from the visited site, if provided:
+Title: {request.metadata.model_dump().get("pageTitle", "")}
+{str(request.metadata.model_dump().get("pageContent", ""))[:5000]}
 
 Live rates, if relevant:
 {format_rates(rates)}

@@ -19,7 +19,11 @@ const siteCopy = {
       send: "Envoyer",
       loading: "Un instant...",
       error: "Je rencontre un souci temporaire. Pouvez-vous réessayer dans quelques instants ?",
-      consent: "J’accepte que mes messages et coordonnées soient partagés avec cet établissement afin de traiter ma demande.",
+      consent: "J’ai lu et j’accepte l’avis de confidentialité pour recevoir de l’assistance.",
+      privacy: "Voir l’avis",
+      privacyTitle: "Avis de confidentialité - Olivia AI",
+      privacyBody: "En utilisant ce chat, vous autorisez l’établissement concerné à traiter les données personnelles que vous partagez, notamment messages, coordonnées, langue, page visitée et informations de demande, afin de répondre à votre sollicitation, assurer un suivi et vous contacter par voie électronique. Vous pouvez exercer vos droits d’accès, rectification, annulation et opposition, révoquer votre consentement ou limiter l’utilisation de vos données auprès du responsable indiqué dans l’avis de confidentialité du site.",
+      privacyAccept: "J’ai lu et j’accepte",
       open: "Ouvrir le chat",
       close: "Fermer le chat",
     },
@@ -30,7 +34,11 @@ const siteCopy = {
       send: "Enviar",
       loading: "Un momento...",
       error: "Tengo un problema temporal. Puede intentarlo de nuevo en unos instantes?",
-      consent: "Acepto compartir mis mensajes y datos de contacto con este establecimiento para atender mi solicitud.",
+      consent: "He leído y acepto el Aviso de Privacidad para recibir atención.",
+      privacy: "Ver aviso",
+      privacyTitle: "Aviso de Privacidad - Olivia AI",
+      privacyBody: "Al usar este chat autorizas al establecimiento correspondiente a tratar los datos personales que compartas, incluyendo mensajes, datos de contacto, idioma, página visitada e información de tu solicitud, con la finalidad de atenderte, dar seguimiento y contactarte por medios electrónicos. Puedes ejercer tus derechos de acceso, rectificación, cancelación y oposición, revocar tu consentimiento o limitar el uso de tus datos ante el responsable indicado en el aviso de privacidad del sitio.",
+      privacyAccept: "He leído y acepto",
       open: "Abrir chat",
       close: "Cerrar chat",
     },
@@ -41,7 +49,11 @@ const siteCopy = {
       send: "Send",
       loading: "One moment...",
       error: "I am having a temporary issue. Please try again in a moment.",
-      consent: "I agree to share my messages and contact details with this property so it can process my request.",
+      consent: "I have read and accept the Privacy Notice to receive assistance.",
+      privacy: "View notice",
+      privacyTitle: "Privacy Notice - Olivia AI",
+      privacyBody: "By using this chat, you authorize the relevant site owner to process the personal data you provide, including messages, contact details, language, visited page and request information, to answer your request, follow up and contact you by electronic means. You may exercise access, rectification, cancellation and opposition rights, revoke consent or limit data use with the controller identified in the site’s privacy notice.",
+      privacyAccept: "I have read and accept",
       open: "Open chat",
       close: "Close chat",
     },
@@ -52,7 +64,11 @@ const siteCopy = {
       send: "发送",
       loading: "请稍等...",
       error: "暂时出现问题，请稍后再试。",
-      consent: "我同意与该酒店分享我的消息和联系方式，以便处理我的请求。",
+      consent: "我已阅读并接受隐私声明，以便获得协助。",
+      privacy: "查看声明",
+      privacyTitle: "Olivia AI 隐私声明",
+      privacyBody: "使用本聊天即表示您授权相关网站负责人处理您提供的个人数据，包括消息、联系方式、语言、访问页面和请求信息，用于回复、跟进并通过电子方式联系您。您可以根据网站隐私声明中列明的负责人行使访问、更正、取消和反对权利，撤回同意或限制数据使用。",
+      privacyAccept: "我已阅读并接受",
       open: "打开聊天",
       close: "关闭聊天",
     },
@@ -151,6 +167,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [isLoading, setIsLoading] = useState(false);
   const [metadata, setMetadata] = useState({});
   const [hasConsent, setHasConsent] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [messages, setMessages] = useState([
     { role: "assistant", content: WELCOME_MESSAGE },
   ]);
@@ -167,6 +184,8 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
       ...prev,
       language: detectedLanguage,
       pageUrl: window.location.href,
+      pageTitle: document.title,
+      pageContent: document.body.innerText.replace(/\s+/g, " ").slice(0, 5000),
       dataConsent: savedConsent,
       dataConsentAt: savedConsent ? window.localStorage.getItem(`oliviaConsentAt:${clientId}`) : undefined,
     }));
@@ -324,6 +343,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                       ...prev,
                       dataConsent: accepted,
                       dataConsentAt: acceptedAt || undefined,
+                      consentVersion: `${clientId}-privacy-chat-2026-07-01`,
                     }));
                     if (accepted) {
                       window.localStorage.setItem(`oliviaConsent:${clientId}`, "accepted");
@@ -335,7 +355,19 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                   }}
                   className="mt-1 h-4 w-4 shrink-0 accent-[#2b2b2b]"
                 />
-                <span>{copy.consent || siteCopy.default[language].consent}</span>
+                <span>
+                  {copy.consent || siteCopy.default[language].consent}{" "}
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setShowPrivacy(true);
+                    }}
+                    className="font-semibold text-[#2b2b2b] underline underline-offset-2"
+                  >
+                    {copy.privacy || siteCopy.default[language].privacy}
+                  </button>
+                </span>
               </label>
               <DynamicFields metadata={metadata} setMetadata={setMetadata} language={language} />
               <div className="flex items-end gap-2">
@@ -357,6 +389,57 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
               </div>
             </div>
           </motion.section>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPrivacy && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={copy.privacyTitle || siteCopy.default[language].privacyTitle}
+          >
+            <motion.div
+              initial={{ y: 12, scale: 0.98 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: 12, scale: 0.98 }}
+              className="relative max-w-xl rounded-2xl border border-[#c8aa70] bg-[#fffdf8] p-6 text-[#2b2b2b] shadow-2xl"
+            >
+              <button
+                type="button"
+                onClick={() => setShowPrivacy(false)}
+                className="absolute right-3 top-3 rounded-full p-2 text-[#2b2b2b] hover:bg-[#f0eadf]"
+                aria-label={copy.close}
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <h3 className="pr-8 text-lg font-semibold">{copy.privacyTitle || siteCopy.default[language].privacyTitle}</h3>
+              <p className="mt-3 text-sm leading-6 text-[#5f5546]">{copy.privacyBody || siteCopy.default[language].privacyBody}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  const acceptedAt = new Date().toISOString();
+                  setHasConsent(true);
+                  setMetadata((prev) => ({
+                    ...prev,
+                    dataConsent: true,
+                    dataConsentAt: acceptedAt,
+                    consentVersion: `${clientId}-privacy-chat-2026-07-01`,
+                  }));
+                  window.localStorage.setItem(`oliviaConsent:${clientId}`, "accepted");
+                  window.localStorage.setItem(`oliviaConsentAt:${clientId}`, acceptedAt);
+                  setShowPrivacy(false);
+                }}
+                className="mt-5 rounded-xl bg-[#2b2b2b] px-4 py-2 text-sm font-semibold text-white"
+              >
+                {copy.privacyAccept || siteCopy.default[language].privacyAccept}
+              </button>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
