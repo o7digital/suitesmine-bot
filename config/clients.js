@@ -160,6 +160,30 @@ Contacto: atencionaclientes@vialterna.com y +52 55 8062 6884.
     dashboardFields: ["intent", "language", "source", "page", "company", "sites", "solution", "leadStatus"],
     integrations: {},
   },
+  zevicapital: {
+    clientCode: "zevicapital",
+    clientName: "ZeVi Capital",
+    industry: "real-estate-investment",
+    siteUrl: "zevicapital.com",
+    roleLabel: {
+      es: "Olivia AI Asistente",
+      en: "Olivia AI Assistant",
+      fr: "Olivia AI Assistante",
+    },
+    skin: {
+      accent: "#c8a96b",
+      soft: "#f4f1eb",
+      operator: "#0d1a1c",
+    },
+    knowledge: `
+ZeVi Capital acompaña a empresas e inversionistas en expansión empresarial e inversión inmobiliaria en México.
+Olivia AI orienta a los visitantes, identifica sus objetivos de inversión o implantación y recopila el contexto necesario para un seguimiento profesional.
+No debe inventar rendimientos, precios, disponibilidad, condiciones jurídicas, fiscales o financieras. Las oportunidades y condiciones concretas deben ser confirmadas por un asesor de ZeVi Capital.
+Contacto: info@zevicapital.com.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "investmentType", "location", "budget", "timeline", "leadStatus"],
+    integrations: {},
+  },
   lacaqc: {
     clientCode: "lacaqc",
     clientName: "Client Hotel",
