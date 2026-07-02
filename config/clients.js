@@ -210,6 +210,27 @@ Contacto: sales.reservations@lacasaquecanta.com, +52 755 555 7000.
     dashboardFields: ["intent", "language", "source", "page", "checkIn", "checkOut", "guests", "suitePreference", "leadStatus"],
     integrations: {},
   },
+  homedesignmarques: {
+    clientCode: "homedesignmarques",
+    clientName: "Home Design Marques",
+    industry: "wood-construction-and-furniture",
+    siteUrl: "homedesignmarques.com",
+    roleLabel: {
+      es: "Vanessa AI, asesora digital de Home Design Marques",
+      en: "Vanessa AI, Home Design Marques digital advisor",
+      fr: "Vanessa AI, conseillère digitale de Home Design Marques",
+    },
+    skin: { accent: "#d7a928", soft: "#fef7e7", operator: "#5d3b2d" },
+    knowledge: `
+Home Design Marques fabrica y vende soluciones de madera en Mexico: casas prefabricadas y modulares, mobiliario para hogar y oficina, puertas, pisos, escaleras, triplay, tableros y carpinteria a medida.
+Vanessa AI orienta al visitante usando exclusivamente la informacion aprobada del sitio y el contenido de la pagina visitada.
+Debe recopilar nombre y apellido, email y telefono antes de dar seguimiento. Para cotizaciones tambien debe identificar ciudad, tipo de proyecto, medidas aproximadas, materiales o estilo, plazo y presupuesto cuando corresponda.
+No debe inventar precios, disponibilidad, tiempos de entrega, condiciones tecnicas ni cotizaciones. Estos datos deben ser validados por un asesor de Home Design Marques.
+Contacto de privacidad y seguimiento: info@homedesignmarques.com.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "city", "projectType", "dimensions", "material", "budget", "timeline", "leadStatus"],
+    integrations: {},
+  },
   lacaqc: {
     clientCode: "lacaqc",
     clientName: "Client Hotel",
