@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AtSign,
   BarChart3,
@@ -113,6 +113,10 @@ const translations = {
     bookingContext: "Contexte",
     lastViewed: "Dernière page consultée",
     seeHistory: "Voir l’historique",
+    tools: { suggest: "Suggérer une réponse avec l’IA", greeting: "Insérer un message d’accueil", quick: "Insérer une réponse rapide", focus: "Placer le curseur dans la réponse", attach: "Ajouter une pièce jointe" },
+    greetingText: "Bonjour, merci pour votre message. Comment puis-je vous aider ?",
+    quickText: "Merci. Je vérifie ces informations et je reviens vers vous rapidement.",
+    attachment: "Pièce jointe",
   },
   en: {
     nav: ["Inbox", "AI automations", "Customers", "Analytics", "AI copilot"],
@@ -139,6 +143,10 @@ const translations = {
     waiting: "Dashboard active. Waiting for a conversation from the widget.", liveChat: "Live chat", writeReply: "Write a reply to the customer…",
     takeoverToReply: "Take over to reply to the customer", reply: "Reply", info: "Info", viewedPages: "Viewed pages", notes: "Notes",
     customerData: "Customer data", addTag: "Add customer tag", bookingContext: "Context", lastViewed: "Last viewed page", seeHistory: "See history",
+    tools: { suggest: "Suggest an AI reply", greeting: "Insert a greeting", quick: "Insert a quick reply", focus: "Focus the reply field", attach: "Add an attachment" },
+    greetingText: "Hello, thank you for your message. How can I help?",
+    quickText: "Thank you. I’ll check this information and get back to you shortly.",
+    attachment: "Attachment",
   },
   es: {
     nav: ["Bandeja de entrada", "Automatizaciones IA", "Clientes", "Estadísticas", "Copiloto IA"],
@@ -165,6 +173,10 @@ const translations = {
     waiting: "Dashboard activo. Esperando una conversación desde el widget.", liveChat: "Chat en vivo", writeReply: "Escribe una respuesta al cliente…",
     takeoverToReply: "Toma el control para responder al cliente", reply: "Responder", info: "Información", viewedPages: "Páginas vistas", notes: "Notas",
     customerData: "Datos del cliente", addTag: "Añadir etiqueta", bookingContext: "Contexto", lastViewed: "Última página vista", seeHistory: "Ver historial",
+    tools: { suggest: "Sugerir una respuesta con IA", greeting: "Insertar un saludo", quick: "Insertar una respuesta rápida", focus: "Enfocar el campo de respuesta", attach: "Añadir un archivo" },
+    greetingText: "Hola, gracias por tu mensaje. ¿Cómo puedo ayudarte?",
+    quickText: "Gracias. Verificaré esta información y te responderé en breve.",
+    attachment: "Archivo adjunto",
   },
 };
 
@@ -662,6 +674,9 @@ export default function InboxPage() {
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [activeView, setActiveView] = useState("my-open");
   const [draft, setDraft] = useState("");
+  const [toolLoading, setToolLoading] = useState(false);
+  const replyRef = useRef(null);
+  const attachmentRef = useRef(null);
 
   const viewCounts = useMemo(
     () =>
@@ -753,6 +768,29 @@ export default function InboxPage() {
     filteredConversations.length > 0 ? filteredConversations : visibleConversations;
   const showingFallbackList =
     filteredConversations.length === 0 && visibleConversations.length > 0;
+
+  const suggestReply = async () => {
+    if (!hasRealSelection || toolLoading) return;
+    setToolLoading(true);
+    try {
+      const transcript = selected.messages.map((message) => `${message.role}: ${message.content}`).join("\n");
+      const response = await fetch("/api/dashboard/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript, language }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      const suggestion = data.analysis?.suggestedReply || data.analysis?.summary;
+      if (suggestion) setDraft(suggestion);
+      replyRef.current?.focus();
+    } catch {
+      setDraft(copy.quickText);
+      replyRef.current?.focus();
+    } finally {
+      setToolLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#f4f6fb] text-[#121827]">
@@ -1041,6 +1079,7 @@ export default function InboxPage() {
             </div>
             <div className="px-4 py-3">
               <textarea
+                ref={replyRef}
                 value={draft}
                 disabled={!hasRealSelection || !isManual}
                 onChange={(event) => setDraft(event.target.value)}
@@ -1052,12 +1091,23 @@ export default function InboxPage() {
                 className="h-16 w-full resize-none text-sm outline-none placeholder:text-[#66718a] disabled:bg-white disabled:text-[#66718a]"
               />
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-[#6f7b94]">
-                  <Bot className="h-4 w-4" />
-                  <Wand2 className="h-4 w-4" />
-                  <Zap className="h-4 w-4" />
-                  <Command className="h-4 w-4" />
-                  <Paperclip className="h-4 w-4" />
+                <div className="flex items-center gap-1 text-[#6f7b94]">
+                  <button type="button" disabled={!hasRealSelection || toolLoading} onClick={suggestReply} title={copy.tools.suggest} aria-label={copy.tools.suggest} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Bot className="h-4 w-4" /></button>
+                  <button type="button" disabled={!hasRealSelection} onClick={() => { setDraft(copy.greetingText); replyRef.current?.focus(); }} title={copy.tools.greeting} aria-label={copy.tools.greeting} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Wand2 className="h-4 w-4" /></button>
+                  <button type="button" disabled={!hasRealSelection} onClick={() => { setDraft(copy.quickText); replyRef.current?.focus(); }} title={copy.tools.quick} aria-label={copy.tools.quick} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Zap className="h-4 w-4" /></button>
+                  <button type="button" disabled={!hasRealSelection} onClick={() => replyRef.current?.focus()} title={copy.tools.focus} aria-label={copy.tools.focus} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Command className="h-4 w-4" /></button>
+                  <button type="button" disabled={!hasRealSelection} onClick={() => attachmentRef.current?.click()} title={copy.tools.attach} aria-label={copy.tools.attach} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Paperclip className="h-4 w-4" /></button>
+                  <input
+                    ref={attachmentRef}
+                    type="file"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) setDraft((current) => `${current}${current ? "\n" : ""}[${copy.attachment}: ${file.name}]`);
+                      event.target.value = "";
+                      replyRef.current?.focus();
+                    }}
+                  />
                 </div>
                 <button
                   disabled={!hasRealSelection || !isManual || !draft.trim()}
