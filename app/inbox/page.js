@@ -117,6 +117,7 @@ const translations = {
     greetingText: "Bonjour, merci pour votre message. Comment puis-je vous aider ?",
     quickText: "Merci. Je vérifie ces informations et je reviens vers vous rapidement.",
     attachment: "Pièce jointe",
+    attachmentTooLarge: "Le fichier dépasse la limite de 2 Mo.",
     logout: "Se déconnecter",
   },
   en: {
@@ -148,6 +149,7 @@ const translations = {
     greetingText: "Hello, thank you for your message. How can I help?",
     quickText: "Thank you. I’ll check this information and get back to you shortly.",
     attachment: "Attachment",
+    attachmentTooLarge: "The file exceeds the 2 MB limit.",
     logout: "Sign out",
   },
   es: {
@@ -179,6 +181,7 @@ const translations = {
     greetingText: "Hola, gracias por tu mensaje. ¿Cómo puedo ayudarte?",
     quickText: "Gracias. Verificaré esta información y te responderé en breve.",
     attachment: "Archivo adjunto",
+    attachmentTooLarge: "El archivo supera el límite de 2 MB.",
     logout: "Cerrar sesión",
   },
 };
@@ -442,6 +445,16 @@ function MessageBlock({ message, guest, skin, copy }) {
         >
           {message.content}
         </div>
+        {message.metadata?.attachment?.dataUrl && (
+          <a
+            href={message.metadata.attachment.dataUrl}
+            download={message.metadata.attachment.name}
+            className="mt-2 inline-flex items-center gap-2 rounded-md border border-[#d8e0ef] bg-white px-3 py-2 text-sm font-medium text-[#3159c9]"
+          >
+            <Paperclip className="h-4 w-4" />
+            {message.metadata.attachment.name}
+          </a>
+        )}
       </div>
     </div>
   );
@@ -684,6 +697,8 @@ export default function InboxPage() {
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [activeView, setActiveView] = useState("my-open");
   const [draft, setDraft] = useState("");
+  const [attachment, setAttachment] = useState(null);
+  const [attachmentError, setAttachmentError] = useState("");
   const [toolLoading, setToolLoading] = useState(false);
   const replyRef = useRef(null);
   const attachmentRef = useRef(null);
@@ -1100,6 +1115,13 @@ export default function InboxPage() {
                 }
                 className="h-16 w-full resize-none text-sm outline-none placeholder:text-[#66718a] disabled:bg-white disabled:text-[#66718a]"
               />
+              {attachment && (
+                <div className="mb-2 flex items-center justify-between rounded-md bg-[#eef3ff] px-3 py-2 text-xs text-[#3159c9]">
+                  <span>{copy.attachment}: {attachment.name}</span>
+                  <button type="button" onClick={() => setAttachment(null)} aria-label="Remove attachment">×</button>
+                </div>
+              )}
+              {attachmentError && <p className="mb-2 text-xs text-[#b42318]">{attachmentError}</p>}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1 text-[#6f7b94]">
                   <button type="button" disabled={!hasRealSelection || toolLoading} onClick={suggestReply} title={copy.tools.suggest} aria-label={copy.tools.suggest} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Bot className="h-4 w-4" /></button>
@@ -1110,29 +1132,44 @@ export default function InboxPage() {
                   <input
                     ref={attachmentRef}
                     type="file"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.txt"
                     className="hidden"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) setDraft((current) => `${current}${current ? "\n" : ""}[${copy.attachment}: ${file.name}]`);
+                      setAttachmentError("");
+                      if (file && file.size > 2_000_000) {
+                        setAttachmentError(copy.attachmentTooLarge);
+                      } else if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => setAttachment({
+                          name: file.name,
+                          type: file.type || "application/octet-stream",
+                          size: file.size,
+                          dataUrl: String(reader.result),
+                        });
+                        reader.onerror = () => setAttachmentError(copy.attachmentTooLarge);
+                        reader.readAsDataURL(file);
+                      }
                       event.target.value = "";
                       replyRef.current?.focus();
                     }}
                   />
                 </div>
                 <button
-                  disabled={!hasRealSelection || !isManual || !draft.trim()}
+                  disabled={!hasRealSelection || !isManual || (!draft.trim() && !attachment)}
                   onClick={async () => {
-                    if (!hasRealSelection || !draft.trim()) return;
+                    if (!hasRealSelection || (!draft.trim() && !attachment)) return;
                     await fetch(`/api/conversations/${selected.id}/messages`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ content: draft }),
+                      body: JSON.stringify({ content: draft, attachment }),
                     });
                     setDraft("");
+                    setAttachment(null);
                     loadConversations();
                   }}
                   className="flex h-9 items-center gap-2 rounded-md px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#dce2ed]"
-                  style={isManual && draft.trim() ? { background: skin.accent } : undefined}
+                  style={isManual && (draft.trim() || attachment) ? { background: skin.accent } : undefined}
                 >
                   <Send className="h-4 w-4" />
                   {copy.reply}

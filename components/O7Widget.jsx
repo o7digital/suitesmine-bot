@@ -208,7 +208,11 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
         if (incoming.length) {
           setMessages((prev) => [
             ...prev,
-            ...incoming.map((message) => ({ role: "assistant", content: message.content })),
+            ...incoming.map((message) => ({
+              role: "assistant",
+              content: message.content,
+              attachment: message.metadata?.attachment,
+            })),
           ]);
         }
       } catch {}
@@ -310,6 +314,15 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
               {messages.map((msg, idx) => (
                 <MessageBubble key={`${msg.role}-${idx}`} role={msg.role}>
                   {msg.content}
+                  {msg.attachment?.dataUrl && (
+                    <a
+                      href={msg.attachment.dataUrl}
+                      download={msg.attachment.name}
+                      className="mt-2 block font-semibold underline underline-offset-2"
+                    >
+                      {msg.attachment.name}
+                    </a>
+                  )}
                 </MessageBubble>
               ))}
               {copy.actions?.length ? (
