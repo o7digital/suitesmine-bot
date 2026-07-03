@@ -229,6 +229,28 @@ No debe inventar precios, disponibilidad, tiempos de traslado ni confirmaciones.
     dashboardFields: ["intent", "language", "source", "page", "origin", "destination", "date", "passengers", "vehicleType", "leadStatus"],
     integrations: {},
   },
+  aoitgroup: {
+    clientCode: "aoitgroup",
+    clientName: "A&O IT Group",
+    industry: "global-it-services-and-cybersecurity",
+    siteUrl: "aoitgroup.vercel.app",
+    roleLabel: {
+      es: "Olivia AI, asistente de A&O IT Group",
+      en: "Olivia AI, A&O IT Group assistant",
+      fr: "Olivia AI, assistante de A&O IT Group",
+      de: "Olivia AI, Assistentin von A&O IT Group",
+      it: "Olivia AI, assistente di A&O IT Group",
+    },
+    skin: { accent: "#00a4ed", soft: "#e8f6fc", operator: "#171d30" },
+    knowledge: `
+A&O IT Group provides global IT support services, managed IT services and cyber security solutions for organisations operating internationally.
+Olivia AI helps website visitors understand the available services and collects the context needed for a professional follow-up.
+Respond in the visitor's language. Before arranging follow-up, collect first and last name, business email, phone number, company and the relevant IT requirement.
+Do not invent prices, coverage, service levels, availability, technical commitments or contractual terms. An A&O IT Group advisor must validate these details.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "company", "country", "service", "requirements", "leadStatus"],
+    integrations: {},
+  },
   homedesignmarques: {
     clientCode: "homedesignmarques",
     clientName: "Home Design Marques",
