@@ -43,6 +43,131 @@ const clientSkins = Object.fromEntries(
   ])
 );
 
+const translations = {
+  fr: {
+    nav: ["Boîte de réception", "Automatisations IA", "Clients", "Statistiques", "Copilote IA"],
+    settings: "Paramètres et sécurité",
+    views: ["Non assigné", "Ouvert", "Résolue"],
+    statuses: { manual: "Manuel", ai: "IA", solved: "Résolue" },
+    you: "Vous",
+    back: "Retour à l’Inbox",
+    conversations: "Conversations",
+    open: "Ouvertes",
+    aiManaged: "Gérées par l’IA",
+    manualManaged: "Reprises manuellement",
+    visitors: "clients et visiteurs",
+    analyticsText: "Reliez la propriété GA4 de chaque site pour comparer trafic, ouvertures du chat et demandes de réservation.",
+    connected: "Connecté",
+    connect: "À connecter",
+    configure: "À configurer",
+    openAnalytics: "Ouvrir Google Analytics",
+    gaRequired: "Configuration serveur requise : GA4_PROPERTY_ID et compte de service Google.",
+    automations: [
+      ["Réponse automatique", "L’IA répond aux nouvelles conversations tant qu’un opérateur ne prend pas la main."],
+      ["Collecte de réservation", "Dates, nombre de voyageurs, catégorie, nom, email et téléphone."],
+      ["Escalade humaine", "Transfert immédiat lorsqu’un visiteur demande explicitement une personne."],
+      ["Consentement données", "Le widget bloque l’envoi tant que le visiteur n’a pas accepté le partage."],
+    ],
+    aiBrief: "Brief opérationnel IA",
+    aiBriefText: "Résume les conversations récentes, intentions, urgence et informations manquantes.",
+    analyzing: "Analyse en cours…",
+    analyze: "Analyser maintenant",
+    accountSecurity: "Compte et sécurité",
+    accountText: "Gérez votre email, vos sessions et activez l’authentification à deux facteurs dans votre profil Clerk.",
+    openProfile: "Ouvrir mon profil sécurisé",
+    primaryNav: "Navigation principale",
+    allClients: "tous-les-clients",
+    liveAuto: "Actualisation auto",
+    syncing: "Synchronisation…",
+    liveConversations: "Conversations en direct",
+    tickets: "Tickets",
+    ticketsText: "Messages de la boîte mail ou du widget hors ligne",
+    connectMailbox: "Connecter la boîte mail",
+    savedViews: "Vues",
+    search: "Rechercher dans l’Inbox…",
+    all: "Toutes",
+    emptyView: "La vue choisie est vide. Affichage de toutes les conversations en direct.",
+    loading: "Chargement Railway…",
+    railwayError: "Erreur Railway. Consultez les logs Vercel.",
+    noConversation: "Aucune conversation dans cette vue.",
+    noConversationTitle: "Aucune conversation",
+    loadConversations: "Chargement des conversations Railway…",
+    loadFailed: "Impossible de charger les conversations Railway.",
+    sendFirstMessage: "Envoyez un message depuis le widget pour créer la première conversation.",
+    client: "Client",
+    solve: "Résoudre",
+    returnAi: "Rendre à l’IA",
+    takeover: "Prendre la main",
+    conversationFrom: "Conversation reçue depuis le site",
+    manualPaused: "La réponse IA est suspendue en mode manuel.",
+    waiting: "Dashboard actif. En attente d’une conversation reçue depuis le widget.",
+    liveChat: "Chat en direct",
+    writeReply: "Écrire une réponse au client…",
+    takeoverToReply: "Prenez la main pour répondre au client",
+    reply: "Répondre",
+    info: "Informations",
+    viewedPages: "Pages consultées",
+    notes: "Notes",
+    customerData: "Données client",
+    addTag: "Ajouter une étiquette client",
+    bookingContext: "Contexte",
+    lastViewed: "Dernière page consultée",
+    seeHistory: "Voir l’historique",
+  },
+  en: {
+    nav: ["Inbox", "AI automations", "Customers", "Analytics", "AI copilot"],
+    settings: "Settings and security",
+    views: ["Unassigned", "Open", "Solved"],
+    statuses: { manual: "Manual", ai: "AI", solved: "Solved" },
+    you: "You",
+    back: "Back to Inbox",
+    conversations: "Conversations", open: "Open", aiManaged: "Handled by AI", manualManaged: "Handled manually",
+    visitors: "customers and visitors",
+    analyticsText: "Connect each website’s GA4 property to compare traffic, chat opens and booking requests.",
+    connected: "Connected", connect: "Connect", configure: "Needs setup", openAnalytics: "Open Google Analytics",
+    gaRequired: "Server setup required: GA4_PROPERTY_ID and a Google service account.",
+    automations: [["Automatic replies", "AI answers new conversations until an operator takes over."], ["Booking details", "Dates, guests, category, name, email and phone."], ["Human escalation", "Immediate transfer when a visitor explicitly asks for a person."], ["Data consent", "The widget blocks sending until the visitor accepts data sharing."]],
+    aiBrief: "AI operational brief", aiBriefText: "Summarizes recent conversations, intent, urgency and missing information.", analyzing: "Analyzing…", analyze: "Analyze now",
+    accountSecurity: "Account and security", accountText: "Manage your email and sessions, and enable two-factor authentication in your Clerk profile.", openProfile: "Open secure profile",
+    primaryNav: "Main navigation", allClients: "all-clients", liveAuto: "Live auto", syncing: "Syncing…", liveConversations: "Live conversations",
+    tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views",
+    search: "Search in Inbox…", all: "All", emptyView: "The selected view is empty. Showing all live conversations.", loading: "Loading Railway…",
+    railwayError: "Railway error. Check Vercel logs.", noConversation: "No conversations in this view.", client: "Client", solve: "Solve",
+    noConversationTitle: "No conversation", loadConversations: "Loading Railway conversations…", loadFailed: "Unable to load Railway conversations.",
+    sendFirstMessage: "Send a message from the widget to create the first conversation.",
+    returnAi: "Return to AI", takeover: "Take over", conversationFrom: "Conversation received from", manualPaused: "AI replies are paused in manual mode.",
+    waiting: "Dashboard active. Waiting for a conversation from the widget.", liveChat: "Live chat", writeReply: "Write a reply to the customer…",
+    takeoverToReply: "Take over to reply to the customer", reply: "Reply", info: "Info", viewedPages: "Viewed pages", notes: "Notes",
+    customerData: "Customer data", addTag: "Add customer tag", bookingContext: "Context", lastViewed: "Last viewed page", seeHistory: "See history",
+  },
+  es: {
+    nav: ["Bandeja de entrada", "Automatizaciones IA", "Clientes", "Estadísticas", "Copiloto IA"],
+    settings: "Configuración y seguridad",
+    views: ["Sin asignar", "Abiertas", "Resueltas"],
+    statuses: { manual: "Manual", ai: "IA", solved: "Resuelta" },
+    you: "Tú",
+    back: "Volver a la bandeja",
+    conversations: "Conversaciones", open: "Abiertas", aiManaged: "Gestionadas por IA", manualManaged: "Gestionadas manualmente",
+    visitors: "clientes y visitantes",
+    analyticsText: "Conecta la propiedad GA4 de cada sitio para comparar tráfico, aperturas del chat y solicitudes de reserva.",
+    connected: "Conectado", connect: "Conectar", configure: "Por configurar", openAnalytics: "Abrir Google Analytics",
+    gaRequired: "Configuración del servidor requerida: GA4_PROPERTY_ID y cuenta de servicio de Google.",
+    automations: [["Respuesta automática", "La IA responde las conversaciones nuevas hasta que interviene un operador."], ["Datos de reserva", "Fechas, huéspedes, categoría, nombre, email y teléfono."], ["Escalación humana", "Transferencia inmediata cuando el visitante solicita hablar con una persona."], ["Consentimiento de datos", "El widget bloquea el envío hasta que el visitante acepta compartir sus datos."]],
+    aiBrief: "Resumen operativo IA", aiBriefText: "Resume conversaciones recientes, intenciones, urgencia e información faltante.", analyzing: "Analizando…", analyze: "Analizar ahora",
+    accountSecurity: "Cuenta y seguridad", accountText: "Gestiona tu email y sesiones, y activa la autenticación de dos factores en tu perfil de Clerk.", openProfile: "Abrir perfil seguro",
+    primaryNav: "Navegación principal", allClients: "todos-los-clientes", liveAuto: "Actualización automática", syncing: "Sincronizando…", liveConversations: "Conversaciones en vivo",
+    tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas",
+    search: "Buscar en la bandeja…", all: "Todas", emptyView: "La vista seleccionada está vacía. Mostrando todas las conversaciones en vivo.", loading: "Cargando Railway…",
+    railwayError: "Error de Railway. Revisa los logs de Vercel.", noConversation: "No hay conversaciones en esta vista.", client: "Cliente", solve: "Resolver",
+    noConversationTitle: "No hay conversaciones", loadConversations: "Cargando conversaciones de Railway…", loadFailed: "No se pudieron cargar las conversaciones de Railway.",
+    sendFirstMessage: "Envía un mensaje desde el widget para crear la primera conversación.",
+    returnAi: "Devolver a la IA", takeover: "Tomar control", conversationFrom: "Conversación recibida desde", manualPaused: "Las respuestas de IA están pausadas en modo manual.",
+    waiting: "Dashboard activo. Esperando una conversación desde el widget.", liveChat: "Chat en vivo", writeReply: "Escribe una respuesta al cliente…",
+    takeoverToReply: "Toma el control para responder al cliente", reply: "Responder", info: "Información", viewedPages: "Páginas vistas", notes: "Notas",
+    customerData: "Datos del cliente", addTag: "Añadir etiqueta", bookingContext: "Contexto", lastViewed: "Última página vista", seeHistory: "Ver historial",
+  },
+};
+
 const demoConversations = [
   {
     id: "conv-1024",
@@ -208,9 +333,9 @@ function formatTime(value) {
   return value ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 }
 
-function formatConversationDate(value) {
+function formatConversationDate(value, language = "fr") {
   if (!value) return "";
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat({ fr: "fr-FR", en: "en-US", es: "es-MX" }[language], {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -246,17 +371,17 @@ function mapConversation(conversation) {
   };
 }
 
-const views = [
-  { id: "unassigned", label: "Non assigne", icon: "!" },
-  { id: "my-open", label: "Ouvert", icon: "[]" },
-  { id: "solved", label: "Resolue", icon: "✓" },
+const getViews = (copy) => [
+  { id: "unassigned", label: copy.views[0], icon: "!" },
+  { id: "my-open", label: copy.views[1], icon: "[]" },
+  { id: "solved", label: copy.views[2], icon: "✓" },
 ];
 
-function StatusPill({ status }) {
+function StatusPill({ status, copy }) {
   const config = {
-    manual: { label: "Manual", className: "bg-[#fff3dc] text-[#8a5200]" },
-    ai: { label: "AI", className: "bg-[#e9f8ef] text-[#17623a]" },
-    solved: { label: "Solved", className: "bg-[#eaf0ff] text-[#3159c9]" },
+    manual: { label: copy.statuses.manual, className: "bg-[#fff3dc] text-[#8a5200]" },
+    ai: { label: copy.statuses.ai, className: "bg-[#e9f8ef] text-[#17623a]" },
+    solved: { label: copy.statuses.solved, className: "bg-[#eaf0ff] text-[#3159c9]" },
   }[status];
 
   return (
@@ -266,7 +391,7 @@ function StatusPill({ status }) {
   );
 }
 
-function MessageBlock({ message, guest, skin }) {
+function MessageBlock({ message, guest, skin, copy }) {
   if (message.role === "system") {
     return (
       <p className="mx-auto max-w-2xl text-center text-sm italic leading-6 text-[#66718a]">
@@ -287,7 +412,7 @@ function MessageBlock({ message, guest, skin }) {
       )}
       <div className={`max-w-[720px] ${isGuest ? "" : "text-right"}`}>
         <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-[#172033]">
-          <span>{isGuest ? guest.guest : isAi ? "O7 IA" : "You"}</span>
+          <span>{isGuest ? guest.guest : isAi ? "O7 IA" : copy.you}</span>
           <span className="font-normal text-[#758198]">{message.time}</span>
         </div>
         <div
@@ -307,22 +432,22 @@ function MessageBlock({ message, guest, skin }) {
   );
 }
 
-const navigationItems = [
-  { id: "inbox", label: "Boîte de réception", icon: Inbox },
-  { id: "automation", label: "Automatisations IA", icon: Bot },
-  { id: "customers", label: "Clients", icon: UsersRound },
-  { id: "analytics", label: "Statistiques", icon: LayoutDashboard },
-  { id: "copilot", label: "Copilote IA", icon: Sparkles },
+const getNavigationItems = (copy) => [
+  { id: "inbox", label: copy.nav[0], icon: Inbox },
+  { id: "automation", label: copy.nav[1], icon: Bot },
+  { id: "customers", label: copy.nav[2], icon: UsersRound },
+  { id: "analytics", label: copy.nav[3], icon: LayoutDashboard },
+  { id: "copilot", label: copy.nav[4], icon: Sparkles },
 ];
 
-function WorkspacePanel({ section, conversations, integrations, onClose }) {
+function WorkspacePanel({ section, conversations, integrations, onClose, copy, language }) {
   const [analysis, setAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const open = conversations.filter((item) => item.status !== "solved");
   const manual = conversations.filter((item) => item.status === "manual");
   const ai = conversations.filter((item) => item.status === "ai");
   const uniqueVisitors = new Map(conversations.map((item) => [item.guest, item]));
-  const title = navigationItems.find((item) => item.id === section)?.label || "Paramètres";
+  const title = getNavigationItems(copy).find((item) => item.id === section)?.label || copy.settings;
 
   const runAnalysis = async () => {
     const transcript = conversations
@@ -337,7 +462,7 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
       const response = await fetch("/api/dashboard/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript, language: "fr" }),
+        body: JSON.stringify({ transcript, language }),
       });
       const data = await response.json();
       setAnalysis(data.analysis || { summary: data.error || "Analyse indisponible." });
@@ -354,7 +479,7 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
           <h1 className="text-xl font-semibold">{title}</h1>
         </div>
         <button onClick={onClose} className="rounded-md border border-[#d8e0ef] px-3 py-2 text-sm font-medium">
-          Retour à l’Inbox
+          {copy.back}
         </button>
       </header>
 
@@ -363,10 +488,10 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
           <div className="space-y-6">
             <div className="grid grid-cols-4 gap-4">
               {[
-                ["Conversations", conversations.length],
-                ["Ouvertes", open.length],
-                ["Gérées par l’IA", ai.length],
-                ["Reprises manuellement", manual.length],
+                [copy.conversations, conversations.length],
+                [copy.open, open.length],
+                [copy.aiManaged, ai.length],
+                [copy.manualManaged, manual.length],
               ].map(([label, value]) => (
                 <article key={label} className="rounded-xl border border-[#dde4f1] bg-white p-5">
                   <p className="text-sm text-[#66718a]">{label}</p>
@@ -379,18 +504,18 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
                 <div>
                   <h2 className="flex items-center gap-2 text-lg font-semibold"><BarChart3 className="h-5 w-5" /> Google Analytics 4</h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#66718a]">
-                    Reliez la propriété GA4 de chaque site pour comparer trafic, ouvertures du chat et demandes de réservation.
+                    {copy.analyticsText}
                   </p>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${integrations?.analytics?.configured ? "bg-[#e9f8ef] text-[#17623a]" : "bg-[#fff3dc] text-[#8a5200]"}`}>
-                  {integrations?.analytics?.configured ? "Connecté" : "À connecter"}
+                  {integrations?.analytics?.configured ? copy.connected : copy.connect}
                 </span>
               </div>
               <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-md bg-[#3159c9] px-4 py-2 text-sm font-semibold text-white">
-                Ouvrir Google Analytics <ExternalLink className="h-4 w-4" />
+                {copy.openAnalytics} <ExternalLink className="h-4 w-4" />
               </a>
               {!integrations?.analytics?.configured && (
-                <p className="mt-4 text-xs text-[#66718a]">Configuration serveur requise : GA4_PROPERTY_ID et compte de service Google.</p>
+                <p className="mt-4 text-xs text-[#66718a]">{copy.gaRequired}</p>
               )}
             </article>
           </div>
@@ -399,14 +524,14 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
         {section === "customers" && (
           <div className="overflow-hidden rounded-xl border border-[#dde4f1] bg-white">
             <div className="border-b border-[#e8edf5] p-5">
-              <h2 className="text-lg font-semibold">{uniqueVisitors.size} clients et visiteurs</h2>
+              <h2 className="text-lg font-semibold">{uniqueVisitors.size} {copy.visitors}</h2>
             </div>
             {[...uniqueVisitors.values()].map((visitor) => (
               <div key={visitor.guest} className="grid grid-cols-[1.4fr_1.5fr_1fr_1fr] gap-4 border-b border-[#eef1f6] px-5 py-4 text-sm last:border-0">
                 <span className="font-medium">{visitor.guest}</span>
                 <span className="truncate text-[#66718a]">{visitor.email}</span>
                 <span className="text-[#66718a]">{visitor.phone}</span>
-                <StatusPill status={visitor.status} />
+                <StatusPill status={visitor.status} copy={copy} />
               </div>
             ))}
           </div>
@@ -414,16 +539,11 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
 
         {section === "automation" && (
           <div className="grid max-w-4xl grid-cols-2 gap-5">
-            {[
-              ["Réponse automatique", "L’IA répond aux nouvelles conversations tant qu’un opérateur ne prend pas la main.", true],
-              ["Collecte de réservation", "Dates, nombre de voyageurs, catégorie, nom, email et téléphone.", true],
-              ["Escalade humaine", "Transfert immédiat lorsqu’un visiteur demande explicitement une personne.", true],
-              ["Consentement données", "Le widget bloque l’envoi tant que le visiteur n’a pas accepté le partage.", true],
-            ].map(([name, description, enabled]) => (
+            {copy.automations.map(([name, description]) => (
               <article key={name} className="rounded-xl border border-[#dde4f1] bg-white p-5">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold">{name}</h2>
-                  <span className={`h-6 w-11 rounded-full p-1 ${enabled ? "bg-[#3159c9]" : "bg-[#cfd6e4]"}`}><span className="block h-4 w-4 translate-x-5 rounded-full bg-white" /></span>
+                  <span className="h-6 w-11 rounded-full bg-[#3159c9] p-1"><span className="block h-4 w-4 translate-x-5 rounded-full bg-white" /></span>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[#66718a]">{description}</p>
               </article>
@@ -433,10 +553,10 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
 
         {section === "copilot" && (
           <article className="max-w-4xl rounded-xl border border-[#dde4f1] bg-white p-6">
-            <h2 className="text-lg font-semibold">Brief opérationnel IA</h2>
-            <p className="mt-2 text-sm text-[#66718a]">Résume les conversations récentes, intentions, urgence et informations manquantes.</p>
+            <h2 className="text-lg font-semibold">{copy.aiBrief}</h2>
+            <p className="mt-2 text-sm text-[#66718a]">{copy.aiBriefText}</p>
             <button disabled={analyzing || !conversations.length} onClick={runAnalysis} className="mt-5 rounded-md bg-[#3159c9] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-              {analyzing ? "Analyse en cours…" : "Analyser maintenant"}
+              {analyzing ? copy.analyzing : copy.analyze}
             </button>
             {analysis && <pre className="mt-5 whitespace-pre-wrap rounded-lg bg-[#f4f7fc] p-5 text-sm leading-6">{JSON.stringify(analysis, null, 2)}</pre>}
           </article>
@@ -446,16 +566,16 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
           <div className="grid max-w-4xl grid-cols-2 gap-5">
             <article className="rounded-xl border border-[#dde4f1] bg-white p-6">
               <ShieldCheck className="h-6 w-6 text-[#3159c9]" />
-              <h2 className="mt-4 text-lg font-semibold">Compte et sécurité</h2>
-              <p className="mt-2 text-sm leading-6 text-[#66718a]">Gérez votre email, vos sessions et activez l’authentification à deux facteurs dans votre profil Clerk.</p>
-              <div className="mt-5 flex items-center gap-3"><UserButton userProfileMode="modal" showName /><span className="text-sm">Ouvrir mon profil sécurisé</span></div>
+              <h2 className="mt-4 text-lg font-semibold">{copy.accountSecurity}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#66718a]">{copy.accountText}</p>
+              <div className="mt-5 flex items-center gap-3"><UserButton userProfileMode="modal" showName /><span className="text-sm">{copy.openProfile}</span></div>
             </article>
             {["mailbox", "analytics", "database", "clerk", "openai", "cloudbeds"].map((key) => (
               <article key={key} className="rounded-xl border border-[#dde4f1] bg-white p-5">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold capitalize">{key}</h2>
                   <span className={`rounded-full px-2 py-1 text-xs font-semibold ${integrations?.[key]?.configured ? "bg-[#e9f8ef] text-[#17623a]" : "bg-[#fff3dc] text-[#8a5200]"}`}>
-                    {integrations?.[key]?.configured ? "Connecté" : "À configurer"}
+                    {integrations?.[key]?.configured ? copy.connected : copy.configure}
                   </span>
                 </div>
               </article>
@@ -470,6 +590,10 @@ function WorkspacePanel({ section, conversations, integrations, onClose }) {
 export default function InboxPage() {
   const { user } = useUser();
   const role = "admin";
+  const [language, setLanguage] = useState("fr");
+  const copy = translations[language];
+  const views = useMemo(() => getViews(copy), [copy]);
+  const navigationItems = useMemo(() => getNavigationItems(copy), [copy]);
   const [scopedClientCode, setScopedClientCode] = useState(undefined);
   const [conversations, setConversations] = useState([]);
   const [loadState, setLoadState] = useState("loading");
@@ -479,6 +603,9 @@ export default function InboxPage() {
   const [integrations, setIntegrations] = useState(null);
   useEffect(() => {
     setScopedClientCode(new URLSearchParams(window.location.search).get("client")?.trim() || null);
+    const savedLanguage = window.localStorage.getItem("oliviaInboxLanguage");
+    const browserLanguage = (navigator.language || "fr").slice(0, 2);
+    setLanguage(["fr", "en", "es"].includes(savedLanguage) ? savedLanguage : ["fr", "en", "es"].includes(browserLanguage) ? browserLanguage : "fr");
   }, []);
   const loadConversations = useCallback(async () => {
     if (scopedClientCode === undefined) return;
@@ -582,7 +709,7 @@ export default function InboxPage() {
       id: "empty",
       createdAt: null,
       clientCode: "suitesmine",
-      guest: "Aucune conversation",
+      guest: copy.noConversationTitle,
       initials: "OC",
       channel: "Railway",
       view: activeView,
@@ -590,10 +717,10 @@ export default function InboxPage() {
       intent: "-",
       lastMessage:
         loadState === "loading"
-          ? "Chargement des conversations Railway..."
+          ? copy.loadConversations
           : loadState === "error"
-            ? "Erreur de chargement Railway."
-            : "Envoyez un message depuis le widget de test.",
+            ? copy.loadFailed
+            : copy.sendFirstMessage,
       lastSeen: "",
       email: "-",
       phone: "-",
@@ -608,10 +735,10 @@ export default function InboxPage() {
           role: "system",
           content:
             loadState === "loading"
-              ? "Chargement des conversations Railway..."
+              ? copy.loadConversations
               : loadState === "error"
-                ? "Impossible de charger les conversations Railway. Les logs serveur sont actifs pour diagnostiquer."
-                : "Aucune conversation dans cette vue. Envoyez un message depuis le widget Suites Mine pour créer la première conversation.",
+                ? copy.loadFailed
+                : `${copy.noConversation} ${copy.sendFirstMessage}`,
           time: "",
         },
       ],
@@ -634,7 +761,7 @@ export default function InboxPage() {
           <div className="mb-6 flex h-9 w-9 items-center justify-center rounded-md bg-white shadow-sm">
             <MessageCircle className="h-5 w-5 text-[#3159c9]" />
           </div>
-          <nav aria-label="Navigation principale" className="flex flex-1 flex-col gap-2">
+          <nav aria-label={copy.primaryNav} className="flex flex-1 flex-col gap-2">
             {navigationItems.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -653,8 +780,8 @@ export default function InboxPage() {
           </nav>
           <button
             type="button"
-            title="Paramètres et sécurité"
-            aria-label="Paramètres et sécurité"
+            title={copy.settings}
+            aria-label={copy.settings}
             onClick={() => setActiveSection("settings")}
             className={`flex h-11 w-11 items-center justify-center rounded-md ${activeSection === "settings" ? "bg-[#dce8ff] text-[#173b8f]" : "text-[#61708b] hover:bg-white"}`}
           >
@@ -668,27 +795,29 @@ export default function InboxPage() {
             conversations={visibleConversations}
             integrations={integrations}
             onClose={() => setActiveSection("inbox")}
+            copy={copy}
+            language={language}
           />
         ) : (
         <>
         <aside className="w-[238px] shrink-0 border-r border-[#dde4f1] bg-[#f4f7fc] px-5 py-5">
-          <h1 className="text-xl font-semibold">Inbox</h1>
+          <h1 className="text-xl font-semibold">{copy.nav[0]}</h1>
           <div className="mt-3 flex items-center gap-2 text-xs text-[#5f6c86]">
             <span className="rounded-full bg-[#e8edf9] px-2 py-1">{user?.firstName || role}</span>
-            <span>{scopedClientCode ?? "all-clients"}</span>
+            <span>{scopedClientCode ?? copy.allClients}</span>
           </div>
           <div className="mt-3 rounded-md bg-white px-3 py-2 text-xs leading-5 text-[#5f6c86] shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="font-medium text-[#17623a]">Live auto</span>
+              <span className="font-medium text-[#17623a]">{copy.liveAuto}</span>
               <span>{visibleConversations.length}</span>
             </div>
-            <div>{lastSync ? `Sync ${lastSync}` : "Synchronisation..."}</div>
+            <div>{lastSync ? `Sync ${lastSync}` : copy.syncing}</div>
             {loadError && <div className="text-[#b42318]">{loadError}</div>}
           </div>
 
           <section className="mt-8">
             <button className="flex items-center gap-1 text-xs font-semibold uppercase text-[#172033]">
-              Live conversations
+              {copy.liveConversations}
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             <div className="mt-4 space-y-1">
@@ -720,20 +849,20 @@ export default function InboxPage() {
 
           <section className="mt-8">
             <button className="flex items-center gap-1 text-xs font-semibold uppercase text-[#172033]">
-              Tickets
+              {copy.tickets}
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             <div className="mt-4 rounded-md bg-[#eef3ff] p-3 text-sm leading-5 text-[#536079]">
-              Messages from mailbox or offline chat widget
+              {copy.ticketsText}
               <button className="mt-3 rounded-md bg-[#dbe6ff] px-3 py-1.5 text-sm font-medium text-[#3159c9]">
-                Connect mailbox
+                {copy.connectMailbox}
               </button>
             </div>
           </section>
 
           <section className="mt-8">
             <button className="flex items-center gap-1 text-xs font-semibold uppercase text-[#172033]">
-              Views
+              {copy.savedViews}
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             <div className="mt-4 space-y-3 text-sm text-[#2c3750]">
@@ -754,14 +883,14 @@ export default function InboxPage() {
             <label className="flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4">
               <Search className="h-4 w-4 text-[#74819a]" />
               <input
-                placeholder="Search in Inbox..."
+                placeholder={copy.search}
                 className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#7d889d]"
               />
             </label>
           </div>
           <div className="px-5 py-5">
             <h2 className="flex items-center gap-3 text-xl font-semibold">
-              📬 {showingFallbackList ? "Toutes" : views.find((view) => view.id === activeView)?.label}
+              📬 {showingFallbackList ? copy.all : views.find((view) => view.id === activeView)?.label}
               <span className="rounded-full bg-[#eef3ff] px-2 py-1 text-xs font-medium text-[#5b6b91]">
                 {displayedConversations.length}
               </span>
@@ -770,7 +899,7 @@ export default function InboxPage() {
           <div className="h-[calc(100%-138px)] overflow-y-auto px-3 pb-4">
             {showingFallbackList && (
               <div className="mb-3 rounded-md bg-[#eef3ff] px-3 py-2 text-xs leading-5 text-[#4f5f83]">
-                La vue choisie est vide. Affichage de toutes les conversations live.
+                {copy.emptyView}
               </div>
             )}
             {displayedConversations.map((conversation) => {
@@ -802,7 +931,7 @@ export default function InboxPage() {
                       <p className="mt-2 line-clamp-2 text-sm leading-5">{conversation.lastMessage}</p>
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-xs text-[#66718a]">{conversationSkin.label}</span>
-                        <StatusPill status={status} />
+                        <StatusPill status={status} copy={copy} />
                       </div>
                     </div>
                   </div>
@@ -812,10 +941,10 @@ export default function InboxPage() {
             {displayedConversations.length === 0 && (
               <div className="rounded-lg border border-dashed border-[#cfd8ea] bg-[#f8faff] px-4 py-5 text-sm leading-6 text-[#5d6880]">
                 {loadState === "loading"
-                  ? "Chargement Railway..."
+                  ? copy.loading
                   : loadState === "error"
-                    ? "Erreur Railway. Consulte les logs Vercel."
-                    : "Aucune conversation dans cette vue. Le dashboard reste ouvert."}
+                    ? copy.railwayError
+                    : copy.noConversation}
               </div>
             )}
           </div>
@@ -824,7 +953,7 @@ export default function InboxPage() {
         <section className="flex min-w-0 flex-1 flex-col bg-white">
           <header className="flex h-[72px] items-center justify-between border-b border-[#dde4f1] px-6">
             <div className="flex items-center gap-3">
-              <span className="text-sm text-[#68748b]">Client</span>
+              <span className="text-sm text-[#68748b]">{copy.client}</span>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e1e7f2] text-xs font-semibold">
                 {skin.label.slice(0, 2)}
               </div>
@@ -845,7 +974,7 @@ export default function InboxPage() {
                 className="flex h-9 items-center gap-2 rounded-md border border-[#d8e0ef] px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Check className="h-4 w-4 text-[#17623a]" />
-                Solve
+                {copy.solve}
               </button>
               <button
                 disabled={!hasRealSelection}
@@ -861,30 +990,44 @@ export default function InboxPage() {
                 className="h-9 rounded-md px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ background: isManual ? "#66718a" : skin.accent }}
               >
-                {isManual ? "Rendre a l'IA" : "Prendre la main"}
+                {isManual ? copy.returnAi : copy.takeover}
               </button>
               <button className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-[#f4f6fb]">
                 <MoreVertical className="h-4 w-4" />
               </button>
             </div>
+            <select
+              value={language}
+              onChange={(event) => {
+                const nextLanguage = event.target.value;
+                setLanguage(nextLanguage);
+                window.localStorage.setItem("oliviaInboxLanguage", nextLanguage);
+              }}
+              aria-label="Language"
+              className="h-9 rounded-md border border-[#d8e0ef] bg-white px-2 text-sm"
+            >
+              <option value="fr">FR</option>
+              <option value="en">EN</option>
+              <option value="es">ES</option>
+            </select>
           </header>
 
           <div className="flex h-9 items-center justify-center text-sm" style={{ background: skin.soft, color: skin.accent }}>
             <CircleHelp className="mr-2 h-4 w-4" />
             {hasRealSelection
-              ? `Conversation recue depuis le site ${skin.siteUrl}. La reponse IA est suspendue en mode manuel.`
-              : "Dashboard actif. En attente d'une conversation recue depuis le widget."}
+              ? `${copy.conversationFrom} ${skin.siteUrl}. ${copy.manualPaused}`
+              : copy.waiting}
           </div>
 
           <div className="flex-1 overflow-y-auto px-7 py-7">
             <div className="mb-7 flex items-center gap-8 text-sm text-[#172033]">
               <div className="h-px flex-1 bg-[#dfe5f1]" />
-              {formatConversationDate(selected.createdAt)}
+              {formatConversationDate(selected.createdAt, language)}
               <div className="h-px flex-1 bg-[#dfe5f1]" />
             </div>
             <div className="space-y-6">
               {selected.messages.map((message, index) => (
-                <MessageBlock key={`${message.role}-${index}`} message={message} guest={selected} skin={skin} />
+                <MessageBlock key={`${message.role}-${index}`} message={message} guest={selected} skin={skin} copy={copy} />
               ))}
             </div>
           </div>
@@ -892,9 +1035,9 @@ export default function InboxPage() {
           <footer className="border-t-4 bg-white" style={{ borderColor: skin.accent }}>
             <div className="flex h-12 items-center gap-2 border-b border-[#e8edf5] px-5 text-sm">
               <MessageSquareText className="h-4 w-4 text-[#68748b]" />
-              Live chat
+              {copy.liveChat}
               <ChevronDown className="h-4 w-4 text-[#68748b]" />
-              <StatusPill status={currentStatus} />
+              <StatusPill status={currentStatus} copy={copy} />
             </div>
             <div className="px-4 py-3">
               <textarea
@@ -903,8 +1046,8 @@ export default function InboxPage() {
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={
                   isManual
-                    ? "Ecrire une reponse au client..."
-                    : "Prendre la main pour repondre au client"
+                    ? copy.writeReply
+                    : copy.takeoverToReply
                 }
                 className="h-16 w-full resize-none text-sm outline-none placeholder:text-[#66718a] disabled:bg-white disabled:text-[#66718a]"
               />
@@ -932,7 +1075,7 @@ export default function InboxPage() {
                   style={isManual && draft.trim() ? { background: skin.accent } : undefined}
                 >
                   <Send className="h-4 w-4" />
-                  Repondre
+                  {copy.reply}
                 </button>
               </div>
             </div>
@@ -942,13 +1085,13 @@ export default function InboxPage() {
         <aside className="w-[280px] shrink-0 border-l border-[#dde4f1] bg-white">
           <div className="flex h-[72px] items-center gap-5 border-b border-[#dde4f1] px-5 text-sm">
             <button className="border-b-2 pb-5 font-medium" style={{ borderColor: skin.accent, color: skin.accent }}>
-              Info
+              {copy.info}
             </button>
-            <button className="pb-5">Viewed pages</button>
-            <button className="pb-5">Notes</button>
+            <button className="pb-5">{copy.viewedPages}</button>
+            <button className="pb-5">{copy.notes}</button>
           </div>
           <div className="border-b border-[#e8edf5] p-5">
-            <h2 className="text-xs font-semibold uppercase">Customer data</h2>
+            <h2 className="text-xs font-semibold uppercase">{copy.customerData}</h2>
             <div className="mt-5 space-y-4 text-sm">
               <div className="flex items-center gap-3">
                 <UserRound className="h-4 w-4 text-[#8792a8]" />
@@ -964,12 +1107,12 @@ export default function InboxPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Tag className="h-4 w-4 text-[#8792a8]" />
-                <button className="text-[#66718a]">Add customer tag</button>
+                <button className="text-[#66718a]">{copy.addTag}</button>
               </div>
             </div>
           </div>
           <div className="border-b border-[#e8edf5] p-5">
-            <h2 className="text-xs font-semibold uppercase">Booking context</h2>
+            <h2 className="text-xs font-semibold uppercase">{copy.bookingContext}</h2>
             <dl className="mt-4 space-y-3 text-sm">
               {Object.entries(selected.metadata).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between gap-3">
@@ -980,10 +1123,10 @@ export default function InboxPage() {
             </dl>
           </div>
           <div className="p-5">
-            <h2 className="text-xs font-semibold uppercase">Last viewed page</h2>
+            <h2 className="text-xs font-semibold uppercase">{copy.lastViewed}</h2>
             <p className="mt-4 text-sm text-[#66718a]">{selected.lastViewed}</p>
             <button className="mt-4 text-sm font-medium" style={{ color: skin.accent }}>
-              See the history
+              {copy.seeHistory}
             </button>
           </div>
         </aside>
