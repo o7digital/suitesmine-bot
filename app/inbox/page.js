@@ -29,7 +29,7 @@ import {
   Wand2,
   Zap,
 } from "lucide-react";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { clients } from "@/config/clients";
 
 const clientSkins = Object.fromEntries(
@@ -117,6 +117,7 @@ const translations = {
     greetingText: "Bonjour, merci pour votre message. Comment puis-je vous aider ?",
     quickText: "Merci. Je vérifie ces informations et je reviens vers vous rapidement.",
     attachment: "Pièce jointe",
+    logout: "Se déconnecter",
   },
   en: {
     nav: ["Inbox", "AI automations", "Customers", "Analytics", "AI copilot"],
@@ -147,6 +148,7 @@ const translations = {
     greetingText: "Hello, thank you for your message. How can I help?",
     quickText: "Thank you. I’ll check this information and get back to you shortly.",
     attachment: "Attachment",
+    logout: "Sign out",
   },
   es: {
     nav: ["Bandeja de entrada", "Automatizaciones IA", "Clientes", "Estadísticas", "Copiloto IA"],
@@ -177,6 +179,7 @@ const translations = {
     greetingText: "Hola, gracias por tu mensaje. ¿Cómo puedo ayudarte?",
     quickText: "Gracias. Verificaré esta información y te responderé en breve.",
     attachment: "Archivo adjunto",
+    logout: "Cerrar sesión",
   },
 };
 
@@ -575,7 +578,7 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
         )}
 
         {section === "settings" && (
-          <div className="grid max-w-4xl grid-cols-2 gap-5">
+          <div className="grid min-h-full max-w-4xl grid-cols-2 content-start gap-5">
             <article className="rounded-xl border border-[#dde4f1] bg-white p-6">
               <ShieldCheck className="h-6 w-6 text-[#3159c9]" />
               <h2 className="mt-4 text-lg font-semibold">{copy.accountSecurity}</h2>
@@ -592,6 +595,13 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
                 </div>
               </article>
             ))}
+            <div className="col-span-2 mt-auto flex justify-end pt-8">
+              <SignOutButton redirectUrl="/sign-in">
+                <button type="button" className="rounded-md border border-[#d8e0ef] bg-white px-4 py-2 text-sm font-semibold text-[#b42318] hover:bg-[#fff5f4]">
+                  {copy.logout}
+                </button>
+              </SignOutButton>
+            </div>
           </div>
         )}
       </div>
