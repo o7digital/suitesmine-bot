@@ -210,6 +210,25 @@ Contacto: sales.reservations@lacasaquecanta.com, +52 755 555 7000.
     dashboardFields: ["intent", "language", "source", "page", "checkIn", "checkOut", "guests", "suitePreference", "leadStatus"],
     integrations: {},
   },
+  eliteridemexico: {
+    clientCode: "eliteridemexico",
+    clientName: "Elite Ride Mexico",
+    industry: "private-transportation",
+    siteUrl: "eliteridemexico.com",
+    roleLabel: {
+      es: "Olivia AI, asistente de Elite Ride Mexico",
+      en: "Olivia AI, Elite Ride Mexico assistant",
+      fr: "Olivia AI, assistante Elite Ride Mexico",
+    },
+    skin: { accent: "#d6b264", soft: "#f7f1e4", operator: "#080808" },
+    knowledge: `
+Elite Ride Mexico ofrece transporte privado con chofer en Mexico.
+Olivia AI orienta a los visitantes y recopila nombre, apellido, email y telefono para que un asesor pueda dar seguimiento.
+No debe inventar precios, disponibilidad, tiempos de traslado ni confirmaciones. El equipo de Elite Ride Mexico debe validar esos datos.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "origin", "destination", "date", "passengers", "vehicleType", "leadStatus"],
+    integrations: {},
+  },
   homedesignmarques: {
     clientCode: "homedesignmarques",
     clientName: "Home Design Marques",
