@@ -570,7 +570,7 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
               <p className="mt-2 text-sm leading-6 text-[#66718a]">{copy.accountText}</p>
               <div className="mt-5 flex items-center gap-3"><UserButton userProfileMode="modal" showName /><span className="text-sm">{copy.openProfile}</span></div>
             </article>
-            {["mailbox", "analytics", "database", "clerk", "openai", "cloudbeds"].map((key) => (
+            {["whatsapp", "facebook", "instagram", "mailbox", "analytics", "database", "clerk", "openai", "cloudbeds"].map((key) => (
               <article key={key} className="rounded-xl border border-[#dde4f1] bg-white p-5">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold capitalize">{key}</h2>

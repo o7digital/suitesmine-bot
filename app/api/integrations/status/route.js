@@ -17,6 +17,27 @@ export async function GET() {
         configured("GOOGLE_REDIRECT_URI"),
       provider: "gmail-oauth",
     },
+    whatsapp: {
+      configured:
+        configured("META_WEBHOOK_VERIFY_TOKEN") &&
+        configured("WHATSAPP_PHONE_NUMBER_ID") &&
+        configured("WHATSAPP_ACCESS_TOKEN"),
+      provider: "meta-whatsapp-cloud-api",
+    },
+    facebook: {
+      configured:
+        configured("META_WEBHOOK_VERIFY_TOKEN") &&
+        configured("META_PAGE_ID") &&
+        configured("META_PAGE_ACCESS_TOKEN"),
+      provider: "meta-messenger-platform",
+    },
+    instagram: {
+      configured:
+        configured("META_WEBHOOK_VERIFY_TOKEN") &&
+        configured("INSTAGRAM_ACCOUNT_ID") &&
+        configured("META_PAGE_ACCESS_TOKEN"),
+      provider: "instagram-messaging-api",
+    },
     analytics: {
       configured:
         configured("GA4_PROPERTY_ID") &&

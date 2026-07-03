@@ -281,6 +281,33 @@ GOOGLE_REDIRECT_URI=
 
 The mailbox connector still needs Railway Postgres before OAuth refresh tokens and imported emails can be stored safely.
 
+## Default Omnichannel Inbox
+
+Every client skin includes the same channel catalog by default:
+
+- website widget;
+- WhatsApp Business through Meta WhatsApp Cloud API;
+- Facebook Messenger through Meta Messenger Platform;
+- Instagram Direct through Instagram Messaging API;
+- email through Gmail OAuth.
+
+Channels are isolated by `clientCode`. A channel is visible as `not configured` until that client's credentials and account identifiers are provisioned. Incoming webhooks must resolve the destination `clientCode` from a server-side channel mapping; client codes and access tokens must never be trusted from webhook payloads or exposed in the browser.
+
+Required Meta configuration:
+
+```env
+META_APP_ID=
+META_APP_SECRET=
+META_WEBHOOK_VERIFY_TOKEN=
+META_PAGE_ID=
+META_PAGE_ACCESS_TOKEN=
+INSTAGRAM_ACCOUNT_ID=
+WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_ACCESS_TOKEN=
+```
+
+All inbound messages must be normalized into the existing conversation model with `source` set to `whatsapp`, `facebook`, `instagram`, `email`, or `website`. Operator replies must be delivered through the originating provider.
+
 ## Google Analytics 4
 
 Olivia needs two GA4 layers:
