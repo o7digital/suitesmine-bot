@@ -1,10 +1,17 @@
 export const runtime = "nodejs";
 
+import { isDatabaseConfigured } from "@/lib/db";
+import { getOAuthConnection } from "@/lib/oauth-connections";
+
 function configured(name) {
   return Boolean(process.env[name]?.trim());
 }
 
-export async function GET() {
+export async function GET(request) {
+  const clientCode = new URL(request.url).searchParams.get("client")?.trim() || "";
+  const gmailConnection = clientCode && isDatabaseConfigured()
+    ? await getOAuthConnection(clientCode, "gmail").catch(() => null)
+    : null;
   return Response.json({
     huggingFace: {
       configured: configured("HF_TOKEN") || configured("HUGGING_FACE_TOKEN"),
@@ -16,6 +23,8 @@ export async function GET() {
         configured("GOOGLE_CLIENT_SECRET") &&
         configured("GOOGLE_REDIRECT_URI"),
       provider: "gmail-oauth",
+      connected: Boolean(gmailConnection),
+      accountEmail: gmailConnection?.account_email || null,
     },
     whatsapp: {
       configured:

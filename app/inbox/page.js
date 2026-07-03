@@ -679,11 +679,13 @@ export default function InboxPage() {
   }, [loadConversations]);
 
   useEffect(() => {
-    fetch("/api/integrations/status")
+    const params = new URLSearchParams();
+    if (scopedClientCode) params.set("client", scopedClientCode);
+    fetch(`/api/integrations/status?${params}`)
       .then((response) => response.json())
       .then(setIntegrations)
       .catch(() => setIntegrations({}));
-  }, []);
+  }, [scopedClientCode]);
 
   const visibleConversations = useMemo(
     () =>
@@ -917,7 +919,7 @@ export default function InboxPage() {
             </button>
             <div className="mt-4 rounded-md bg-[#eef3ff] p-3 text-sm leading-5 text-[#536079]">
               {copy.ticketsText}
-              <button className="mt-3 rounded-md bg-[#dbe6ff] px-3 py-1.5 text-sm font-medium text-[#3159c9]">
+              <button type="button" onClick={() => { if (!scopedClientCode) return setActiveSection("settings"); window.location.href = `/api/integrations/gmail/connect?client=${encodeURIComponent(scopedClientCode)}`; }} className="mt-3 rounded-md bg-[#dbe6ff] px-3 py-1.5 text-sm font-medium text-[#3159c9]">
                 {copy.connectMailbox}
               </button>
             </div>

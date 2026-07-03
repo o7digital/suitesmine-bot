@@ -32,3 +32,11 @@ create index if not exists conversations_client_updated_idx
 
 create index if not exists messages_conversation_created_idx
   on messages (conversation_id, created_at asc);
+
+create table if not exists oauth_connections (
+  id uuid primary key default gen_random_uuid(), client_code text not null, provider text not null,
+  account_id text, account_email text, access_token text not null, refresh_token text,
+  expires_at timestamptz, scopes text, metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+  unique (client_code, provider)
+);
