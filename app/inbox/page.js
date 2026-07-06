@@ -750,7 +750,7 @@ export default function InboxPage() {
     selectedCandidate ?? {
       id: "empty",
       createdAt: null,
-      clientCode: "suitesmine",
+      clientCode: scopedClientCode || "suitesmine",
       guest: copy.noConversationTitle,
       initials: "OC",
       channel: "Railway",
