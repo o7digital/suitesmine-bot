@@ -468,7 +468,7 @@ const getNavigationItems = (copy) => [
   { id: "copilot", label: copy.nav[4], icon: Sparkles },
 ];
 
-function WorkspacePanel({ section, conversations, integrations, onClose, copy, language }) {
+function WorkspacePanel({ section, conversations, integrations, onClose, copy, language, scopedClientCode }) {
   const [analysis, setAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const open = conversations.filter((item) => item.status !== "solved");
@@ -609,7 +609,11 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
               </article>
             ))}
             <div className="col-span-2 mt-auto flex justify-end pt-8">
-              <SignOutButton redirectUrl="/sign-in">
+              <SignOutButton
+                redirectUrl={`/sign-in?redirect_url=${encodeURIComponent(
+                  scopedClientCode ? `/inbox?client=${scopedClientCode}` : "/inbox"
+                )}`}
+              >
                 <button type="button" className="rounded-md border border-[#d8e0ef] bg-white px-4 py-2 text-sm font-semibold text-[#b42318] hover:bg-[#fff5f4]">
                   {copy.logout}
                 </button>
@@ -862,6 +866,7 @@ export default function InboxPage() {
             onClose={() => setActiveSection("inbox")}
             copy={copy}
             language={language}
+            scopedClientCode={scopedClientCode}
           />
         ) : (
         <>
