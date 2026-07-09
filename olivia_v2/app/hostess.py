@@ -15,9 +15,9 @@ from olivia_v2.app.schemas import ChatRequest, OliviaResponse
 
 def build_booking_url(language: str, fields) -> str:
     base = (
-        "https://hotels.cloudbeds.com/en/reservation/DzS8Bc"
+        "https://hotels.cloudbeds.com/en/reservation/UeErs0"
         if language == "en"
-        else "https://hotels.cloudbeds.com/es/reservation/DzS8Bc"
+        else "https://hotels.cloudbeds.com/es/reservation/UeErs0"
     )
     params = {
         "currency": "mxn",

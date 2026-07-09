@@ -249,8 +249,8 @@ function contactQualificationReply(language, client, details, message) {
 function buildCloudbedsBookingUrl({ language, details }) {
   const base =
     language === "en"
-      ? "https://hotels.cloudbeds.com/en/reservation/DzS8Bc"
-      : "https://hotels.cloudbeds.com/es/reservation/DzS8Bc";
+      ? "https://hotels.cloudbeds.com/en/reservation/UeErs0"
+      : "https://hotels.cloudbeds.com/es/reservation/UeErs0";
   const url = new URL(base);
   url.searchParams.set("currency", "mxn");
   if (details.checkIn) url.searchParams.set("checkin", details.checkIn);
