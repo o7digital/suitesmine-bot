@@ -368,6 +368,34 @@ export async function POST(request) {
       });
     }
 
+    const preflightMessage = clean(payload.message);
+    const preflightMetadata = payload.metadata || {};
+    const preflightBookingDraft = preflightMetadata.bookingDraft || {};
+
+    if (
+      requestedClientCode === "suitesmine" &&
+      preflightMessage &&
+      isBookingFlow(preflightMessage, preflightBookingDraft)
+    ) {
+      const language = clean(payload.language) || "es";
+      const checkIn = clean(preflightMetadata.checkIn);
+      const checkOut = clean(preflightMetadata.checkOut);
+      const guests = clean(preflightMetadata.guests);
+      const rates = await getCloudbedsRates({ checkIn, checkOut });
+      const bookingDetails = extractBookingDetails({
+        message: preflightMessage,
+        metadata: { ...preflightMetadata, checkIn, checkOut, guests },
+      });
+
+      return json({
+        reply: bookingReply(language, bookingDetails, rates),
+        mode: "booking",
+        clientCode: "suitesmine",
+        rates,
+        bookingDraft: { active: true, ...bookingDetails },
+      });
+    }
+
     try {
       const v2Response = await callOliviaV2(payload);
       if (v2Response) return json(v2Response);
