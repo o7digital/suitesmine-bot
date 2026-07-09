@@ -198,17 +198,35 @@ function bookingReply(language, details, rates) {
 
   const selected = rates.find((rate) => normalize(rate.roomTypeName) === normalize(details.roomType));
   const bookingUrl = buildCloudbedsBookingUrl({ language, details });
+  const available = Number(selected?.roomsAvailable);
+  const availabilityLine = selected
+    ? language === "en"
+      ? available > 0
+        ? `Live Cloudbeds availability: ${available} ${details.roomType} unit(s) still available for these dates.`
+        : `Live Cloudbeds availability: ${details.roomType} is fully booked for these dates.`
+      : available > 0
+        ? `Disponibilidad Cloudbeds en vivo: quedan ${available} unidad(es) ${details.roomType} para estas fechas.`
+        : `Disponibilidad Cloudbeds en vivo: ${details.roomType} esta completo para estas fechas.`
+    : language === "en"
+      ? "Live Cloudbeds availability: no live availability was returned for this category."
+      : "Disponibilidad Cloudbeds en vivo: no se recibio disponibilidad en vivo para esta categoria.";
   const priceLine = selected
     ? language === "en"
-      ? `Rate: ${selected.roomRateDetailed?.[0]?.rate ?? selected.roomRate} MXN per night, total ${selected.totalRate} MXN.`
-      : `Tarifa: ${selected.roomRateDetailed?.[0]?.rate ?? selected.roomRate} MXN por noche, total ${selected.totalRate} MXN.`
+      ? `Rate: ${selected.roomRateDetailed?.[0]?.rate ?? selected.roomRate} USD per night, total ${selected.totalRate} USD.`
+      : `Tarifa: ${selected.roomRateDetailed?.[0]?.rate ?? selected.roomRate} USD por noche, total ${selected.totalRate} USD.`
     : "";
 
   if (language === "en") {
-    return `Request summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nCloudbeds availability link:\n${bookingUrl}\n\nBefore discussing payment, please check live availability and the real rate in Cloudbeds. If Cloudbeds shows availability, you can continue the booking there. Payment and confirmation only apply after availability is validated.`;
+    if (selected && available <= 0) {
+      return `Request summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n\n${availabilityLine}\n\nI should not send the payment or booking link for a sold-out category. Please choose another category or different dates.`;
+    }
+    return `Request summary:\n\nName: ${details.name}\nEmail: ${details.email}\nPhone: ${details.phone}\nCheck-in: ${details.checkIn}\nCheck-out: ${details.checkOut}\nGuests: ${details.guests}\nCategory: ${details.roomType}\n\n${availabilityLine}\n${priceLine ? `\n${priceLine}\n` : ""}\nCloudbeds test booking engine:\n${bookingUrl}\n\nYou can continue the reservation in the Cloudbeds test booking engine. Payment and confirmation happen only inside Cloudbeds.`;
   }
 
-  return `Resumen de solicitud:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n${priceLine ? `\n${priceLine}\n` : ""}\nLink para revisar disponibilidad Cloudbeds:\n${bookingUrl}\n\nAntes de hablar de pago, revise disponibilidad y tarifa real en Cloudbeds. Si Cloudbeds muestra disponibilidad, puede continuar ahi con la reserva. El pago y la confirmacion solo aplican despues de validar disponibilidad.`;
+  if (selected && available <= 0) {
+    return `Resumen de solicitud:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n\n${availabilityLine}\n\nNo debo enviar link de pago ni de reserva para una categoria sin disponibilidad. Por favor elija otra categoria u otras fechas.`;
+  }
+  return `Resumen de solicitud:\n\nNombre: ${details.name}\nEmail: ${details.email}\nTelefono: ${details.phone}\nLlegada: ${details.checkIn}\nSalida: ${details.checkOut}\nHuespedes: ${details.guests}\nCategoria: ${details.roomType}\n\n${availabilityLine}\n${priceLine ? `\n${priceLine}\n` : ""}\nMotor de reserva Cloudbeds TEST:\n${bookingUrl}\n\nPuede continuar la reserva en el motor de reserva Cloudbeds de prueba. El pago y la confirmacion se hacen solamente dentro de Cloudbeds.`;
 }
 
 function missingContactFields(details) {
@@ -252,7 +270,7 @@ function buildCloudbedsBookingUrl({ language, details }) {
       ? "https://hotels.cloudbeds.com/en/reservation/UeErs0"
       : "https://hotels.cloudbeds.com/es/reservation/UeErs0";
   const url = new URL(base);
-  url.searchParams.set("currency", "mxn");
+  url.searchParams.set("currency", "usd");
   if (details.checkIn) url.searchParams.set("checkin", details.checkIn);
   if (details.checkOut) url.searchParams.set("checkout", details.checkOut);
   if (details.guests) {

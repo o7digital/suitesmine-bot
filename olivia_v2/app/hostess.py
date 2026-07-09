@@ -20,7 +20,7 @@ def build_booking_url(language: str, fields) -> str:
         else "https://hotels.cloudbeds.com/es/reservation/UeErs0"
     )
     params = {
-        "currency": "mxn",
+        "currency": "usd",
         "kids": "0",
     }
     if fields.checkIn:
@@ -141,19 +141,51 @@ def local_booking_reply(language: str, fields, missing: list[str], rates: list[d
 
     booking_url = build_booking_url(language, fields)
     selected = next((r for r in rates if str(r.get("roomTypeName", "")).lower() == fields.roomType.lower()), None)
+    available = int(selected.get("roomsAvailable", 0)) if selected and str(selected.get("roomsAvailable", "")).isdigit() else 0
+    if selected:
+        if language == "en":
+            availability = (
+                f"Live Cloudbeds availability: {available} {fields.roomType} unit(s) still available for these dates."
+                if available > 0
+                else f"Live Cloudbeds availability: {fields.roomType} is fully booked for these dates."
+            )
+        else:
+            availability = (
+                f"Disponibilidad Cloudbeds en vivo: quedan {available} unidad(es) {fields.roomType} para estas fechas."
+                if available > 0
+                else f"Disponibilidad Cloudbeds en vivo: {fields.roomType} esta completo para estas fechas."
+            )
+    else:
+        availability = (
+            "Live Cloudbeds availability: no live availability was returned for this category."
+            if language == "en"
+            else "Disponibilidad Cloudbeds en vivo: no se recibio disponibilidad en vivo para esta categoria."
+        )
     price = ""
     if selected:
-        price = f"\nTarifa estimada: {selected.get('totalRate', 'n/a')} MXN total."
+        price = f"\nTarifa estimada: {selected.get('totalRate', 'n/a')} USD total."
     if language == "en":
+        if selected and available <= 0:
+            return (
+                "availability_check",
+                "offer_alternative_dates_or_category",
+                f"Request summary:\n\nName: {fields.name}\nEmail: {fields.email}\nPhone: {fields.phone}\nCheck-in: {fields.checkIn}\nCheck-out: {fields.checkOut}\nGuests: {fields.guests}\nCategory: {fields.roomType}\n\n{availability}\n\nI should not send the payment or booking link for a sold-out category. Please choose another category or different dates.",
+            )
         return (
             "availability_check",
             "send_cloudbeds_availability_link",
-            f"Request summary:\n\nName: {fields.name}\nEmail: {fields.email}\nPhone: {fields.phone}\nCheck-in: {fields.checkIn}\nCheck-out: {fields.checkOut}\nGuests: {fields.guests}\nCategory: {fields.roomType}{price}\n\nCloudbeds availability link:\n{booking_url}\n\nBefore discussing payment, please check live availability and the real rate in Cloudbeds. If Cloudbeds shows availability, you can continue the booking there. Payment and confirmation only apply after availability is validated.",
+            f"Request summary:\n\nName: {fields.name}\nEmail: {fields.email}\nPhone: {fields.phone}\nCheck-in: {fields.checkIn}\nCheck-out: {fields.checkOut}\nGuests: {fields.guests}\nCategory: {fields.roomType}\n\n{availability}{price}\n\nCloudbeds test booking engine:\n{booking_url}\n\nYou can continue the reservation in the Cloudbeds test booking engine. Payment and confirmation happen only inside Cloudbeds.",
+        )
+    if selected and available <= 0:
+        return (
+            "availability_check",
+            "offer_alternative_dates_or_category",
+            f"Resumen de solicitud:\n\nNombre: {fields.name}\nEmail: {fields.email}\nTelefono: {fields.phone}\nLlegada: {fields.checkIn}\nSalida: {fields.checkOut}\nHuespedes: {fields.guests}\nCategoria: {fields.roomType}\n\n{availability}\n\nNo debo enviar link de pago ni de reserva para una categoria sin disponibilidad. Por favor elija otra categoria u otras fechas.",
         )
     return (
         "availability_check",
         "send_cloudbeds_availability_link",
-        f"Resumen de solicitud:\n\nNombre: {fields.name}\nEmail: {fields.email}\nTelefono: {fields.phone}\nLlegada: {fields.checkIn}\nSalida: {fields.checkOut}\nHuespedes: {fields.guests}\nCategoria: {fields.roomType}{price}\n\nLink para revisar disponibilidad Cloudbeds:\n{booking_url}\n\nAntes de hablar de pago, revise disponibilidad y tarifa real en Cloudbeds. Si Cloudbeds muestra disponibilidad, puede continuar ahi con la reserva. El pago y la confirmacion solo aplican despues de validar disponibilidad.",
+        f"Resumen de solicitud:\n\nNombre: {fields.name}\nEmail: {fields.email}\nTelefono: {fields.phone}\nLlegada: {fields.checkIn}\nSalida: {fields.checkOut}\nHuespedes: {fields.guests}\nCategoria: {fields.roomType}\n\n{availability}{price}\n\nMotor de reserva Cloudbeds TEST:\n{booking_url}\n\nPuede continuar la reserva en el motor de reserva Cloudbeds de prueba. El pago y la confirmacion se hacen solamente dentro de Cloudbeds.",
     )
 
 
