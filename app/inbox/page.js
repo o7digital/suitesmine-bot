@@ -835,13 +835,13 @@ export default function InboxPage() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f4f6fb] text-[#121827]">
-      <div className="flex h-screen min-h-[760px]">
-        <aside className="flex w-16 shrink-0 flex-col items-center border-r border-[#dde4f1] bg-[#f8faff] py-4">
-          <div className="mb-6 flex h-9 w-9 items-center justify-center rounded-md bg-white shadow-sm">
+    <main className="min-h-screen overflow-x-hidden bg-[#f4f6fb] text-[#121827]">
+      <div className="flex min-h-screen flex-col lg:h-screen lg:min-h-[760px] lg:flex-row">
+        <aside className="flex shrink-0 items-center gap-3 overflow-x-auto border-b border-[#dde4f1] bg-[#f8faff] px-3 py-3 lg:w-16 lg:flex-col lg:border-b-0 lg:border-r lg:px-0 lg:py-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white shadow-sm lg:mb-6">
             <MessageCircle className="h-5 w-5 text-[#3159c9]" />
           </div>
-          <nav aria-label={copy.primaryNav} className="flex flex-1 flex-col gap-2">
+          <nav aria-label={copy.primaryNav} className="flex flex-1 gap-2 lg:flex-col">
             {navigationItems.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -881,7 +881,7 @@ export default function InboxPage() {
           />
         ) : (
         <>
-        <aside className="w-[238px] shrink-0 border-r border-[#dde4f1] bg-[#f4f7fc] px-5 py-5">
+        <aside className="w-full shrink-0 border-b border-[#dde4f1] bg-[#f4f7fc] px-5 py-5 lg:w-[238px] lg:border-b-0 lg:border-r">
           <h1 className="text-xl font-semibold">{copy.nav[0]}</h1>
           <div className="mt-3 flex items-center gap-2 text-xs text-[#5f6c86]">
             <span className="rounded-full bg-[#e8edf9] px-2 py-1">{user?.firstName || role}</span>
@@ -896,12 +896,12 @@ export default function InboxPage() {
             {loadError && <div className="text-[#b42318]">{loadError}</div>}
           </div>
 
-          <section className="mt-8">
+          <section className="mt-6 lg:mt-8">
             <button className="flex items-center gap-1 text-xs font-semibold uppercase text-[#172033]">
               {copy.liveConversations}
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
-            <div className="mt-4 space-y-1">
+            <div className="mt-4 grid grid-cols-3 gap-2 lg:block lg:space-y-1">
               {views.map((view) => (
                 <button
                   key={view.id}
@@ -928,7 +928,7 @@ export default function InboxPage() {
             </div>
           </section>
 
-          <section className="mt-8">
+          <section className="mt-6 lg:mt-8">
             <button className="flex items-center gap-1 text-xs font-semibold uppercase text-[#172033]">
               {copy.tickets}
               <ChevronDown className="h-3.5 w-3.5" />
@@ -941,7 +941,7 @@ export default function InboxPage() {
             </div>
           </section>
 
-          <section className="mt-8">
+          <section className="mt-6 lg:mt-8">
             <button className="flex items-center gap-1 text-xs font-semibold uppercase text-[#172033]">
               {copy.savedViews}
               <ChevronDown className="h-3.5 w-3.5" />
@@ -959,7 +959,7 @@ export default function InboxPage() {
           </section>
         </aside>
 
-        <section className="w-[320px] shrink-0 border-r border-[#dde4f1] bg-white">
+        <section className="w-full shrink-0 border-b border-[#dde4f1] bg-white lg:w-[320px] lg:border-b-0 lg:border-r">
           <div className="border-b border-[#e9edf5] px-4 py-4">
             <label className="flex h-10 items-center gap-2 rounded-full bg-[#f1f4f9] px-4">
               <Search className="h-4 w-4 text-[#74819a]" />
@@ -977,7 +977,7 @@ export default function InboxPage() {
               </span>
             </h2>
           </div>
-          <div className="h-[calc(100%-138px)] overflow-y-auto px-3 pb-4">
+          <div className="max-h-[360px] overflow-y-auto px-3 pb-4 lg:h-[calc(100%-138px)] lg:max-h-none">
             {showingFallbackList && (
               <div className="mb-3 rounded-md bg-[#eef3ff] px-3 py-2 text-xs leading-5 text-[#4f5f83]">
                 {copy.emptyView}
@@ -1031,8 +1031,8 @@ export default function InboxPage() {
           </div>
         </section>
 
-        <section className="flex min-w-0 flex-1 flex-col bg-white">
-          <header className="flex h-[72px] items-center justify-between border-b border-[#dde4f1] px-6">
+        <section className="flex min-h-[560px] min-w-0 flex-1 flex-col bg-white lg:min-h-0">
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#dde4f1] px-4 py-3 lg:h-[72px] lg:flex-nowrap lg:px-6 lg:py-0">
             <div className="flex items-center gap-3">
               <span className="text-sm text-[#68748b]">{copy.client}</span>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e1e7f2] text-xs font-semibold">
@@ -1040,7 +1040,7 @@ export default function InboxPage() {
               </div>
               <span className="text-sm font-medium">{skin.label}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 disabled={!hasRealSelection}
                 onClick={async () => {
@@ -1093,15 +1093,15 @@ export default function InboxPage() {
             </select>
           </header>
 
-          <div className="flex h-9 items-center justify-center text-sm" style={{ background: skin.soft, color: skin.accent }}>
+          <div className="flex min-h-9 items-center justify-center px-3 py-2 text-center text-sm" style={{ background: skin.soft, color: skin.accent }}>
             <CircleHelp className="mr-2 h-4 w-4" />
             {hasRealSelection
               ? `${copy.conversationFrom} ${skin.siteUrl}. ${copy.manualPaused}`
               : copy.waiting}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-7 py-7">
-            <div className="mb-7 flex items-center gap-8 text-sm text-[#172033]">
+          <div className="flex-1 overflow-y-auto px-4 py-5 lg:px-7 lg:py-7">
+            <div className="mb-5 flex items-center gap-4 text-sm text-[#172033] lg:mb-7 lg:gap-8">
               <div className="h-px flex-1 bg-[#dfe5f1]" />
               {formatConversationDate(selected.createdAt, language)}
               <div className="h-px flex-1 bg-[#dfe5f1]" />
@@ -1120,7 +1120,7 @@ export default function InboxPage() {
               <ChevronDown className="h-4 w-4 text-[#68748b]" />
               <StatusPill status={currentStatus} copy={copy} />
             </div>
-            <div className="px-4 py-3">
+            <div className="px-3 py-3 lg:px-4">
               <textarea
                 ref={replyRef}
                 value={draft}
@@ -1140,8 +1140,8 @@ export default function InboxPage() {
                 </div>
               )}
               {attachmentError && <p className="mb-2 text-xs text-[#b42318]">{attachmentError}</p>}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-[#6f7b94]">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-1 text-[#6f7b94]">
                   <button type="button" disabled={!hasRealSelection || toolLoading} onClick={suggestReply} title={copy.tools.suggest} aria-label={copy.tools.suggest} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Bot className="h-4 w-4" /></button>
                   <button type="button" disabled={!hasRealSelection} onClick={() => { setDraft(copy.greetingText); replyRef.current?.focus(); }} title={copy.tools.greeting} aria-label={copy.tools.greeting} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Wand2 className="h-4 w-4" /></button>
                   <button type="button" disabled={!hasRealSelection} onClick={() => { setDraft(copy.quickText); replyRef.current?.focus(); }} title={copy.tools.quick} aria-label={copy.tools.quick} className="rounded p-2 hover:bg-[#eef3ff] disabled:opacity-40"><Zap className="h-4 w-4" /></button>
@@ -1197,8 +1197,8 @@ export default function InboxPage() {
           </footer>
         </section>
 
-        <aside className="w-[280px] shrink-0 border-l border-[#dde4f1] bg-white">
-          <div className="flex h-[72px] items-center gap-5 border-b border-[#dde4f1] px-5 text-sm">
+        <aside className="w-full shrink-0 border-t border-[#dde4f1] bg-white lg:w-[280px] lg:border-l lg:border-t-0">
+          <div className="flex min-h-[56px] items-center gap-5 overflow-x-auto border-b border-[#dde4f1] px-5 py-3 text-sm lg:h-[72px] lg:py-0">
             <button className="border-b-2 pb-5 font-medium" style={{ borderColor: skin.accent, color: skin.accent }}>
               {copy.info}
             </button>
@@ -1229,12 +1229,12 @@ export default function InboxPage() {
           <div className="border-b border-[#e8edf5] p-5">
             <h2 className="text-xs font-semibold uppercase">{copy.bookingContext}</h2>
             <dl className="mt-4 space-y-3 text-sm">
-	              {Object.entries(selected.metadata).map(([key, value]) => (
-	                <div key={key} className="flex items-center justify-between gap-3">
-	                  <dt className="text-[#66718a]">{key}</dt>
-	                  <dd className="break-words text-right font-medium">{formatMetadataValue(value)}</dd>
-	                </div>
-	              ))}
+              {Object.entries(selected.metadata).map(([key, value]) => (
+                <div key={key} className="flex items-start justify-between gap-3">
+                  <dt className="shrink-0 text-[#66718a]">{key}</dt>
+                  <dd className="min-w-0 break-words text-right font-medium">{formatMetadataValue(value)}</dd>
+                </div>
+              ))}
             </dl>
           </div>
           <div className="p-5">
