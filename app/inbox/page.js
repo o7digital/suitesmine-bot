@@ -389,6 +389,17 @@ function mapConversation(conversation) {
   };
 }
 
+function formatMetadataValue(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  if (Array.isArray(value)) return value.map(formatMetadataValue).join(", ");
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, nestedValue]) => `${key}: ${formatMetadataValue(nestedValue)}`)
+      .join(" · ");
+  }
+  return String(value);
+}
+
 const getViews = (copy) => [
   { id: "unassigned", label: copy.views[0], icon: "!" },
   { id: "my-open", label: copy.views[1], icon: "[]" },
@@ -400,7 +411,7 @@ function StatusPill({ status, copy }) {
     manual: { label: copy.statuses.manual, className: "bg-[#fff3dc] text-[#8a5200]" },
     ai: { label: copy.statuses.ai, className: "bg-[#e9f8ef] text-[#17623a]" },
     solved: { label: copy.statuses.solved, className: "bg-[#eaf0ff] text-[#3159c9]" },
-  }[status];
+  }[status] ?? { label: status || "-", className: "bg-[#eef3ff] text-[#536079]" };
 
   return (
     <span className={`inline-flex h-6 items-center rounded-full px-2 text-xs font-medium ${config.className}`}>
@@ -1218,12 +1229,12 @@ export default function InboxPage() {
           <div className="border-b border-[#e8edf5] p-5">
             <h2 className="text-xs font-semibold uppercase">{copy.bookingContext}</h2>
             <dl className="mt-4 space-y-3 text-sm">
-              {Object.entries(selected.metadata).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between gap-3">
-                  <dt className="text-[#66718a]">{key}</dt>
-                  <dd className="font-medium">{value}</dd>
-                </div>
-              ))}
+	              {Object.entries(selected.metadata).map(([key, value]) => (
+	                <div key={key} className="flex items-center justify-between gap-3">
+	                  <dt className="text-[#66718a]">{key}</dt>
+	                  <dd className="break-words text-right font-medium">{formatMetadataValue(value)}</dd>
+	                </div>
+	              ))}
             </dl>
           </div>
           <div className="p-5">
