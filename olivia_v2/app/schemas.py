@@ -24,6 +24,7 @@ class ChatMetadata(BaseModel):
     pageTitle: str | None = None
     pageContent: str | None = None
     bookingDraft: dict[str, Any] = Field(default_factory=dict)
+    lead: dict[str, Any] = Field(default_factory=dict)
 
 
 class ChatRequest(BaseModel):

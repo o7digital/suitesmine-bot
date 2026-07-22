@@ -75,6 +75,7 @@ def value_after_step(message: str, step: int) -> str:
 
 def extract_fields(message: str, metadata: ChatMetadata) -> CollectedFields:
     draft = metadata.bookingDraft or {}
+    lead = metadata.lead or {}
     structured_name = value_after_step(message, 1)
     structured_email = re.search(r"[^\s@]+@[^\s@]+\.[^\s@,.;]+", value_after_step(message, 2))
     structured_phone = re.search(r"(?:\+?\d[\d\s().-]{6,}\d)", value_after_step(message, 3))
@@ -82,7 +83,8 @@ def extract_fields(message: str, metadata: ChatMetadata) -> CollectedFields:
     phone = structured_phone or re.search(r"(?:\+?\d[\d\s().-]{6,}\d)", message)
     room_type = pick_room_type(value_after_step(message, 5) or message, draft.get("roomType"))
 
-    name = clean(draft.get("name"))
+    lead_name = clean(lead.get("name")) or f"{clean(lead.get('firstName'))} {clean(lead.get('lastName'))}".strip()
+    name = clean(draft.get("name")) or lead_name
     if not name and structured_name and "@" not in structured_name:
         name = structured_name
     if not name and email:
@@ -92,8 +94,8 @@ def extract_fields(message: str, metadata: ChatMetadata) -> CollectedFields:
 
     return CollectedFields(
         name=name or None,
-        email=email.group(0) if email else clean(draft.get("email")) or None,
-        phone=phone.group(0) if phone else clean(draft.get("phone")) or None,
+        email=email.group(0) if email else clean(draft.get("email")) or clean(lead.get("email")) or None,
+        phone=phone.group(0) if phone else clean(draft.get("phone")) or clean(lead.get("phone")) or None,
         checkIn=clean(metadata.checkIn) or clean(draft.get("checkIn")) or None,
         checkOut=clean(metadata.checkOut) or clean(draft.get("checkOut")) or None,
         guests=str(metadata.guests) if metadata.guests else clean(draft.get("guests")) or None,

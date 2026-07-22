@@ -108,16 +108,18 @@ function valueAfterStep(text, step) {
 
 function extractBookingDetails({ message, metadata }) {
   const draft = metadata.bookingDraft || {};
+  const lead = metadata.lead || {};
   const text = clean(message);
   const normalized = normalize(text);
   const structuredName = valueAfterStep(text, 1);
   const structuredEmail = valueAfterStep(text, 2).match(/[^\s@]+@[^\s@]+\.[^\s@,.;]+/)?.[0] || "";
   const structuredPhone = valueAfterStep(text, 3).match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || "";
-  const email = structuredEmail || text.match(/[^\s@]+@[^\s@]+\.[^\s@,.;]+/)?.[0] || clean(draft.email);
-  const phone = structuredPhone || text.match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || clean(draft.phone);
+  const leadName = clean(lead.name) || `${clean(lead.firstName)} ${clean(lead.lastName)}`.trim();
+  const email = structuredEmail || text.match(/[^\s@]+@[^\s@]+\.[^\s@,.;]+/)?.[0] || clean(draft.email) || clean(lead.email);
+  const phone = structuredPhone || text.match(/(?:\+?\d[\d\s().-]{6,}\d)/)?.[0] || clean(draft.phone) || clean(lead.phone);
   const roomType = pickRoomType(valueAfterStep(text, 5) || text, draft.roomType);
 
-  let name = clean(draft.name);
+  let name = clean(draft.name) || leadName;
   if (!name && structuredName && !structuredName.includes("@")) {
     name = structuredName;
   }
@@ -355,9 +357,9 @@ export async function POST(request) {
 
     if (requestedClientCode === "suitesmine" && isSpecialBookingRequest(payload)) {
       const replies = {
-        en: "For special requests, please contact the hotel directly via WhatsApp or by phone at +52 55 36 66 85 85.",
-        fr: "Pour les demandes particulieres, contactez directement l'hotel via WhatsApp ou par telephone au +52 55 36 66 85 85.",
-        es: "Para solicitudes especiales, contacte directamente al hotel via WhatsApp o por telefono al +52 55 36 66 85 85.",
+        en: "For special requests, please contact the hotel directly via WhatsApp or by phone at +52 55 36 66 85 35.",
+        fr: "Pour les demandes particulieres, contactez directement l'hotel via WhatsApp ou par telephone au +52 55 36 66 85 35.",
+        es: "Para solicitudes especiales, contacte directamente al hotel via WhatsApp o por telefono al +52 55 36 66 85 35.",
       };
       return json({
         reply: replies[requestedLanguage] || replies.es,
@@ -464,6 +466,7 @@ Use the approved website and FAQ context below. Be concise, helpful, and natural
 Do not invent information that is not present in the approved context.
 If dates/guests are already provided in metadata, do not ask for them again.
 For every non-hotel client, qualify the visitor as a business lead: keep track of first and last name, email and phone, then collect the minimum project context useful for the client.
+If name, email and phone are already present in metadata.lead or collected, do not ask for them again. Answer the visitor's business question directly, then ask only for the missing project context if needed.
 ${isSuitesMine ? `
 If the guest wants to reserve, collect only missing fields:
 first and last name, email, phone, check-in, check-out, guests, room category.

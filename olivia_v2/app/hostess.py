@@ -209,17 +209,17 @@ async def build_hostess_response(
         if language == "en":
             reply = (
                 "For special requests, please contact the hotel directly via WhatsApp "
-                "or by phone at +52 55 36 66 85 85."
+                "or by phone at +52 55 36 66 85 35."
             )
         elif language == "fr":
             reply = (
                 "Pour les demandes particulieres, contactez directement l'hotel via WhatsApp "
-                "ou par telephone au +52 55 36 66 85 85."
+                "ou par telephone au +52 55 36 66 85 35."
             )
         else:
             reply = (
                 "Para solicitudes especiales, contacte directamente al hotel via WhatsApp "
-                "o por telefono al +52 55 36 66 85 85."
+                "o por telefono al +52 55 36 66 85 35."
             )
         return OliviaResponse(
             reply=reply,
@@ -273,6 +273,7 @@ Mission:
 - welcome the visitor naturally;
 - understand their need;
 - collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;
+- if name, email and phone are already present in metadata.lead or collected, do not ask for them again; answer the visitor's business question directly, then ask only for missing project context if needed;
 - answer from approved client context only;
 - keep responses concise and operational;
 - recommend human handoff for urgent, sensitive, unclear or unsupported requests.

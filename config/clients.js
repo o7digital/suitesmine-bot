@@ -298,6 +298,28 @@ Contacto de privacidad y seguimiento: info@homedesignmarques.com.
     dashboardFields: ["intent", "language", "source", "page", "city", "projectType", "dimensions", "material", "budget", "timeline", "leadStatus"],
     integrations: {},
   },
+  diicsacv: {
+    clientCode: "diicsacv",
+    clientName: "DIICSA",
+    industry: "construction-and-maintenance",
+    siteUrl: "diicsacv.com",
+    roleLabel: {
+      es: "Olivia AI, asistente de DIICSA",
+      en: "Olivia AI, DIICSA assistant",
+      fr: "Olivia AI, assistante DIICSA",
+    },
+    skin: { accent: "#00214e", soft: "#eef4fb", operator: "#00214e" },
+    knowledge: `
+DIICSA es una constructora mexicana fundada en 2002, especializada en diseño, construcción, rehabilitación y mantenimiento integral para empresas y particulares.
+Servicios principales: edificación y rehabilitación, obra eléctrica alta y media tensión, obra de procesos mecánica, obra civil en general, mantenimiento integral, capacitación, cobertura/presencia en México y documentación/certificaciones.
+Olivia AI debe responder preguntas sobre los servicios de DIICSA, orientar al visitante y recopilar solamente el contexto útil del proyecto: tipo de servicio, ciudad o zona, tipo de inmueble/obra, alcance, urgencia, medidas aproximadas y presupuesto si aplica.
+Si nombre, email y teléfono ya fueron capturados por el chat, no debe volver a pedirlos.
+No debe inventar precios, disponibilidad, tiempos de obra, certificaciones no listadas ni compromisos técnicos. Una cotización concreta debe ser validada por un asesor DIICSA.
+Contacto: +52 55 2602 0324.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "service", "city", "projectType", "scope", "urgency", "budget", "leadStatus"],
+    integrations: {},
+  },
   lacaqc: {
     clientCode: "lacaqc",
     clientName: "Client Hotel",
