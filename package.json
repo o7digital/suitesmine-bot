@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "backup:chats": "node scripts/backup-chats.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.21.0",
