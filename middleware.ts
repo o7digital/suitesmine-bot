@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
   "/inbox(.*)",
@@ -7,6 +8,13 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  const userAgent = request.headers.get("user-agent") || "";
+  const isLinkPreviewBot = /WhatsApp|facebookexternalhit|Facebot|Twitterbot|Slackbot|TelegramBot|LinkedInBot/i.test(userAgent);
+
+  if (request.nextUrl.pathname.startsWith("/inbox") && isLinkPreviewBot) {
+    return NextResponse.next();
+  }
+
   if (isProtectedRoute(request)) {
     await auth.protect();
   }
