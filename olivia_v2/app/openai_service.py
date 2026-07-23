@@ -11,14 +11,25 @@ class OpenAIService:
         if not self.client:
             return None
 
-        response = await self.client.responses.create(
+        if hasattr(self.client, "responses"):
+            response = await self.client.responses.create(
+                model=self.settings.openai_model,
+                input=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                temperature=0.3,
+                max_output_tokens=500,
+            )
+            return getattr(response, "output_text", None)
+
+        response = await self.client.chat.completions.create(
             model=self.settings.openai_model,
-            input=[
+            messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
             temperature=0.3,
-            max_output_tokens=500,
+            max_tokens=500,
         )
-        return getattr(response, "output_text", None)
-
+        return response.choices[0].message.content if response.choices else None
