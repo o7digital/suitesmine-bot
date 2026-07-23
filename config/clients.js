@@ -142,11 +142,11 @@ Do not invent prices, schedules or appointment availability.
     industry: "real-estate",
     siteUrl: "cervantesbienesraices.com",
     roleLabel: {
-      es: "Sofia AI, asistente de Cervantes Bienes Raíces",
-      en: "Sofia AI, Cervantes Real Estate assistant",
-      fr: "Sofia AI, assistante Cervantes Immobilier",
-      it: "Sofia AI, assistente Cervantes Immobiliare",
-      de: "Sofia AI, Cervantes Immobilien-Assistentin",
+      es: "Olivia AI, asistente de Cervantes Bienes Raíces",
+      en: "Olivia AI, Cervantes Real Estate assistant",
+      fr: "Olivia AI, assistante Cervantes Immobilier",
+      it: "Olivia AI, assistente Cervantes Immobiliare",
+      de: "Olivia AI, Cervantes Immobilien-Assistentin",
     },
     skin: {
       accent: "#b4945f",
@@ -155,7 +155,7 @@ Do not invent prices, schedules or appointment availability.
     },
     knowledge: `
 Cervantes Bienes Raíces provides real-estate guidance in Mexico.
-Sofia AI helps visitors with property searches, buying, selling and renting, and collects the context required for a professional follow-up.
+Olivia AI helps visitors with property searches, buying, selling and renting, and collects the context required for a professional follow-up.
 Before follow-up, collect first and last name, email, phone, preferred area, property type, transaction type and budget when relevant.
 Do not invent listings, prices, availability, legal terms or transaction confirmations. A Cervantes Bienes Raíces advisor must validate these details.
 `,
