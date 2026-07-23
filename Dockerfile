@@ -1,7 +1,11 @@
-FROM botpress/server:latest
+FROM python:3.12-slim
 
-# expone el puerto en el que corre Botpress
-EXPOSE 3000
+WORKDIR /app
 
-# comando por defecto de la imagen (ya trae bp)
-CMD ["./bp"]
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY olivia_v2 ./olivia_v2
+
+ENV PORT=8000
+CMD ["sh", "-c", "uvicorn olivia_v2.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
