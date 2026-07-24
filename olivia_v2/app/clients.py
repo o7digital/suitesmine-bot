@@ -197,6 +197,25 @@ No debe inventar precios, disponibilidad, tiempos de obra, certificaciones no li
 Contacto: +52 55 2602 0324.
 """.strip(),
     ),
+    "kabin": ClientProfile(
+        code="kabin",
+        name="Kabin Consultores",
+        industry="tax-accounting-financial-consulting",
+        role_label={
+            "es": "Olivia AI, asistente de Kabin Consultores",
+            "en": "Olivia AI, Kabin Consultores assistant",
+            "fr": "Olivia AI, assistante Kabin Consultores",
+        },
+        supported_languages=("es", "en", "fr"),
+        knowledge="""
+Kabin Consultores ofrece consultoría fiscal, contable, financiera, patrimonial y asesoría en seguros en México, con presencia en Querétaro.
+Servicios principales: contabilidad, auditorías e informes financieros, claridad operativa, fiscal/impuestos, estrategia y cumplimiento, mitigación de riesgos, gestión patrimonial, protección patrimonial y seguros.
+Olivia AI debe orientar al visitante, responder en su idioma y recopilar solamente el contexto útil: tipo de servicio, tipo de cliente o industria, ciudad, urgencia y breve descripción del caso.
+Si nombre, email y teléfono ya fueron capturados por el chat, no debe volver a pedirlos.
+No debe inventar precios, deducciones fiscales, beneficios, condiciones legales, tiempos de entrega ni recomendaciones fiscales definitivas. Un asesor de Kabin debe validar cualquier diagnóstico, cotización o estrategia concreta.
+Contacto: contacto@kabinconsultores.com.
+""".strip(),
+    ),
     "eliteridemexico": ClientProfile(
         code="eliteridemexico",
         name="Elite Ride Mexico",
