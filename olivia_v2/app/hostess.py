@@ -1,5 +1,7 @@
 import json
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
+from urllib.request import urlopen
 
 from olivia_v2.app.clients import ClientProfile
 from olivia_v2.app.extraction import (
@@ -110,6 +112,104 @@ def contact_qualification_reply(language: str, client: ClientProfile, fields, me
         f"Puedo ayudarle con {client.name}. Para darle seguimiento correctamente, envíeme: {', '.join(labels)}.",
         missing,
     )
+
+
+ZEVI_DIRECTUS_URL = "https://zevicapital-directus-backend-lc-inmobiliaria.up.railway.app"
+ZEVI_SITE_URL = "https://www.zevicapital.com"
+
+
+def is_zevi_property_request(message: str) -> bool:
+    text = message.lower()
+    triggers = [
+        "propiedad", "propiedades", "bienes", "bien", "inmueble", "inmuebles",
+        "anuncio", "anuncios", "lista", "listado", "zona esmeralda", "for rent",
+        "for sale", "renta", "venta", "comprar", "rent", "sale", "property",
+        "properties", "listing", "listings", "real estate",
+    ]
+    return any(trigger in text for trigger in triggers)
+
+
+def fetch_zevi_properties() -> list[dict]:
+    params = urlencode(
+        {
+            "fields": "id,title,price,price_text,currency,location,address,listing_status,tag,sqft,bedrooms,bathrooms,public_url",
+            "limit": "6",
+            "filter[status][_eq]": "published",
+        }
+    )
+    url = f"{ZEVI_DIRECTUS_URL}/items/properties?{params}"
+    try:
+        with urlopen(url, timeout=6) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, ValueError):
+        return []
+    data = payload.get("data")
+    return data if isinstance(data, list) else []
+
+
+def format_money(value, currency: str | None, price_text: str | None) -> str:
+    if price_text:
+        return price_text
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return "precio bajo solicitud"
+    if amount <= 0:
+        return "precio bajo solicitud"
+    code = currency or "MXN"
+    return f"${amount:,.0f} {code}"
+
+
+def zevi_property_reply(language: str) -> str:
+    properties = fetch_zevi_properties()
+    if not properties:
+        if language == "en":
+            return (
+                "You can see ZeVi Capital's current property opportunities here:\n"
+                f"{ZEVI_SITE_URL}/#properties\n\n"
+                "I can help you filter them by area, budget, use case or investment objective."
+            )
+        if language == "fr":
+            return (
+                "Vous pouvez consulter les opportunités immobilières actuelles de ZeVi Capital ici :\n"
+                f"{ZEVI_SITE_URL}/#properties\n\n"
+                "Je peux vous aider à les filtrer par zone, budget, usage ou objectif d'investissement."
+            )
+        return (
+            "Puedes ver las oportunidades inmobiliarias actuales de ZeVi Capital aquí:\n"
+            f"{ZEVI_SITE_URL}/#properties\n\n"
+            "Puedo ayudarte a filtrarlas por zona, presupuesto, uso u objetivo de inversión."
+        )
+
+    lines = []
+    for item in properties:
+        link = item.get("public_url") or f"{ZEVI_SITE_URL}/listing_details_01?id={item.get('id')}"
+        details = [
+            item.get("listing_status") or item.get("tag"),
+            item.get("location") or item.get("address"),
+            format_money(item.get("price"), item.get("currency"), item.get("price_text")),
+        ]
+        specs = []
+        if item.get("sqft"):
+            specs.append(f"{item.get('sqft')} sqft")
+        if item.get("bedrooms"):
+            specs.append(f"{item.get('bedrooms')} rec.")
+        if item.get("bathrooms"):
+            specs.append(f"{item.get('bathrooms')} baños")
+        if specs:
+            details.append(", ".join(specs))
+        lines.append(f"- {item.get('title') or 'Propiedad'} — {' · '.join(str(x) for x in details if x)}\n  {link}")
+
+    if language == "en":
+        intro = "These are the current ZeVi Capital property opportunities I found:"
+        outro = f"\n\nFull property section: {ZEVI_SITE_URL}/#properties\nTell me the area or budget and I will narrow the list."
+    elif language == "fr":
+        intro = "Voici les opportunités immobilières ZeVi Capital disponibles :"
+        outro = f"\n\nSection complète : {ZEVI_SITE_URL}/#properties\nIndiquez-moi la zone ou le budget et je filtre la liste."
+    else:
+        intro = "Estas son las oportunidades inmobiliarias actuales de ZeVi Capital:"
+        outro = f"\n\nSección completa: {ZEVI_SITE_URL}/#properties\nDime la zona o presupuesto y te filtro la lista."
+    return intro + "\n\n" + "\n".join(lines) + outro
 
 
 def local_booking_reply(language: str, fields, missing: list[str], rates: list[dict]) -> tuple[str, str, str]:
@@ -247,6 +347,20 @@ async def build_hostess_response(
             missingFields=missing,
             bookingUrl=booking_url,
             rates=rates,
+        )
+
+    if client.code == "zevicapital" and is_zevi_property_request(request.message):
+        return OliviaResponse(
+            reply=zevi_property_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="lead",
+            phase="answer",
+            nextAction="show_property_list",
+            handoffRecommended=False,
+            collected=fields,
+            missingFields=[],
+            rates=[],
         )
 
     if client.code != "suitesmine":

@@ -266,6 +266,72 @@ function contactQualificationReply(language, client, details, message) {
   return (leadIn[language] || leadIn.es);
 }
 
+function isZeviPropertyRequest(message) {
+  return hasAny(message, [
+    "propiedad", "propiedades", "bienes", "bien", "inmueble", "inmuebles",
+    "anuncio", "anuncios", "lista", "listado", "zona esmeralda",
+    "renta", "venta", "comprar", "for rent", "for sale",
+    "property", "properties", "listing", "listings", "real estate",
+  ]);
+}
+
+async function fetchZeviProperties() {
+  const url = new URL("https://zevicapital-directus-backend-lc-inmobiliaria.up.railway.app/items/properties");
+  url.searchParams.set("fields", "id,title,price,price_text,currency,location,address,listing_status,tag,sqft,bedrooms,bathrooms,public_url");
+  url.searchParams.set("limit", "6");
+  url.searchParams.set("filter[status][_eq]", "published");
+
+  const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+  if (!response.ok) return [];
+  const payload = await response.json().catch(() => null);
+  return Array.isArray(payload?.data) ? payload.data : [];
+}
+
+function zeviMoney(value, currency, priceText) {
+  if (priceText) return priceText;
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return "precio bajo solicitud";
+  return `$${number.toLocaleString("es-MX", { maximumFractionDigits: 0 })} ${currency || "MXN"}`;
+}
+
+async function zeviPropertyReply(language) {
+  const site = "https://www.zevicapital.com";
+  const properties = await fetchZeviProperties();
+  if (!properties.length) {
+    const replies = {
+      en: `You can see ZeVi Capital's current property opportunities here:\n${site}/#properties\n\nI can help you filter them by area, budget, use case or investment objective.`,
+      fr: `Vous pouvez consulter les opportunités immobilières actuelles de ZeVi Capital ici :\n${site}/#properties\n\nJe peux vous aider à les filtrer par zone, budget, usage ou objectif d'investissement.`,
+      es: `Puedes ver las oportunidades inmobiliarias actuales de ZeVi Capital aquí:\n${site}/#properties\n\nPuedo ayudarte a filtrarlas por zona, presupuesto, uso u objetivo de inversión.`,
+    };
+    return replies[language] || replies.es;
+  }
+
+  const lines = properties.map((item) => {
+    const link = item.public_url || `${site}/listing_details_01?id=${item.id}`;
+    const details = [
+      item.listing_status || item.tag,
+      item.location || item.address,
+      zeviMoney(item.price, item.currency, item.price_text),
+      item.sqft && `${item.sqft} sqft`,
+      item.bedrooms && `${item.bedrooms} rec.`,
+      item.bathrooms && `${item.bathrooms} baños`,
+    ].filter(Boolean).join(" · ");
+    return `- ${item.title || "Propiedad"} — ${details}\n  ${link}`;
+  });
+
+  const intros = {
+    en: "These are the current ZeVi Capital property opportunities I found:",
+    fr: "Voici les opportunités immobilières ZeVi Capital disponibles :",
+    es: "Estas son las oportunidades inmobiliarias actuales de ZeVi Capital:",
+  };
+  const outros = {
+    en: `\n\nFull property section: ${site}/#properties\nTell me the area or budget and I will narrow the list.`,
+    fr: `\n\nSection complète : ${site}/#properties\nIndiquez-moi la zone ou le budget et je filtre la liste.`,
+    es: `\n\nSección completa: ${site}/#properties\nDime la zona o presupuesto y te filtro la lista.`,
+  };
+  return `${intros[language] || intros.es}\n\n${lines.join("\n")}${outros[language] || outros.es}`;
+}
+
 function buildCloudbedsBookingUrl({ language, details }) {
   const base =
     language === "en"
@@ -428,6 +494,15 @@ export async function POST(request) {
         mode: "booking",
         rates,
         bookingDraft: { active: true, ...bookingDetails },
+      });
+    }
+
+    if (client.clientCode === "zevicapital" && isZeviPropertyRequest(message)) {
+      return json({
+        reply: await zeviPropertyReply(language),
+        mode: "property-list",
+        clientCode: client.clientCode,
+        missingFields: [],
       });
     }
 
