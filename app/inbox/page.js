@@ -97,6 +97,20 @@ const translations = {
     socialChannelsText: "Connectez WhatsApp, Facebook Messenger et Instagram pour centraliser les messages dans Olivia AI.",
     connectSocialChannels: "Configuration Meta",
     webhookUrl: "URL webhook",
+    metaSetupTitle: "Connexion réelle Meta",
+    metaSetupText: "La connexion se fait site par site dans Meta Business/Developers : Olivia reçoit les webhooks Meta, puis route chaque compte vers ce client avec META_CHANNEL_CLIENTS.",
+    metaSetupSteps: [
+      "Créer ou ouvrir l’app Meta Business.",
+      "Ajouter les produits WhatsApp, Messenger et/ou Instagram Messaging.",
+      "Coller l’URL webhook Olivia ci-dessous dans la configuration Meta.",
+      "Utiliser le verify token stocké dans Vercel, puis s’abonner aux événements messages.",
+      "Ajouter les IDs Meta dans META_CHANNEL_CLIENTS pour router vers ce client.",
+    ],
+    openMetaDevelopers: "Ouvrir Meta Developers",
+    openMetaBusiness: "Ouvrir Meta Business",
+    requiredVariables: "Variables requises",
+    clientMapping: "Mapping client",
+    currentClient: "Client actuel",
     search: "Rechercher dans l’Inbox…",
     all: "Toutes",
     emptyView: "La vue choisie est vide. Affichage de toutes les conversations en direct.",
@@ -149,7 +163,7 @@ const translations = {
     aiBrief: "AI operational brief", aiBriefText: "Summarizes recent conversations, intent, urgency and missing information.", aiProvider: "AI engine", aiProviderText: "Copilot uses Hugging Face to analyze conversations across all Olivia AI clients.", suggestedReply: "Suggested reply", missingInformation: "Missing information", intent: "Intent", urgency: "Urgency", sentiment: "Sentiment", tags: "Tags", notConfigured: "Hugging Face is not configured.", analyzing: "Analyzing…", analyze: "Analyze now",
     accountSecurity: "Account and security", accountText: "Manage your email and sessions, and enable two-factor authentication in your Clerk profile.", openProfile: "Open secure profile",
     primaryNav: "Main navigation", allClients: "all-clients", liveAuto: "Live auto", syncing: "Syncing…", liveConversations: "Live conversations",
-    tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views", socialChannels: "Social channels", socialChannelsText: "Connect WhatsApp, Facebook Messenger and Instagram to centralize messages in Olivia AI.", connectSocialChannels: "Meta setup", webhookUrl: "Webhook URL",
+    tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views", socialChannels: "Social channels", socialChannelsText: "Connect WhatsApp, Facebook Messenger and Instagram to centralize messages in Olivia AI.", connectSocialChannels: "Meta setup", webhookUrl: "Webhook URL", metaSetupTitle: "Real Meta connection", metaSetupText: "Connection is done site by site in Meta Business/Developers: Olivia receives Meta webhooks, then routes each account to this client with META_CHANNEL_CLIENTS.", metaSetupSteps: ["Create or open the Meta Business app.", "Add WhatsApp, Messenger and/or Instagram Messaging products.", "Paste the Olivia webhook URL below into Meta configuration.", "Use the verify token stored in Vercel, then subscribe to message events.", "Add Meta IDs to META_CHANNEL_CLIENTS to route to this client."], openMetaDevelopers: "Open Meta Developers", openMetaBusiness: "Open Meta Business", requiredVariables: "Required variables", clientMapping: "Client mapping", currentClient: "Current client",
     search: "Search in Inbox…", all: "All", emptyView: "The selected view is empty. Showing all live conversations.", loading: "Loading Railway…",
     railwayError: "Railway error. Check Vercel logs.", noConversation: "No conversations in this view.", client: "Client", solve: "Solve",
     noConversationTitle: "No conversation", loadConversations: "Loading Railway conversations…", loadFailed: "Unable to load Railway conversations.",
@@ -181,7 +195,7 @@ const translations = {
     aiBrief: "Resumen operativo IA", aiBriefText: "Resume conversaciones recientes, intenciones, urgencia e información faltante.", aiProvider: "Motor IA", aiProviderText: "Copilot usa Hugging Face para analizar conversaciones de todos los clientes Olivia AI.", suggestedReply: "Respuesta sugerida", missingInformation: "Información faltante", intent: "Intención", urgency: "Urgencia", sentiment: "Sentimiento", tags: "Etiquetas", notConfigured: "Hugging Face no está configurado.", analyzing: "Analizando…", analyze: "Analizar ahora",
     accountSecurity: "Cuenta y seguridad", accountText: "Gestiona tu email y sesiones, y activa la autenticación de dos factores en tu perfil de Clerk.", openProfile: "Abrir perfil seguro",
     primaryNav: "Navegación principal", allClients: "todos-los-clientes", liveAuto: "Actualización automática", syncing: "Sincronizando…", liveConversations: "Conversaciones en vivo",
-    tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas", socialChannels: "Redes sociales", socialChannelsText: "Conecta WhatsApp, Facebook Messenger e Instagram para centralizar los mensajes en Olivia AI.", connectSocialChannels: "Configuración Meta", webhookUrl: "URL webhook",
+    tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas", socialChannels: "Redes sociales", socialChannelsText: "Conecta WhatsApp, Facebook Messenger e Instagram para centralizar los mensajes en Olivia AI.", connectSocialChannels: "Configuración Meta", webhookUrl: "URL webhook", metaSetupTitle: "Conexión real de Meta", metaSetupText: "La conexión se hace sitio por sitio en Meta Business/Developers: Olivia recibe los webhooks de Meta y enruta cada cuenta a este cliente con META_CHANNEL_CLIENTS.", metaSetupSteps: ["Crear o abrir la app Meta Business.", "Añadir los productos WhatsApp, Messenger y/o Instagram Messaging.", "Pegar la URL webhook de Olivia abajo en la configuración de Meta.", "Usar el verify token guardado en Vercel y suscribirse a eventos de mensajes.", "Añadir los IDs de Meta en META_CHANNEL_CLIENTS para enrutar a este cliente."], openMetaDevelopers: "Abrir Meta Developers", openMetaBusiness: "Abrir Meta Business", requiredVariables: "Variables requeridas", clientMapping: "Mapping cliente", currentClient: "Cliente actual",
     search: "Buscar en la bandeja…", all: "Todas", emptyView: "La vista seleccionada está vacía. Mostrando todas las conversaciones en vivo.", loading: "Cargando Railway…",
     railwayError: "Error de Railway. Revisa los logs de Vercel.", noConversation: "No hay conversaciones en esta vista.", client: "Cliente", solve: "Resolver",
     noConversationTitle: "No hay conversaciones", loadConversations: "Cargando conversaciones de Railway…", loadFailed: "No se pudieron cargar las conversaciones de Railway.",
@@ -502,6 +516,17 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
   const title = getNavigationItems(copy).find((item) => item.id === section)?.label || copy.settings;
   const copilotConfigured = Boolean(integrations?.huggingFace?.configured);
   const copilotModel = integrations?.huggingFace?.model || "openai/gpt-oss-20b:fastest";
+  const currentClientCode = scopedClientCode || "default";
+  const currentClientSkin = clientSkins[currentClientCode] || clientSkins.default;
+  const metaMappingExample = JSON.stringify(
+    {
+      [`WHATSAPP_PHONE_NUMBER_ID_${currentClientCode}`]: currentClientCode,
+      [`FACEBOOK_PAGE_ID_${currentClientCode}`]: currentClientCode,
+      [`INSTAGRAM_ACCOUNT_ID_${currentClientCode}`]: currentClientCode,
+    },
+    null,
+    2
+  );
 
   const runAnalysis = async () => {
     const transcript = conversations
@@ -673,6 +698,41 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
               <h2 className="mt-4 text-lg font-semibold">{copy.accountSecurity}</h2>
               <p className="mt-2 text-sm leading-6 text-[#66718a]">{copy.accountText}</p>
               <div className="mt-5 flex items-center gap-3"><UserButton userProfileMode="modal" showName /><span className="text-sm">{copy.openProfile}</span></div>
+            </article>
+            <article className="rounded-xl border border-[#dde4f1] bg-white p-6">
+              <MessageCircle className="h-6 w-6 text-[#3159c9]" />
+              <h2 className="mt-4 text-lg font-semibold">{copy.metaSetupTitle}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#66718a]">{copy.metaSetupText}</p>
+              <div className="mt-4 rounded-lg border border-[#e6ebf4] bg-white p-3 text-xs leading-5">
+                <p className="font-semibold text-[#172033]">{copy.currentClient}</p>
+                <p className="mt-1 text-[#66718a]">{currentClientSkin?.label || currentClientCode}</p>
+                <p className="text-[#66718a]">{currentClientCode}</p>
+                {currentClientSkin?.siteUrl && <p className="text-[#66718a]">{currentClientSkin.siteUrl}</p>}
+              </div>
+              <div className="mt-4 break-all rounded-lg bg-[#f4f7fc] p-3 text-xs leading-5 text-[#536079]">
+                {copy.webhookUrl}: {integrations?.whatsapp?.webhookUrl || "https://olivia-ai.o7digital.com/api/integrations/meta/webhook"}
+              </div>
+              <ol className="mt-4 list-decimal space-y-1 pl-5 text-xs leading-5 text-[#66718a]">
+                {copy.metaSetupSteps.map((step) => <li key={step}>{step}</li>)}
+              </ol>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <a href="https://developers.facebook.com/apps/" target="_blank" rel="noreferrer" className="rounded-md bg-[#3159c9] px-3 py-1.5 text-xs font-semibold text-white">
+                  {copy.openMetaDevelopers}
+                </a>
+                <a href="https://business.facebook.com/settings/" target="_blank" rel="noreferrer" className="rounded-md border border-[#d8e0ef] bg-white px-3 py-1.5 text-xs font-semibold text-[#3159c9]">
+                  {copy.openMetaBusiness}
+                </a>
+              </div>
+              <div className="mt-4 grid gap-3 text-xs leading-5 text-[#66718a]">
+                <div>
+                  <p className="font-semibold text-[#172033]">{copy.requiredVariables}</p>
+                  <p className="mt-1 break-all">META_WEBHOOK_VERIFY_TOKEN, META_CHANNEL_CLIENTS, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_ACCESS_TOKEN, META_PAGE_ID, META_PAGE_ACCESS_TOKEN, INSTAGRAM_ACCOUNT_ID</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-[#172033]">{copy.clientMapping}</p>
+                  <pre className="mt-1 overflow-x-auto rounded bg-[#f4f7fc] p-2"><code>{metaMappingExample}</code></pre>
+                </div>
+              </div>
             </article>
             {["huggingFace", "whatsapp", "facebook", "instagram", "mailbox", "analytics", "database", "clerk", "openai", "cloudbeds"].map((key) => (
               <article key={key} className="rounded-xl border border-[#dde4f1] bg-white p-5">
