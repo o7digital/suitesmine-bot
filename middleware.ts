@@ -7,6 +7,10 @@ const isProtectedRoute = createRouteMatcher([
   "/api/integrations(.*)",
 ]);
 
+const isPublicMetaWebhook = createRouteMatcher([
+  "/api/integrations/meta/webhook(.*)",
+]);
+
 export default clerkMiddleware(async (auth, request) => {
   const userAgent = request.headers.get("user-agent") || "";
   const isLinkPreviewBot = /WhatsApp|facebookexternalhit|Facebot|Twitterbot|Slackbot|TelegramBot|LinkedInBot/i.test(userAgent);
@@ -15,7 +19,7 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.next();
   }
 
-  if (isProtectedRoute(request)) {
+  if (isProtectedRoute(request) && !isPublicMetaWebhook(request)) {
     await auth.protect();
   }
 });

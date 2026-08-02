@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { addMessage, findConversation } from "@/lib/conversations";
+import { sendMetaReply } from "@/lib/meta-channels";
 
 export const runtime = "nodejs";
 
@@ -47,11 +48,18 @@ export async function POST(request, { params }) {
     return Response.json({ error: "Attachment is too large" }, { status: 413 });
   }
 
+  const content = payload.content?.trim() || attachment.name;
+  const delivery = await sendMetaReply(conversation, content).catch((error) => ({
+    skipped: false,
+    ok: false,
+    error: error?.message || "Meta delivery failed",
+  }));
+
   const message = await addMessage({
     conversationId: conversation.id,
     role: "operator",
-    content: payload.content?.trim() || attachment.name,
-    metadata: { operatorId: userId, ...(hasAttachment ? { attachment } : {}) },
+    content,
+    metadata: { operatorId: userId, delivery, ...(hasAttachment ? { attachment } : {}) },
   });
   console.log("[olivia-inbox] POST /api/conversations/:id/messages created", {
     messageId: message?.id || null,

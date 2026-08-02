@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import { isDatabaseConfigured } from "@/lib/db";
 import { getOAuthConnection } from "@/lib/oauth-connections";
+import { getMetaWebhookUrl } from "@/lib/meta-channels";
 
 function configured(name) {
   return Boolean(process.env[name]?.trim());
@@ -32,6 +33,7 @@ export async function GET(request) {
         configured("WHATSAPP_PHONE_NUMBER_ID") &&
         configured("WHATSAPP_ACCESS_TOKEN"),
       provider: "meta-whatsapp-cloud-api",
+      webhookUrl: getMetaWebhookUrl(),
     },
     facebook: {
       configured:
@@ -39,6 +41,7 @@ export async function GET(request) {
         configured("META_PAGE_ID") &&
         configured("META_PAGE_ACCESS_TOKEN"),
       provider: "meta-messenger-platform",
+      webhookUrl: getMetaWebhookUrl(),
     },
     instagram: {
       configured:
@@ -46,6 +49,7 @@ export async function GET(request) {
         configured("INSTAGRAM_ACCOUNT_ID") &&
         configured("META_PAGE_ACCESS_TOKEN"),
       provider: "instagram-messaging-api",
+      webhookUrl: getMetaWebhookUrl(),
     },
     analytics: {
       configured:

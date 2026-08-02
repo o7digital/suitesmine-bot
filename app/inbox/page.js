@@ -95,7 +95,8 @@ const translations = {
     savedViews: "Vues",
     socialChannels: "Réseaux sociaux",
     socialChannelsText: "Connectez WhatsApp, Facebook Messenger et Instagram pour centraliser les messages dans Olivia AI.",
-    connectSocialChannels: "Connecter les réseaux",
+    connectSocialChannels: "Configuration Meta",
+    webhookUrl: "URL webhook",
     search: "Rechercher dans l’Inbox…",
     all: "Toutes",
     emptyView: "La vue choisie est vide. Affichage de toutes les conversations en direct.",
@@ -148,7 +149,7 @@ const translations = {
     aiBrief: "AI operational brief", aiBriefText: "Summarizes recent conversations, intent, urgency and missing information.", aiProvider: "AI engine", aiProviderText: "Copilot uses Hugging Face to analyze conversations across all Olivia AI clients.", suggestedReply: "Suggested reply", missingInformation: "Missing information", intent: "Intent", urgency: "Urgency", sentiment: "Sentiment", tags: "Tags", notConfigured: "Hugging Face is not configured.", analyzing: "Analyzing…", analyze: "Analyze now",
     accountSecurity: "Account and security", accountText: "Manage your email and sessions, and enable two-factor authentication in your Clerk profile.", openProfile: "Open secure profile",
     primaryNav: "Main navigation", allClients: "all-clients", liveAuto: "Live auto", syncing: "Syncing…", liveConversations: "Live conversations",
-    tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views", socialChannels: "Social channels", socialChannelsText: "Connect WhatsApp, Facebook Messenger and Instagram to centralize messages in Olivia AI.", connectSocialChannels: "Connect social channels",
+    tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views", socialChannels: "Social channels", socialChannelsText: "Connect WhatsApp, Facebook Messenger and Instagram to centralize messages in Olivia AI.", connectSocialChannels: "Meta setup", webhookUrl: "Webhook URL",
     search: "Search in Inbox…", all: "All", emptyView: "The selected view is empty. Showing all live conversations.", loading: "Loading Railway…",
     railwayError: "Railway error. Check Vercel logs.", noConversation: "No conversations in this view.", client: "Client", solve: "Solve",
     noConversationTitle: "No conversation", loadConversations: "Loading Railway conversations…", loadFailed: "Unable to load Railway conversations.",
@@ -180,7 +181,7 @@ const translations = {
     aiBrief: "Resumen operativo IA", aiBriefText: "Resume conversaciones recientes, intenciones, urgencia e información faltante.", aiProvider: "Motor IA", aiProviderText: "Copilot usa Hugging Face para analizar conversaciones de todos los clientes Olivia AI.", suggestedReply: "Respuesta sugerida", missingInformation: "Información faltante", intent: "Intención", urgency: "Urgencia", sentiment: "Sentimiento", tags: "Etiquetas", notConfigured: "Hugging Face no está configurado.", analyzing: "Analizando…", analyze: "Analizar ahora",
     accountSecurity: "Cuenta y seguridad", accountText: "Gestiona tu email y sesiones, y activa la autenticación de dos factores en tu perfil de Clerk.", openProfile: "Abrir perfil seguro",
     primaryNav: "Navegación principal", allClients: "todos-los-clientes", liveAuto: "Actualización automática", syncing: "Sincronizando…", liveConversations: "Conversaciones en vivo",
-    tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas", socialChannels: "Redes sociales", socialChannelsText: "Conecta WhatsApp, Facebook Messenger e Instagram para centralizar los mensajes en Olivia AI.", connectSocialChannels: "Conectar redes",
+    tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas", socialChannels: "Redes sociales", socialChannelsText: "Conecta WhatsApp, Facebook Messenger e Instagram para centralizar los mensajes en Olivia AI.", connectSocialChannels: "Configuración Meta", webhookUrl: "URL webhook",
     search: "Buscar en la bandeja…", all: "Todas", emptyView: "La vista seleccionada está vacía. Mostrando todas las conversaciones en vivo.", loading: "Cargando Railway…",
     railwayError: "Error de Railway. Revisa los logs de Vercel.", noConversation: "No hay conversaciones en esta vista.", client: "Cliente", solve: "Resolver",
     noConversationTitle: "No hay conversaciones", loadConversations: "Cargando conversaciones de Railway…", loadFailed: "No se pudieron cargar las conversaciones de Railway.",
@@ -682,6 +683,11 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
                   </span>
                 </div>
                 {integrations?.[key]?.model && <p className="mt-2 truncate text-xs text-[#66718a]">{integrations[key].model}</p>}
+                {integrations?.[key]?.webhookUrl && (
+                  <p className="mt-2 break-all rounded bg-[#f4f7fc] p-2 text-xs leading-5 text-[#66718a]">
+                    {copy.webhookUrl}: {integrations[key].webhookUrl}
+                  </p>
+                )}
               </article>
             ))}
             <div className="col-span-2 mt-auto flex justify-end pt-8">
