@@ -93,6 +93,9 @@ const translations = {
     ticketsText: "Messages de la boîte mail ou du widget hors ligne",
     connectMailbox: "Connecter la boîte mail",
     savedViews: "Vues",
+    socialChannels: "Réseaux sociaux",
+    socialChannelsText: "Connectez WhatsApp, Facebook Messenger et Instagram pour centraliser les messages dans Olivia AI.",
+    connectSocialChannels: "Connecter les réseaux",
     search: "Rechercher dans l’Inbox…",
     all: "Toutes",
     emptyView: "La vue choisie est vide. Affichage de toutes les conversations en direct.",
@@ -145,7 +148,7 @@ const translations = {
     aiBrief: "AI operational brief", aiBriefText: "Summarizes recent conversations, intent, urgency and missing information.", aiProvider: "AI engine", aiProviderText: "Copilot uses Hugging Face to analyze conversations across all Olivia AI clients.", suggestedReply: "Suggested reply", missingInformation: "Missing information", intent: "Intent", urgency: "Urgency", sentiment: "Sentiment", tags: "Tags", notConfigured: "Hugging Face is not configured.", analyzing: "Analyzing…", analyze: "Analyze now",
     accountSecurity: "Account and security", accountText: "Manage your email and sessions, and enable two-factor authentication in your Clerk profile.", openProfile: "Open secure profile",
     primaryNav: "Main navigation", allClients: "all-clients", liveAuto: "Live auto", syncing: "Syncing…", liveConversations: "Live conversations",
-    tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views",
+    tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views", socialChannels: "Social channels", socialChannelsText: "Connect WhatsApp, Facebook Messenger and Instagram to centralize messages in Olivia AI.", connectSocialChannels: "Connect social channels",
     search: "Search in Inbox…", all: "All", emptyView: "The selected view is empty. Showing all live conversations.", loading: "Loading Railway…",
     railwayError: "Railway error. Check Vercel logs.", noConversation: "No conversations in this view.", client: "Client", solve: "Solve",
     noConversationTitle: "No conversation", loadConversations: "Loading Railway conversations…", loadFailed: "Unable to load Railway conversations.",
@@ -177,7 +180,7 @@ const translations = {
     aiBrief: "Resumen operativo IA", aiBriefText: "Resume conversaciones recientes, intenciones, urgencia e información faltante.", aiProvider: "Motor IA", aiProviderText: "Copilot usa Hugging Face para analizar conversaciones de todos los clientes Olivia AI.", suggestedReply: "Respuesta sugerida", missingInformation: "Información faltante", intent: "Intención", urgency: "Urgencia", sentiment: "Sentimiento", tags: "Etiquetas", notConfigured: "Hugging Face no está configurado.", analyzing: "Analizando…", analyze: "Analizar ahora",
     accountSecurity: "Cuenta y seguridad", accountText: "Gestiona tu email y sesiones, y activa la autenticación de dos factores en tu perfil de Clerk.", openProfile: "Abrir perfil seguro",
     primaryNav: "Navegación principal", allClients: "todos-los-clientes", liveAuto: "Actualización automática", syncing: "Sincronizando…", liveConversations: "Conversaciones en vivo",
-    tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas",
+    tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas", socialChannels: "Redes sociales", socialChannelsText: "Conecta WhatsApp, Facebook Messenger e Instagram para centralizar los mensajes en Olivia AI.", connectSocialChannels: "Conectar redes",
     search: "Buscar en la bandeja…", all: "Todas", emptyView: "La vista seleccionada está vacía. Mostrando todas las conversaciones en vivo.", loading: "Cargando Railway…",
     railwayError: "Error de Railway. Revisa los logs de Vercel.", noConversation: "No hay conversaciones en esta vista.", client: "Cliente", solve: "Resolver",
     noConversationTitle: "No hay conversaciones", loadConversations: "Cargando conversaciones de Railway…", loadFailed: "No se pudieron cargar las conversaciones de Railway.",
@@ -1009,13 +1012,29 @@ export default function InboxPage() {
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             <div className="mt-4 space-y-3 text-sm text-[#2c3750]">
-              <div className="flex items-center gap-3">
-                <MessageCircle className="h-4 w-4 text-[#3159c9]" />
-                Messenger
-              </div>
-              <div className="flex items-center gap-3">
-                <AtSign className="h-4 w-4 text-[#d34c86]" />
-                Instagram
+              {[
+                ["whatsapp", MessageCircle, "WhatsApp", "text-[#17623a]"],
+                ["facebook", MessageCircle, "Facebook Messenger", "text-[#3159c9]"],
+                ["instagram", AtSign, "Instagram", "text-[#d34c86]"],
+              ].map(([key, Icon, label, color]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setActiveSection("settings")}
+                  className="flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-white"
+                >
+                  <Icon className={`h-4 w-4 ${color}`} />
+                  <span className="min-w-0 flex-1">{label}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${integrations?.[key]?.configured ? "bg-[#e9f8ef] text-[#17623a]" : "bg-[#fff3dc] text-[#8a5200]"}`}>
+                    {integrations?.[key]?.configured ? copy.connected : copy.configure}
+                  </span>
+                </button>
+              ))}
+              <div className="rounded-md bg-[#eef3ff] p-3 text-xs leading-5 text-[#536079]">
+                {copy.socialChannelsText}
+                <button type="button" onClick={() => setActiveSection("settings")} className="mt-3 rounded-md bg-[#dbe6ff] px-3 py-1.5 text-sm font-medium text-[#3159c9]">
+                  {copy.connectSocialChannels}
+                </button>
               </div>
             </div>
           </section>
