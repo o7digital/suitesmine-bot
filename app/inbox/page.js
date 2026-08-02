@@ -70,6 +70,15 @@ const translations = {
     ],
     aiBrief: "Brief opérationnel IA",
     aiBriefText: "Résume les conversations récentes, intentions, urgence et informations manquantes.",
+    aiProvider: "Moteur IA",
+    aiProviderText: "Copilot utilise Hugging Face pour analyser les conversations de tous les clients Olivia AI.",
+    suggestedReply: "Réponse suggérée",
+    missingInformation: "Informations manquantes",
+    intent: "Intention",
+    urgency: "Urgence",
+    sentiment: "Sentiment",
+    tags: "Étiquettes",
+    notConfigured: "Hugging Face n’est pas configuré.",
     analyzing: "Analyse en cours…",
     analyze: "Analyser maintenant",
     accountSecurity: "Compte et sécurité",
@@ -133,7 +142,7 @@ const translations = {
     connected: "Connected", connect: "Connect", configure: "Needs setup", openAnalytics: "Open Google Analytics",
     gaRequired: "Server setup required: GA4_PROPERTY_ID and a Google service account.",
     automations: [["Automatic replies", "AI answers new conversations until an operator takes over."], ["Booking details", "Dates, guests, category, name, email and phone."], ["Human escalation", "Immediate transfer when a visitor explicitly asks for a person."], ["Data consent", "The widget blocks sending until the visitor accepts data sharing."]],
-    aiBrief: "AI operational brief", aiBriefText: "Summarizes recent conversations, intent, urgency and missing information.", analyzing: "Analyzing…", analyze: "Analyze now",
+    aiBrief: "AI operational brief", aiBriefText: "Summarizes recent conversations, intent, urgency and missing information.", aiProvider: "AI engine", aiProviderText: "Copilot uses Hugging Face to analyze conversations across all Olivia AI clients.", suggestedReply: "Suggested reply", missingInformation: "Missing information", intent: "Intent", urgency: "Urgency", sentiment: "Sentiment", tags: "Tags", notConfigured: "Hugging Face is not configured.", analyzing: "Analyzing…", analyze: "Analyze now",
     accountSecurity: "Account and security", accountText: "Manage your email and sessions, and enable two-factor authentication in your Clerk profile.", openProfile: "Open secure profile",
     primaryNav: "Main navigation", allClients: "all-clients", liveAuto: "Live auto", syncing: "Syncing…", liveConversations: "Live conversations",
     tickets: "Tickets", ticketsText: "Messages from mailbox or offline chat widget", connectMailbox: "Connect mailbox", savedViews: "Views",
@@ -165,7 +174,7 @@ const translations = {
     connected: "Conectado", connect: "Conectar", configure: "Por configurar", openAnalytics: "Abrir Google Analytics",
     gaRequired: "Configuración del servidor requerida: GA4_PROPERTY_ID y cuenta de servicio de Google.",
     automations: [["Respuesta automática", "La IA responde las conversaciones nuevas hasta que interviene un operador."], ["Datos de reserva", "Fechas, huéspedes, categoría, nombre, email y teléfono."], ["Escalación humana", "Transferencia inmediata cuando el visitante solicita hablar con una persona."], ["Consentimiento de datos", "El widget bloquea el envío hasta que el visitante acepta compartir sus datos."]],
-    aiBrief: "Resumen operativo IA", aiBriefText: "Resume conversaciones recientes, intenciones, urgencia e información faltante.", analyzing: "Analizando…", analyze: "Analizar ahora",
+    aiBrief: "Resumen operativo IA", aiBriefText: "Resume conversaciones recientes, intenciones, urgencia e información faltante.", aiProvider: "Motor IA", aiProviderText: "Copilot usa Hugging Face para analizar conversaciones de todos los clientes Olivia AI.", suggestedReply: "Respuesta sugerida", missingInformation: "Información faltante", intent: "Intención", urgency: "Urgencia", sentiment: "Sentimiento", tags: "Etiquetas", notConfigured: "Hugging Face no está configurado.", analyzing: "Analizando…", analyze: "Analizar ahora",
     accountSecurity: "Cuenta y seguridad", accountText: "Gestiona tu email y sesiones, y activa la autenticación de dos factores en tu perfil de Clerk.", openProfile: "Abrir perfil seguro",
     primaryNav: "Navegación principal", allClients: "todos-los-clientes", liveAuto: "Actualización automática", syncing: "Sincronizando…", liveConversations: "Conversaciones en vivo",
     tickets: "Tickets", ticketsText: "Mensajes del correo o del widget fuera de línea", connectMailbox: "Conectar correo", savedViews: "Vistas",
@@ -487,6 +496,8 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
   const ai = conversations.filter((item) => item.status === "ai");
   const uniqueVisitors = new Map(conversations.map((item) => [item.guest, item]));
   const title = getNavigationItems(copy).find((item) => item.id === section)?.label || copy.settings;
+  const copilotConfigured = Boolean(integrations?.huggingFace?.configured);
+  const copilotModel = integrations?.huggingFace?.model || "openai/gpt-oss-20b:fastest";
 
   const runAnalysis = async () => {
     const transcript = conversations
@@ -504,7 +515,7 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
         body: JSON.stringify({ transcript, language }),
       });
       const data = await response.json();
-      setAnalysis(data.analysis || { summary: data.error || "Analyse indisponible." });
+      setAnalysis(data.analysis || { summary: data.error || copy.notConfigured });
     } finally {
       setAnalyzing(false);
     }
@@ -591,14 +602,64 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
         )}
 
         {section === "copilot" && (
-          <article className="max-w-4xl rounded-xl border border-[#dde4f1] bg-white p-6">
-            <h2 className="text-lg font-semibold">{copy.aiBrief}</h2>
-            <p className="mt-2 text-sm text-[#66718a]">{copy.aiBriefText}</p>
-            <button disabled={analyzing || !conversations.length} onClick={runAnalysis} className="mt-5 rounded-md bg-[#3159c9] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-              {analyzing ? copy.analyzing : copy.analyze}
-            </button>
-            {analysis && <pre className="mt-5 whitespace-pre-wrap rounded-lg bg-[#f4f7fc] p-5 text-sm leading-6">{JSON.stringify(analysis, null, 2)}</pre>}
-          </article>
+          <div className="max-w-4xl space-y-5">
+            <article className="rounded-xl border border-[#dde4f1] bg-white p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-lg font-semibold"><Sparkles className="h-5 w-5 text-[#3159c9]" /> {copy.aiBrief}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[#66718a]">{copy.aiBriefText}</p>
+                </div>
+                <span className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${copilotConfigured ? "bg-[#e9f8ef] text-[#17623a]" : "bg-[#fff3dc] text-[#8a5200]"}`}>
+                  {copilotConfigured ? copy.connected : copy.configure}
+                </span>
+              </div>
+              <div className="mt-5 rounded-lg border border-[#e6ebf4] bg-[#f8faff] p-4">
+                <p className="text-sm font-semibold">{copy.aiProvider}: Hugging Face</p>
+                <p className="mt-1 text-xs leading-5 text-[#66718a]">{copy.aiProviderText}</p>
+                <p className="mt-2 text-xs text-[#66718a]">Model: {copilotModel}</p>
+              </div>
+              <button disabled={analyzing || !conversations.length || !copilotConfigured} onClick={runAnalysis} className="mt-5 rounded-md bg-[#3159c9] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                {analyzing ? copy.analyzing : copy.analyze}
+              </button>
+              {!copilotConfigured && <p className="mt-3 text-xs text-[#8a5200]">{copy.notConfigured}</p>}
+            </article>
+            {analysis && (
+              <article className="rounded-xl border border-[#dde4f1] bg-white p-6">
+                <h3 className="text-base font-semibold">{analysis.summary || copy.aiBrief}</h3>
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  {[
+                    [copy.intent, analysis.intent],
+                    [copy.urgency, analysis.urgency],
+                    [copy.sentiment, analysis.sentiment],
+                  ].map(([label, value]) => value ? (
+                    <div key={label} className="rounded-lg bg-[#f4f7fc] p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#66718a]">{label}</p>
+                      <p className="mt-1 text-sm font-semibold">{value}</p>
+                    </div>
+                  ) : null)}
+                </div>
+                {analysis.suggestedReply && (
+                  <div className="mt-5 rounded-lg bg-[#edf8f1] p-4 text-sm leading-6 text-[#18452b]">
+                    <p className="mb-2 font-semibold">{copy.suggestedReply}</p>
+                    {analysis.suggestedReply}
+                  </div>
+                )}
+                {Array.isArray(analysis.missingInformation) && analysis.missingInformation.length > 0 && (
+                  <div className="mt-5">
+                    <p className="text-sm font-semibold">{copy.missingInformation}</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#66718a]">
+                      {analysis.missingInformation.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {Array.isArray(analysis.tags) && analysis.tags.length > 0 && (
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {analysis.tags.map((tag) => <span key={tag} className="rounded-full bg-[#eef3ff] px-3 py-1 text-xs font-semibold text-[#3159c9]">{tag}</span>)}
+                  </div>
+                )}
+              </article>
+            )}
+          </div>
         )}
 
         {section === "settings" && (
@@ -609,14 +670,15 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
               <p className="mt-2 text-sm leading-6 text-[#66718a]">{copy.accountText}</p>
               <div className="mt-5 flex items-center gap-3"><UserButton userProfileMode="modal" showName /><span className="text-sm">{copy.openProfile}</span></div>
             </article>
-            {["whatsapp", "facebook", "instagram", "mailbox", "analytics", "database", "clerk", "openai", "cloudbeds"].map((key) => (
+            {["huggingFace", "whatsapp", "facebook", "instagram", "mailbox", "analytics", "database", "clerk", "openai", "cloudbeds"].map((key) => (
               <article key={key} className="rounded-xl border border-[#dde4f1] bg-white p-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold capitalize">{key}</h2>
+                  <h2 className="font-semibold capitalize">{key === "huggingFace" ? "Hugging Face" : key}</h2>
                   <span className={`rounded-full px-2 py-1 text-xs font-semibold ${integrations?.[key]?.configured ? "bg-[#e9f8ef] text-[#17623a]" : "bg-[#fff3dc] text-[#8a5200]"}`}>
                     {integrations?.[key]?.configured ? copy.connected : copy.configure}
                   </span>
                 </div>
+                {integrations?.[key]?.model && <p className="mt-2 truncate text-xs text-[#66718a]">{integrations[key].model}</p>}
               </article>
             ))}
             <div className="col-span-2 mt-auto flex justify-end pt-8">
