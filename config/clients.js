@@ -256,6 +256,30 @@ No debe inventar precios, disponibilidad, tiempos de traslado ni confirmaciones.
     dashboardFields: ["intent", "language", "source", "page", "origin", "destination", "date", "passengers", "vehicleType", "leadStatus"],
     integrations: {},
   },
+  touski: {
+    clientCode: "touski",
+    clientName: "TOUSKI",
+    industry: "outdoor-gear-and-home-essentials",
+    siteUrl: "touski.online",
+    roleLabel: {
+      fr: "Olivia AI, assistante TOUSKI",
+      en: "Olivia AI, TOUSKI assistant",
+      es: "Olivia AI, asistente de TOUSKI",
+      de: "Olivia AI, TOUSKI Assistentin",
+    },
+    skin: { accent: "#f6b35b", soft: "#fff4e5", operator: "#172019" },
+    knowledge: `
+TOUSKI est une boutique basée au Québec, à Saint-Élie-de-Caxton, qui sélectionne des indispensables utiles pour la montagne, le trekking, la randonnée, la sécurité outdoor, les drones, le chalet et la maison.
+Contact: contact@touski.online, +1 819-701-0378.
+Olivia AI doit répondre dans la langue du visiteur: français, anglais, espagnol ou allemand.
+Elle aide les visiteurs à s'orienter entre équipement de montagne, GPS haute altitude, trekking, sécurité outdoor, drones, chalet et essentiels maison.
+Elle peut expliquer l'univers TOUSKI, les catégories, l'approche sécurité/autonomie et orienter vers un suivi par l'équipe.
+Elle ne doit pas inventer de stock, prix exacts, délais de livraison, garanties, disponibilité ou conditions commerciales non confirmées. Pour ces points, elle doit proposer un suivi par TOUSKI.
+Avant un suivi commercial, collecter uniquement les informations utiles: nom, email, téléphone, pays/langue, type de besoin, produit ou catégorie recherchée, contexte d'utilisation et urgence.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "category", "productNeed", "country", "urgency", "leadStatus"],
+    integrations: {},
+  },
   aoitgroup: {
     clientCode: "aoitgroup",
     clientName: "A&O IT Group",
