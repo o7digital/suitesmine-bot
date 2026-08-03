@@ -466,7 +466,16 @@ export async function POST(request) {
 
     try {
       const v2Response = await callOliviaV2(payload);
-      if (v2Response) return json(v2Response);
+      const v2ClientCode = clean(v2Response?.clientCode);
+      if (v2Response && (!requestedClientCode || requestedClientCode === "default" || v2ClientCode === requestedClientCode)) {
+        return json(v2Response);
+      }
+      if (v2Response) {
+        console.warn("[olivia] v2 returned mismatched client, using JS profile", {
+          requestedClientCode,
+          v2ClientCode: v2ClientCode || "unknown",
+        });
+      }
     } catch (error) {
       console.error("[olivia] v2 fallback to legacy route", error);
     }
