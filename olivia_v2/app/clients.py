@@ -234,6 +234,24 @@ Si nombre, email y teléfono ya fueron capturados por el chat, no debe volver a 
 No debe inventar precios, disponibilidad, tiempos de traslado ni confirmaciones. El equipo de Elite Ride Mexico debe validar esos datos.
 """.strip(),
     ),
+    "goldenhealth": ClientProfile(
+        code="goldenhealth",
+        name="Golden Health MX",
+        industry="longevity-wellness-clinic",
+        role_label={
+            "es": "Olivia AI, asistente de Golden Health MX",
+            "en": "Olivia AI, Golden Health MX assistant",
+            "fr": "Olivia AI, assistante Golden Health MX",
+        },
+        knowledge="""
+Golden Health MX es una clinica de longevidad y bienestar integral en CDMX, liderada por la Dra. Silvia del Moral.
+Areas: medicina preventiva, medicina regenerativa, anti-aging, salud celular, nutricion funcional, terapias biologicas, hidratacion funcional, ciencia del deporte, equilibrio mente-cuerpo, consultas online, CDMX y Madrid.
+Contacto: silvia.delmoral@goldenhealth.com.mx, +52 55 5417 8009.
+Olivia AI debe responder en el idioma del visitante y orientar con informacion general.
+Regla medica: no diagnosticar, no prometer resultados, no indicar tratamientos personalizados ni sustituir consulta medica. Para sintomas, enfermedades, contraindicaciones, embarazo, medicacion o urgencias, recomendar consulta con profesional calificado o atencion medica urgente si aplica.
+Si nombre, email y telefono ya fueron capturados, no volver a pedirlos.
+""".strip(),
+    ),
     "touski": ClientProfile(
         code="touski",
         name="TOUSKI",
