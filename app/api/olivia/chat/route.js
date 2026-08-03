@@ -485,6 +485,9 @@ export async function POST(request) {
     const client = getClientProfile(clientCode);
     const message = clean(payload.message);
     const metadata = payload.metadata || {};
+    const lead = metadata.lead || {};
+    const leadName = [clean(lead.firstName), clean(lead.lastName)].filter(Boolean).join(" ") || clean(lead.name);
+    const hasLeadContact = Boolean(leadName && clean(lead.email) && clean(lead.phone));
     const checkIn = clean(metadata.checkIn);
     const checkOut = clean(metadata.checkOut);
     const guests = clean(metadata.guests);
@@ -550,7 +553,7 @@ Use the approved website and FAQ context below. Be concise, helpful, and natural
 Do not invent information that is not present in the approved context.
 If dates/guests are already provided in metadata, do not ask for them again.
 For every non-hotel client, qualify the visitor as a business lead: keep track of first and last name, email and phone, then collect the minimum project context useful for the client.
-If name, email and phone are already present in metadata.lead or collected, do not ask for them again. Answer the visitor's business question directly, then ask only for the missing project context if needed.
+${hasLeadContact ? `The visitor contact details are already collected: ${leadName}, ${clean(lead.email)}, ${clean(lead.phone)}. Do not ask for name, email or phone again under any circumstance. Answer the business question directly, then ask only for missing project/product context if needed.` : "If name, email and phone are already present in metadata.lead or collected, do not ask for them again. Answer the visitor's business question directly, then ask only for the missing project context if needed."}
 ${isSuitesMine ? `
 If the guest wants to reserve, collect only missing fields:
 first and last name, email, phone, check-in, check-out, guests, room category.
