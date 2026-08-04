@@ -1,5 +1,6 @@
 import { isDatabaseConfigured } from "@/lib/db";
 import { addMessage, findVisitorConversation, upsertConversation } from "@/lib/conversations";
+import { translateVisitorMessageForOperator } from "@/lib/operator-translation";
 
 export const runtime = "nodejs";
 
@@ -78,11 +79,29 @@ export async function POST(request) {
     metadata: payload.metadata,
   });
 
+  const operatorTranslation = await translateVisitorMessageForOperator({
+    content,
+    sourceLanguage: payload.language || payload.metadata?.language || payload.metadata?.locale,
+  }).catch((error) => ({
+    content,
+    translated: false,
+    sourceLanguage: payload.language || payload.metadata?.language || payload.metadata?.locale || "",
+    targetLanguage: "es",
+    reason: error?.message || "translation_failed",
+  }));
+
   const message = await addMessage({
     conversationId: conversation.id,
     role: "visitor",
     content,
-    metadata: payload.metadata,
+    metadata: {
+      ...(payload.metadata || {}),
+      operatorDisplayContent: operatorTranslation.content,
+      operatorDisplayLanguage: operatorTranslation.targetLanguage || "es",
+      visitorOriginalLanguage: operatorTranslation.sourceLanguage || payload.language || "",
+      visitorTranslatedForOperator: Boolean(operatorTranslation.translated),
+      ...(operatorTranslation.reason ? { visitorTranslationReason: operatorTranslation.reason } : {}),
+    },
   });
 
   return json({ conversation, message });

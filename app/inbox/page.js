@@ -458,6 +458,12 @@ function MessageBlock({ message, guest, skin, copy }) {
 
   const isGuest = message.role === "guest";
   const isAi = message.role === "ai";
+  const operatorDisplayContent = isGuest ? message.metadata?.operatorDisplayContent : "";
+  const hasOperatorTranslation =
+    isGuest &&
+    operatorDisplayContent &&
+    operatorDisplayContent !== message.content;
+  const visibleContent = hasOperatorTranslation ? operatorDisplayContent : message.content;
 
   return (
     <div className={`flex gap-3 ${isGuest ? "justify-start" : "justify-end"}`}>
@@ -481,8 +487,13 @@ function MessageBlock({ message, guest, skin, copy }) {
           }`}
           style={!isGuest && !isAi ? { background: skin.operator } : undefined}
         >
-          {message.content}
+          {visibleContent}
         </div>
+        {hasOperatorTranslation && (
+          <div className="mt-2 rounded-md border border-dashed border-[#d8e0ef] bg-[#f8fafc] px-3 py-2 text-xs leading-5 text-[#66718a]">
+            Original: {message.content}
+          </div>
+        )}
         {message.metadata?.attachment?.dataUrl && (
           <a
             href={message.metadata.attachment.dataUrl}
