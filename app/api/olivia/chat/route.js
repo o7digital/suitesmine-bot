@@ -482,6 +482,23 @@ export async function POST(request) {
     const preflightBookingDraft = preflightMetadata.bookingDraft || {};
 
     if (
+      requestedClientCode === "vialterna" &&
+      hasAny(preflightMessage, [
+        "info", "information", "details", "request", "quote", "audit", "expert", "contact", "help", "need",
+        "informacion", "detalles", "solicitud", "cotizacion", "asesor", "ayuda", "necesito",
+        "renseignement", "informations", "devis", "besoin", "aide",
+      ])
+    ) {
+      const client = getClientProfile("vialterna");
+      return json(leadFormResponse({
+        language: requestedLanguage,
+        client,
+        details: extractBookingDetails({ message: preflightMessage, metadata: preflightMetadata }),
+        message: preflightMessage,
+      }));
+    }
+
+    if (
       requestedClientCode === "suitesmine" &&
       preflightMessage &&
       isBookingFlow(preflightMessage, preflightBookingDraft)
