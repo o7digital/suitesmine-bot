@@ -26,6 +26,9 @@ const siteCopy = {
       privacyAccept: "J’ai lu et j’accepte",
       open: "Ouvrir le chat",
       close: "Fermer le chat",
+      leadPrompt: "Laissez vos coordonnées et les détails de votre demande.",
+      leadMissing: "Merci de compléter tous les champs du formulaire.",
+      lead: { name: "Nom", company: "Entreprise", email: "Email", phone: "Téléphone", details: "Détails de la demande" },
     },
     es: {
       welcome: "Hola, soy Olivia. Puedo ayudarle con su solicitud.",
@@ -41,6 +44,9 @@ const siteCopy = {
       privacyAccept: "He leído y acepto",
       open: "Abrir chat",
       close: "Cerrar chat",
+      leadPrompt: "Déjenos sus datos y los detalles de su solicitud.",
+      leadMissing: "Complete todos los campos del formulario.",
+      lead: { name: "Nombre", company: "Empresa", email: "Email", phone: "Teléfono", details: "Detalles de la solicitud" },
     },
     en: {
       welcome: "Hello, I am Olivia. I can help with your request.",
@@ -56,6 +62,9 @@ const siteCopy = {
       privacyAccept: "I have read and accept",
       open: "Open chat",
       close: "Close chat",
+      leadPrompt: "Please leave your contact details and request information.",
+      leadMissing: "Please complete all form fields.",
+      lead: { name: "Name", company: "Company", email: "Email", phone: "Phone", details: "Request info details" },
     },
     zh: {
       welcome: "您好，我是 Olivia，可以协助您处理咨询。",
@@ -71,6 +80,9 @@ const siteCopy = {
       privacyAccept: "我已阅读并接受",
       open: "打开聊天",
       close: "关闭聊天",
+      leadPrompt: "请留下联系方式和需求详情。",
+      leadMissing: "请填写表单中的所有字段。",
+      lead: { name: "姓名", company: "公司", email: "Email", phone: "电话", details: "需求详情" },
     },
   },
   suitesmine: {
@@ -166,6 +178,8 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [metadata, setMetadata] = useState({});
+  const [leadForm, setLeadForm] = useState(null);
+  const [leadData, setLeadData] = useState({ name: "", company: "", email: "", phone: "", details: "" });
   const [hasConsent, setHasConsent] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [messages, setMessages] = useState([
@@ -222,22 +236,46 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   }, [clientId, hasConsent]);
 
   const handleSend = async (overrideMessage = "") => {
-    const message = (overrideMessage || input).trim();
+    const leadMode = Boolean(leadForm);
+    const leadComplete =
+      !leadMode ||
+      ["name", "company", "email", "phone", "details"].every((key) => String(leadData[key] || "").trim());
+    const message = (overrideMessage || input || (leadMode ? leadData.details : "")).trim();
     if (!message || isLoading || !hasConsent) return;
+    if (!leadComplete) {
+      setMessages((prev) => [...prev, { role: "assistant", content: copy.leadMissing || siteCopy.default[language].leadMissing }]);
+      return;
+    }
 
     if (!overrideMessage) setInput("");
     setMessages((prev) => [...prev, { role: "user", content: message }]);
     setIsLoading(true);
 
     try {
+      const messageMetadata = leadMode
+        ? {
+            ...metadata,
+            lead: {
+              ...(metadata.lead || {}),
+              name: leadData.name.trim(),
+              company: leadData.company.trim(),
+              email: leadData.email.trim(),
+              phone: leadData.phone.trim(),
+              details: leadData.details.trim(),
+            },
+          }
+        : metadata;
       let storedConversation = null;
       try {
         storedConversation = await persistConversationMessage({
           clientCode: clientId,
           visitorId: visitorId.current,
           content: message,
-          metadata,
+          metadata: messageMetadata,
           source: "website",
+          visitorName: leadData.name,
+          email: leadData.email,
+          phone: leadData.phone,
         });
       } catch {}
 
@@ -248,9 +286,15 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
       const data = await sendMessage({
         clientId,
         message,
-        metadata,
+        metadata: messageMetadata,
       });
       const assistantContent = getAssistantText(data);
+      if (data?.action === "show_lead_form" || data?.leadForm) {
+        setLeadForm(data.leadForm || { detailsRows: 3 });
+        setLeadData((prev) => ({ ...prev, details: prev.details || data?.leadForm?.initialDetails || message }));
+      } else if (leadMode) {
+        setLeadForm(null);
+      }
 
       setMessages((prev) => [
         ...prev,
@@ -382,6 +426,32 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                   </button>
                 </span>
               </label>
+              {leadForm && (
+                <div className="rounded-xl border border-[#ded7c9] bg-[#f9f5ee] p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase text-[#786b55]">
+                    {copy.leadPrompt || siteCopy.default[language].leadPrompt}
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {["name", "company", "email", "phone"].map((key) => (
+                      <input
+                        key={key}
+                        type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
+                        value={leadData[key] || ""}
+                        placeholder={leadForm.labels?.[key] || copy.lead?.[key] || key}
+                        onChange={(event) => setLeadData((prev) => ({ ...prev, [key]: event.target.value }))}
+                        className="h-10 rounded-lg border border-[#ded7c9] bg-white px-3 text-sm text-[#2b2b2b] outline-none ring-[#c8aa70] placeholder:text-[#9b907d] focus:ring-2"
+                      />
+                    ))}
+                    <textarea
+                      value={leadData.details || ""}
+                      rows={leadForm.detailsRows || 3}
+                      placeholder={leadForm.labels?.details || copy.lead?.details || "Details"}
+                      onChange={(event) => setLeadData((prev) => ({ ...prev, details: event.target.value }))}
+                      className="min-h-[82px] rounded-lg border border-[#ded7c9] bg-white px-3 py-2 text-sm text-[#2b2b2b] outline-none ring-[#c8aa70] placeholder:text-[#9b907d] focus:ring-2 sm:col-span-2"
+                    />
+                  </div>
+                </div>
+              )}
               <DynamicFields metadata={metadata} setMetadata={setMetadata} language={language} />
               <div className="flex items-end gap-2">
                 <input

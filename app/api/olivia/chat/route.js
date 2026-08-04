@@ -266,6 +266,47 @@ function contactQualificationReply(language, client, details, message) {
   return (leadIn[language] || leadIn.es);
 }
 
+function leadFormResponse({ language, client, details, message }) {
+  const reply =
+    {
+      en: `Please leave your contact details and request information so a ${client.clientName} expert can follow up.`,
+      fr: `Laissez vos coordonnées et les détails de votre demande afin qu'un expert ${client.clientName} puisse assurer le suivi.`,
+      es: `Déjenos sus datos de contacto y los detalles de su solicitud para que un experto de ${client.clientName} pueda dar seguimiento.`,
+    }[language] ||
+    `Déjenos sus datos de contacto y los detalles de su solicitud para que un experto de ${client.clientName} pueda dar seguimiento.`;
+
+  return {
+    reply,
+    mode: "lead-qualification",
+    action: "show_lead_form",
+    clientCode: client.clientCode,
+    collected: {
+      name: details.name || null,
+      email: details.email || null,
+      phone: details.phone || null,
+    },
+    missingFields: missingContactFields(details),
+    leadForm: {
+      fields: ["name", "company", "email", "phone", "details"],
+      required: ["name", "company", "email", "phone", "details"],
+      detailsRows: 3,
+      labels: {
+        name: language === "en" ? "Name" : language === "fr" ? "Nom" : "Nombre",
+        company: language === "en" ? "Company" : language === "fr" ? "Entreprise" : "Empresa",
+        email: "Email",
+        phone: language === "en" ? "Phone" : language === "fr" ? "Téléphone" : "Teléfono",
+        details:
+          language === "en"
+            ? "Request info details"
+            : language === "fr"
+              ? "Détails de la demande"
+              : "Detalles de la solicitud",
+      },
+      initialDetails: clean(message),
+    },
+  };
+}
+
 function isZeviPropertyRequest(message) {
   return hasAny(message, [
     "propiedad", "propiedades", "bienes", "bien", "inmueble", "inmuebles",
@@ -529,17 +570,7 @@ export async function POST(request) {
     if (!isSuitesMine) {
       const contactReply = contactQualificationReply(language, client, contactDetails, message);
       if (contactReply) {
-        return json({
-          reply: contactReply,
-          mode: "lead-qualification",
-          clientCode: client.clientCode,
-          collected: {
-            name: contactDetails.name || null,
-            email: contactDetails.email || null,
-            phone: contactDetails.phone || null,
-          },
-          missingFields: missingContactFields(contactDetails),
-        });
+        return json(leadFormResponse({ language, client, details: contactDetails, message }));
       }
     }
 
