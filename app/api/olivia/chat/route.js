@@ -499,6 +499,14 @@ export async function POST(request) {
     const rates = isSuitesMine ? await getCloudbedsRates({ checkIn, checkOut }) : [];
     const ratesText = formatRatesForPrompt(rates);
     const bookingDetails = extractBookingDetails({ message, metadata: { ...metadata, checkIn, checkOut, guests } });
+    const contactDetails = hasLeadContact
+      ? {
+          ...bookingDetails,
+          name: bookingDetails.name || leadName,
+          email: bookingDetails.email || clean(lead.email),
+          phone: bookingDetails.phone || clean(lead.phone),
+        }
+      : bookingDetails;
 
     if (isSuitesMine && isBookingFlow(message, bookingDraft)) {
       return json({
@@ -519,18 +527,18 @@ export async function POST(request) {
     }
 
     if (!isSuitesMine) {
-      const contactReply = contactQualificationReply(language, client, bookingDetails, message);
+      const contactReply = contactQualificationReply(language, client, contactDetails, message);
       if (contactReply) {
         return json({
           reply: contactReply,
           mode: "lead-qualification",
           clientCode: client.clientCode,
           collected: {
-            name: bookingDetails.name || null,
-            email: bookingDetails.email || null,
-            phone: bookingDetails.phone || null,
+            name: contactDetails.name || null,
+            email: contactDetails.email || null,
+            phone: contactDetails.phone || null,
           },
-          missingFields: missingContactFields(bookingDetails),
+          missingFields: missingContactFields(contactDetails),
         });
       }
     }
