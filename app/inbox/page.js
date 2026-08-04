@@ -782,6 +782,7 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
 export default function InboxPage() {
   const { user } = useUser();
   const role = "admin";
+  const appVersionRef = useRef(null);
   const [language, setLanguage] = useState("fr");
   const copy = translations[language];
   const views = useMemo(() => getViews(copy), [copy]);
@@ -834,6 +835,38 @@ export default function InboxPage() {
     const timer = window.setInterval(loadConversations, 2000);
     return () => window.clearInterval(timer);
   }, [loadConversations]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkAppVersion = async () => {
+      try {
+        const response = await fetch(`/api/app-version?ts=${Date.now()}`, {
+          cache: "no-store",
+          credentials: "include",
+          headers: { "Cache-Control": "no-store" },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const version = data?.version;
+        if (!version || cancelled) return;
+        if (!appVersionRef.current) {
+          appVersionRef.current = version;
+          return;
+        }
+        if (appVersionRef.current !== version) {
+          window.location.reload();
+        }
+      } catch {
+        // Keep the inbox running if the version endpoint is temporarily unavailable.
+      }
+    };
+    checkAppVersion();
+    const timer = window.setInterval(checkAppVersion, 30000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
