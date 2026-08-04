@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { addMessage, findConversation } from "@/lib/conversations";
 import { sendMetaReply } from "@/lib/meta-channels";
+import { normalizeLanguage, translateOperatorReply } from "@/lib/operator-translation";
 
 export const runtime = "nodejs";
 
@@ -48,7 +49,27 @@ export async function POST(request, { params }) {
     return Response.json({ error: "Attachment is too large" }, { status: 413 });
   }
 
-  const content = payload.content?.trim() || attachment.name;
+  const originalContent = payload.content?.trim() || attachment.name;
+  const targetLanguage = normalizeLanguage(
+    payload.targetLanguage ||
+      conversation.language ||
+      conversation.metadata?.language ||
+      conversation.metadata?.locale
+  );
+  const translation = hasAttachment
+    ? { content: originalContent, translated: false, sourceLanguage: "es", targetLanguage }
+    : await translateOperatorReply({
+        content: originalContent,
+        sourceLanguage: payload.sourceLanguage || "es",
+        targetLanguage,
+      }).catch((error) => ({
+        content: originalContent,
+        translated: false,
+        sourceLanguage: normalizeLanguage(payload.sourceLanguage || "es") || "es",
+        targetLanguage,
+        reason: error?.message || "translation_failed",
+      }));
+  const content = translation.content || originalContent;
   const delivery = await sendMetaReply(conversation, content).catch((error) => ({
     skipped: false,
     ok: false,
@@ -59,7 +80,16 @@ export async function POST(request, { params }) {
     conversationId: conversation.id,
     role: "operator",
     content,
-    metadata: { operatorId: userId, delivery, ...(hasAttachment ? { attachment } : {}) },
+    metadata: {
+      operatorId: userId,
+      delivery,
+      operatorOriginalContent: originalContent,
+      operatorSourceLanguage: translation.sourceLanguage || normalizeLanguage(payload.sourceLanguage || "es") || "es",
+      operatorTargetLanguage: translation.targetLanguage || targetLanguage || "",
+      operatorTranslated: Boolean(translation.translated),
+      ...(translation.reason ? { operatorTranslationReason: translation.reason } : {}),
+      ...(hasAttachment ? { attachment } : {}),
+    },
   });
   console.log("[olivia-inbox] POST /api/conversations/:id/messages created", {
     messageId: message?.id || null,
