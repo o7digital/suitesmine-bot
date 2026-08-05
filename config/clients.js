@@ -237,6 +237,29 @@ Contacto: sales.reservations@lacasaquecanta.com, +52 755 555 7000.
     dashboardFields: ["intent", "language", "source", "page", "checkIn", "checkOut", "guests", "suitePreference", "leadStatus"],
     integrations: {},
   },
+  archivomac: {
+    clientCode: "archivomac",
+    clientName: "Archivo Mac",
+    industry: "vintage-mac-restoration",
+    siteUrl: "macretro.vercel.app",
+    roleLabel: {
+      es: "Olivia AI, asistente de Archivo Mac",
+      en: "Olivia AI, Archivo Mac assistant",
+      fr: "Olivia AI, assistante Archivo Mac",
+      de: "Olivia AI, Archivo Mac Assistentin",
+      it: "Olivia AI, assistente Archivo Mac",
+    },
+    skin: { accent: "#a76545", soft: "#f3efe6", operator: "#181816" },
+    knowledge: `
+Archivo Mac es un taller independiente en Ciudad de Mexico especializado en diagnostico, reparacion, mantenimiento, restauracion, compra, venta y valuacion de Macs antiguos y computadoras Apple de coleccion.
+Trabaja con Macintosh compactos, iMac G3, Power Mac, iBook, PowerBook y primeras generaciones Intel.
+Olivia AI debe orientar al visitante, identificar modelo, ano aproximado, sintoma, estado de encendido, accesorios, numero de serie y fotos disponibles cuando sea relevante.
+No debe inventar precios, disponibilidad de piezas, valor de mercado, garantia especial ni confirmaciones tecnicas. Para diagnostico, valuacion o seguimiento debe recopilar nombre, email, telefono, modelo y descripcion del problema.
+Contacto: hola@archivomac.mx.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "model", "year", "symptom", "powerState", "serialNumber", "leadStatus"],
+    integrations: {},
+  },
   eliteridemexico: {
     clientCode: "eliteridemexico",
     clientName: "Elite Ride Mexico",
