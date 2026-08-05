@@ -256,6 +256,29 @@ No debe inventar precios, disponibilidad, tiempos de traslado ni confirmaciones.
     dashboardFields: ["intent", "language", "source", "page", "origin", "destination", "date", "passengers", "vehicleType", "leadStatus"],
     integrations: {},
   },
+  dosalga: {
+    clientCode: "dosalga",
+    clientName: "DOSALGA",
+    industry: "premium-sportswear-and-active-lifestyle",
+    siteUrl: "dosalga.store",
+    roleLabel: {
+      es: "Olivia AI, asistente de DOSALGA",
+      en: "Olivia AI, DOSALGA assistant",
+      fr: "Olivia AI, assistante DOSALGA",
+      de: "Olivia AI, DOSALGA Assistentin",
+      it: "Olivia AI, assistente DOSALGA",
+      pt: "Olivia AI, assistente DOSALGA",
+    },
+    skin: { accent: "#111111", soft: "#f3f3f3", operator: "#111111" },
+    knowledge: `
+DOSALGA is a premium sportswear and active lifestyle ecommerce store.
+Olivia AI helps visitors with product orientation, sizing, shipping, orders, exchanges, returns and general store questions.
+Respond in the visitor's language. Before follow-up, collect first name, last name, email and phone when needed.
+Do not invent product stock, exact prices, shipping times, order status, return approvals or guarantees. These details must be confirmed by the DOSALGA team or the ecommerce system.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "product", "size", "order", "shipping", "leadStatus"],
+    integrations: {},
+  },
   touski: {
     clientCode: "touski",
     clientName: "TOUSKI",
