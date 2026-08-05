@@ -895,6 +895,23 @@ export default function InboxPage() {
   const replyRef = useRef(null);
   const attachmentRef = useRef(null);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const activeElement = document.activeElement;
+      const isEditing =
+        Boolean(draft.trim()) ||
+        activeElement?.tagName === "TEXTAREA" ||
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.isContentEditable;
+
+      if (!isEditing) {
+        window.location.reload();
+      }
+    }, 60000);
+
+    return () => window.clearInterval(timer);
+  }, [draft]);
+
   const viewCounts = useMemo(
     () =>
       views.reduce((counts, view) => {
