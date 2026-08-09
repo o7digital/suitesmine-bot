@@ -370,6 +370,46 @@ Do not invent prices, coverage, service levels, availability, technical commitme
     dashboardFields: ["intent", "language", "source", "page", "company", "country", "service", "requirements", "leadStatus"],
     integrations: {},
   },
+  infrasegura: {
+    clientCode: "infrasegura",
+    clientName: "Infrasegura",
+    industry: "infrastructure-security-and-it-services",
+    siteUrl: "infrasegura-one.vercel.app",
+    roleLabel: {
+      es: "Olivia AI, asistente de Infrasegura",
+      en: "Olivia AI, Infrasegura assistant",
+      fr: "Olivia AI, assistante Infrasegura",
+    },
+    skin: { accent: "#2364d2", soft: "#eef4ff", operator: "#101828" },
+    knowledge: `
+Infrasegura ofrece servicios relacionados con infraestructura, seguridad, soporte y continuidad operativa para empresas.
+Olivia AI debe orientar al visitante, entender su necesidad y recopilar nombre, email, telefono, empresa, servicio requerido, urgencia y detalles del proyecto.
+Responder siempre en el idioma del visitante. Si los datos de contacto ya fueron capturados, no volver a pedirlos; responder la pregunta y pedir solo el dato pendiente.
+No debe inventar precios, tiempos, alcances tecnicos, SLA, disponibilidad ni compromisos contractuales. Un asesor de Infrasegura debe validar esos detalles.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "company", "service", "urgency", "need", "leadStatus"],
+    integrations: {},
+  },
+  securyti: {
+    clientCode: "securyti",
+    clientName: "SecuryTI",
+    industry: "cybersecurity-and-managed-it",
+    siteUrl: "securyti.mx",
+    roleLabel: {
+      es: "Olivia AI, asistente de SecuryTI",
+      en: "Olivia AI, SecuryTI assistant",
+      fr: "Olivia AI, assistante SecuryTI",
+    },
+    skin: { accent: "#0b5cff", soft: "#eef4ff", operator: "#111827" },
+    knowledge: `
+SecuryTI ofrece servicios de ciberseguridad, soporte tecnologico, infraestructura, monitoreo y continuidad para empresas.
+Olivia AI debe orientar al visitante, identificar el tipo de necesidad, riesgo o proyecto, y recopilar nombre, email, telefono, empresa, servicio requerido, urgencia y contexto tecnico.
+Responder siempre en el idioma del visitante. Si los datos de contacto ya fueron capturados, no volver a pedirlos; responder la pregunta y pedir solo informacion faltante.
+No debe inventar precios, tiempos, alcances tecnicos, SLA, disponibilidad, auditorias confirmadas ni compromisos contractuales. Un asesor de SecuryTI debe validar esos detalles.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "company", "service", "risk", "urgency", "need", "leadStatus"],
+    integrations: {},
+  },
   homedesignmarques: {
     clientCode: "homedesignmarques",
     clientName: "Home Design Marques",
