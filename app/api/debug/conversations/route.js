@@ -2,6 +2,7 @@ import { isDatabaseConfigured } from "@/lib/db";
 import { listConversations } from "@/lib/conversations";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   if (!isDatabaseConfigured()) {

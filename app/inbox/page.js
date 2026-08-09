@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { clients } from "@/config/clients";
+import { canAccessClient, getAccessibleClientCodes, normalizeClientCode } from "@/config/adminAccess";
 
 const clientSkins = Object.fromEntries(
   Object.entries(clients).map(([clientCode, client]) => [
@@ -41,6 +42,10 @@ const clientSkins = Object.fromEntries(
       ...client.skin,
     },
   ])
+);
+
+const selectableClientCodes = Object.keys(clients).filter(
+  (clientCode) => !["default", "demo"].includes(clientCode)
 );
 
 const translations = {
@@ -781,6 +786,7 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
 
 export default function InboxPage() {
   const { user } = useUser();
+  const userEmail = user?.primaryEmailAddress?.emailAddress || "";
   const role = "admin";
   const appVersionRef = useRef(null);
   const [language, setLanguage] = useState("fr");
@@ -794,14 +800,33 @@ export default function InboxPage() {
   const [lastSync, setLastSync] = useState("");
   const [activeSection, setActiveSection] = useState("inbox");
   const [integrations, setIntegrations] = useState(null);
+  const accessibleClientCodes = useMemo(
+    () => getAccessibleClientCodes(userEmail, selectableClientCodes),
+    [userEmail]
+  );
+  const canUseScopedClient = useMemo(
+    () =>
+      scopedClientCode === undefined ||
+      !scopedClientCode ||
+      canAccessClient(userEmail, scopedClientCode, selectableClientCodes),
+    [scopedClientCode, userEmail]
+  );
   useEffect(() => {
-    setScopedClientCode(new URLSearchParams(window.location.search).get("client")?.trim() || null);
+    const requestedClient = normalizeClientCode(new URLSearchParams(window.location.search).get("client")?.trim() || "");
+    setScopedClientCode(requestedClient || null);
     const savedLanguage = window.localStorage.getItem("oliviaInboxLanguage");
     const browserLanguage = (navigator.language || "fr").slice(0, 2);
     setLanguage(["fr", "en", "es"].includes(savedLanguage) ? savedLanguage : ["fr", "en", "es"].includes(browserLanguage) ? browserLanguage : "fr");
   }, []);
+
+  useEffect(() => {
+    if (scopedClientCode === undefined || !scopedClientCode) return;
+    if (canUseScopedClient) return;
+    window.location.href = "/admin";
+  }, [canUseScopedClient, scopedClientCode]);
+
   const loadConversations = useCallback(async () => {
-    if (scopedClientCode === undefined) return;
+    if (scopedClientCode === undefined || !canUseScopedClient) return;
     try {
       const params = new URLSearchParams({ ts: Date.now().toString() });
       if (scopedClientCode) params.set("clientCode", scopedClientCode);
@@ -828,7 +853,7 @@ export default function InboxPage() {
       setLoadError(error?.message || "Erreur inconnue");
       setLoadState("error");
     }
-  }, [scopedClientCode]);
+  }, [scopedClientCode, canUseScopedClient]);
 
   useEffect(() => {
     loadConversations();
@@ -1078,6 +1103,31 @@ export default function InboxPage() {
           <div className="mt-3 flex items-center gap-2 text-xs text-[#5f6c86]">
             <span className="rounded-full bg-[#e8edf9] px-2 py-1">{user?.firstName || role}</span>
             <span>{scopedClientCode ?? copy.allClients}</span>
+          </div>
+          <div className="mt-3 rounded-md bg-white p-2 text-xs shadow-sm">
+            <label className="mb-1 block font-semibold text-[#536079]">Site Olivia</label>
+            <select
+              value={scopedClientCode || ""}
+              onChange={(event) => {
+                const nextClient = event.target.value;
+                window.location.href = nextClient ? `/inbox?client=${encodeURIComponent(nextClient)}` : "/inbox";
+              }}
+              className="w-full rounded-md border border-[#d8e0ef] bg-white px-2 py-2 text-sm font-medium text-[#172033] outline-none"
+            >
+              <option value="">{copy.allClients}</option>
+              {accessibleClientCodes
+                .map((clientCode) => clients[clientCode])
+                .filter(Boolean)
+                .sort((a, b) => a.clientName.localeCompare(b.clientName))
+                .map((client) => (
+                  <option key={client.clientCode} value={client.clientCode}>
+                    {client.clientName}
+                  </option>
+                ))}
+            </select>
+            <a href="/admin" className="mt-2 block font-semibold text-[#3159c9]">
+              Gérer les sites
+            </a>
           </div>
           <div className="mt-3 rounded-md bg-white px-3 py-2 text-xs leading-5 text-[#5f6c86] shadow-sm">
             <div className="flex items-center justify-between">
