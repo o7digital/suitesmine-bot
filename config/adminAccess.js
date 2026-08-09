@@ -20,6 +20,10 @@ export const adminAccess = {
     role: "client_admin",
     clients: ["infrasegura", "archivomac", "securyti"],
   },
+  "agarcia@securyti.mx": {
+    role: "client_admin",
+    clients: ["infrasegura", "archivomac", "securyti"],
+  },
 };
 
 const clientDomainAccess = [
