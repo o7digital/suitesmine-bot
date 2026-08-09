@@ -7,15 +7,23 @@ export const dynamic = "force-dynamic";
 
 const hiddenClientCodes = new Set(["default", "demo"]);
 
-export async function GET() {
+const clientAccessPreviews = {
+  infrasegura: ["infrasegura", "archivomac", "securyti"],
+};
+
+export async function GET(request) {
   const user = await currentUser().catch(() => null);
   const availableClientCodes = Object.keys(clients).filter((clientCode) => !hiddenClientCodes.has(clientCode));
   const access = getAdminAccessForUser(user);
-  const accessibleClientCodes = getAccessibleClientCodes(user, availableClientCodes);
+  const preview = new URL(request.url).searchParams.get("preview")?.trim().toLowerCase() || "";
+  const previewClientCodes = access.clients.includes("*") ? clientAccessPreviews[preview] : null;
+  const accessibleClientCodes = previewClientCodes?.filter((clientCode) => availableClientCodes.includes(clientCode))
+    ?? getAccessibleClientCodes(user, availableClientCodes);
 
   return Response.json({
-    role: access.role,
-    allClients: access.clients.includes("*"),
+    role: previewClientCodes ? "client_admin_preview" : access.role,
+    allClients: previewClientCodes ? false : access.clients.includes("*"),
+    preview: previewClientCodes ? preview : "",
     clients: accessibleClientCodes,
   });
 }

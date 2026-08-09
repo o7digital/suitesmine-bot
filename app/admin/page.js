@@ -28,7 +28,10 @@ export default function AdminSitesPage() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    fetch("/api/admin/access", { cache: "no-store", credentials: "include" })
+    const params = new URLSearchParams(window.location.search);
+    const preview = params.get("preview") || "";
+    const accessUrl = preview ? `/api/admin/access?preview=${encodeURIComponent(preview)}` : "/api/admin/access";
+    fetch(accessUrl, { cache: "no-store", credentials: "include" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (data?.clients) setServerAccess(data);
