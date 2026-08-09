@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { clients } from "@/config/clients";
-import { canAccessClient, getAccessibleClientCodes, normalizeClientCode } from "@/config/adminAccess";
+import { getAccessibleClientCodes, getAdminAccessForUser, normalizeClientCode } from "@/config/adminAccess";
 
 const clientSkins = Object.fromEntries(
   Object.entries(clients).map(([clientCode, client]) => [
@@ -786,7 +786,6 @@ function WorkspacePanel({ section, conversations, integrations, onClose, copy, l
 
 export default function InboxPage() {
   const { user } = useUser();
-  const userEmail = user?.primaryEmailAddress?.emailAddress || "";
   const role = "admin";
   const appVersionRef = useRef(null);
   const [language, setLanguage] = useState("fr");
@@ -800,17 +799,31 @@ export default function InboxPage() {
   const [lastSync, setLastSync] = useState("");
   const [activeSection, setActiveSection] = useState("inbox");
   const [integrations, setIntegrations] = useState(null);
-  const accessibleClientCodes = useMemo(
-    () => getAccessibleClientCodes(userEmail, selectableClientCodes),
-    [userEmail]
+  const fallbackClientCodes = useMemo(
+    () => getAccessibleClientCodes(user, selectableClientCodes),
+    [user]
   );
+  const fallbackAccess = useMemo(() => getAdminAccessForUser(user), [user]);
+  const [serverAccess, setServerAccess] = useState(null);
+  const accessibleClientCodes = serverAccess?.clients ?? fallbackClientCodes;
+  const access = serverAccess ?? fallbackAccess;
+  const scopeLabel = access.allClients || access.clients.includes("*") ? copy.allClients : "sites autorisés";
   const canUseScopedClient = useMemo(
     () =>
       scopedClientCode === undefined ||
       !scopedClientCode ||
-      canAccessClient(userEmail, scopedClientCode, selectableClientCodes),
-    [scopedClientCode, userEmail]
+      accessibleClientCodes.includes(normalizeClientCode(scopedClientCode)),
+    [accessibleClientCodes, scopedClientCode]
   );
+
+  useEffect(() => {
+    fetch("/api/admin/access", { cache: "no-store", credentials: "include" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data?.clients) setServerAccess(data);
+      })
+      .catch(() => {});
+  }, []);
   useEffect(() => {
     const requestedClient = normalizeClientCode(new URLSearchParams(window.location.search).get("client")?.trim() || "");
     setScopedClientCode(requestedClient || null);
@@ -1102,7 +1115,7 @@ export default function InboxPage() {
           <h1 className="text-xl font-semibold">{copy.nav[0]}</h1>
           <div className="mt-3 flex items-center gap-2 text-xs text-[#5f6c86]">
             <span className="rounded-full bg-[#e8edf9] px-2 py-1">{user?.firstName || role}</span>
-            <span>{scopedClientCode ?? copy.allClients}</span>
+            <span>{scopedClientCode ?? scopeLabel}</span>
           </div>
           <div className="mt-3 rounded-md bg-white p-2 text-xs shadow-sm">
             <label className="mb-1 block font-semibold text-[#536079]">Site Olivia</label>
@@ -1114,7 +1127,7 @@ export default function InboxPage() {
               }}
               className="w-full rounded-md border border-[#d8e0ef] bg-white px-2 py-2 text-sm font-medium text-[#172033] outline-none"
             >
-              <option value="">{copy.allClients}</option>
+              <option value="">{scopeLabel}</option>
               {accessibleClientCodes
                 .map((clientCode) => clients[clientCode])
                 .filter(Boolean)

@@ -1,5 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
-import { addMessage, updateConversationStatus } from "@/lib/conversations";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { canAccessClient } from "@/config/adminAccess";
+import { clients } from "@/config/clients";
+import { addMessage, findConversation, updateConversationStatus } from "@/lib/conversations";
 
 export const runtime = "nodejs";
 
@@ -16,6 +18,13 @@ export async function POST(request, { params }) {
   const payload = await request.json().catch(() => ({}));
   if (!allowedStatuses.has(payload.status)) {
     return Response.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  const existingConversation = await findConversation(params.id);
+  if (!existingConversation) return Response.json({ error: "Conversation not found" }, { status: 404 });
+  const user = await currentUser().catch(() => null);
+  if (!canAccessClient(user, existingConversation.client_code, Object.keys(clients))) {
+    return Response.json({ error: "Forbidden client" }, { status: 403 });
   }
 
   const conversation = await updateConversationStatus({

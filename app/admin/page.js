@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { ArrowRight, Globe2, ShieldCheck } from "lucide-react";
 import { clients } from "@/config/clients";
-import { getAccessibleClientCodes, getAdminAccessForEmail } from "@/config/adminAccess";
+import { getAccessibleClientCodes, getAdminAccessForUser } from "@/config/adminAccess";
 
 const hiddenClientCodes = new Set(["default", "demo"]);
 
@@ -16,12 +16,25 @@ export default function AdminSitesPage() {
     () => Object.keys(clients).filter((clientCode) => !hiddenClientCodes.has(clientCode)),
     []
   );
-  const access = getAdminAccessForEmail(email);
-  const accessibleClientCodes = getAccessibleClientCodes(email, availableClientCodes);
+  const fallbackAccess = getAdminAccessForUser(user);
+  const fallbackClientCodes = getAccessibleClientCodes(user, availableClientCodes);
+  const [serverAccess, setServerAccess] = useState(null);
+  const access = serverAccess ?? fallbackAccess;
+  const accessibleClientCodes = serverAccess?.clients ?? fallbackClientCodes;
   const visibleClients = accessibleClientCodes
     .map((clientCode) => clients[clientCode])
     .filter(Boolean)
     .sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    fetch("/api/admin/access", { cache: "no-store", credentials: "include" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data?.clients) setServerAccess(data);
+      })
+      .catch(() => {});
+  }, [isLoaded]);
 
   return (
     <main className="min-h-screen bg-[#f4f6fb] px-6 py-8 text-[#121827]">

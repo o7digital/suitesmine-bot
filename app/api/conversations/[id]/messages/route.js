@@ -1,4 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { canAccessClient } from "@/config/adminAccess";
+import { clients } from "@/config/clients";
 import { addMessage, findConversation } from "@/lib/conversations";
 import { sendMetaReply } from "@/lib/meta-channels";
 import { normalizeLanguage, translateOperatorReply } from "@/lib/operator-translation";
@@ -19,6 +21,10 @@ export async function POST(request, { params }) {
     status: conversation?.status || null,
   });
   if (!conversation) return Response.json({ error: "Conversation not found" }, { status: 404 });
+  const user = await currentUser().catch(() => null);
+  if (!canAccessClient(user, conversation.client_code, Object.keys(clients))) {
+    return Response.json({ error: "Forbidden client" }, { status: 403 });
+  }
   if (conversation.status !== "manual") {
     return Response.json({ error: "Manual takeover is required before replying" }, { status: 409 });
   }
