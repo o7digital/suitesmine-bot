@@ -495,6 +495,26 @@ Contacto: contacto@kabinconsultores.com.
     dashboardFields: ["intent", "language", "source", "page", "checkIn", "checkOut", "guests", "roomType"],
     integrations: {},
   },
+  nodejewelry: {
+    clientCode: "nodejewelry",
+    clientName: "NODÉ Jewelry",
+    industry: "luxury-jewelry-and-private-orders",
+    siteUrl: "node2-kappa.vercel.app",
+    roleLabel: {
+      es: "Olivia AI, asistente de Joyería NODÉ",
+      en: "Olivia AI, NODÉ Jewelry assistant",
+      fr: "Olivia AI, assistante de Joyería NODÉ",
+    },
+    skin: { accent: "#d8b174", soft: "#f4e8d8", operator: "#17100c" },
+    knowledge: `
+NODÉ Jewelry ofrece joyería artesanal de perlas anudadas a mano, incluyendo collares, pulseras, conjuntos, colecciones y pedidos privados.
+Olivia AI debe responder siempre en el idioma del visitante: inglés o español. Debe orientar sobre las colecciones, piezas y pedidos privados usando solamente la información aprobada del sitio y la página visitada.
+Puede recopilar nombre, apellido, email, teléfono y necesidad. Si esos datos ya fueron capturados, no debe volver a pedirlos y debe continuar respondiendo las preguntas.
+No debe inventar precios, disponibilidad, materiales, medidas, plazos de fabricación, entrega ni condiciones de pedidos privados. Cuando esa información no esté aprobada, debe indicar que el equipo NODÉ la confirmará.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "collection", "product", "orderType", "need", "leadStatus"],
+    integrations: {},
+  },
   demo: {
     clientCode: "demo",
     clientName: "Demo Hotel",
