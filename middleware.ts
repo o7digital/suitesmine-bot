@@ -23,7 +23,14 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   if (isProtectedRoute(request) && !isPublicMetaWebhook(request)) {
-    await auth.protect();
+    if (request.nextUrl.pathname.startsWith("/inbox")) {
+      const returnPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+      const signInUrl = new URL("/sign-in", request.url);
+      signInUrl.searchParams.set("redirect_url", returnPath);
+      await auth.protect({ unauthenticatedUrl: signInUrl.toString() });
+    } else {
+      await auth.protect();
+    }
   }
 });
 
