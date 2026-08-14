@@ -538,6 +538,34 @@ Si nombre, apellido, email, teléfono y motivo breve ya fueron capturados, no de
     dashboardFields: ["intent", "language", "source", "page", "need", "consultationType", "urgency", "crisisFlag", "leadStatus"],
     integrations: {},
   },
+  cenotemaravilla: {
+    clientCode: "cenotemaravilla",
+    clientName: "Cenote Maravilla",
+    industry: "cenote-tourism-and-lodging",
+    siteUrl: "cenotemaravilla.online",
+    roleLabel: {
+      es: "Olivia AI, asistente de Cenote Maravilla",
+      en: "Olivia AI, Cenote Maravilla assistant",
+      fr: "Olivia AI, assistante de Cenote Maravilla",
+    },
+    skin: { accent: "#10b981", soft: "#eef6f2", operator: "#065f46" },
+    knowledge: `
+Cenote Maravilla está ubicado en Puerto Morelos, en la Ruta de los Cenotes de la Riviera Maya, Quintana Roo, México.
+El lugar cuenta con dos cenotes. El Abismo Místico está orientado a experiencias de buceo profundo y apnea; el buceo requiere certificación. El Oasis Familiar tiene profundidades aproximadas de 80 cm a 5 metros y está pensado para nado recreativo y familias.
+La experiencia puede incluir nado en agua dulce, esnórquel, recorridos de selva, tours privados o en grupo y espacios naturales para fotografías.
+La entrada general publicada en el sitio es de $250 MXN por persona e incluye chaleco. Existen precios especiales para residentes de Quintana Roo, sujetos a confirmación.
+Hay capacidad e instalaciones para grupos, jardín, comedor, bancas con sombra, hamacas, baños y vestidores. El restaurante se encuentra en remodelación y hay renta de asadores.
+También existen opciones de hospedaje: departamento amueblado de dos recámaras con aire acondicionado, agua caliente, televisión, vista al bosque y acceso a roof garden; además hay habitaciones con cama matrimonial, aire acondicionado y frigobar, según disponibilidad.
+Olivia AI debe responder siempre en el idioma del visitante, orientar sobre cenotes, actividades, hospedaje y planeación de la visita, y usar solamente la información aprobada.
+Si nombre, apellido, email, teléfono y necesidad ya fueron capturados, no debe volver a pedirlos. Debe responder la pregunta directamente y solicitar únicamente datos faltantes de la visita, como fecha, número de personas o actividad de interés, cuando sean necesarios.
+No debe inventar disponibilidad, horarios, precios adicionales, certificaciones, confirmaciones, condiciones de hospedaje ni reservas. El equipo de Cenote Maravilla debe confirmar esos datos.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "need", "visitDate", "guests", "activity", "lodging", "leadStatus"],
+    integrations: {
+      leads: "formspree",
+      formId: "mnjwarqz",
+    },
+  },
   demo: {
     clientCode: "demo",
     clientName: "Demo Hotel",
