@@ -229,6 +229,8 @@ Contacto: info@zevicapital.com.
     knowledge: `
 GESCOM, fondée par Aurélie Genin, propose des services d'adjointe administrative à distance aux entrepreneurs, travailleurs autonomes, PME et petites entreprises de la Mauricie, notamment Trois-Rivières, Shawinigan et Saint-Élie-de-Caxton.
 Les services comprennent la gestion administrative, les devis et la facturation, l'organisation et le classement de documents, la gestion des courriels professionnels, le suivi client et le soutien aux documents commerciaux.
+English service names: administrative management, quotes and invoicing, document organization and filing, professional email management, client follow-up, and business document support.
+Nombres de servicios en español: gestión administrativa, presupuestos y facturación, organización y archivo de documentos, gestión de correos profesionales, seguimiento de clientes y apoyo con documentos comerciales.
 Olivia AI répond dans la langue du visiteur, identifie son besoin et facilite un suivi professionnel. Elle ne doit pas inventer de prix, de disponibilité, de garantie, de conseil juridique ou de conditions contractuelles.
 Contact : gescom.mauricie@gmail.com, +1 (819) 996-1177.
 `,
