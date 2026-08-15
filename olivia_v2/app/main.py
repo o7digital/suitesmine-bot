@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from olivia_v2.app.clients import get_client_profile
+from olivia_v2.app.clients import resolve_client_profile
 from olivia_v2.app.config import get_settings
 from olivia_v2.app.extraction import detect_intent
 from olivia_v2.app.hostess import build_hostess_response
@@ -38,8 +38,10 @@ async def chat(payload: ChatRequest) -> OliviaResponse:
         raise HTTPException(status_code=400, detail="message is required")
 
     client_code = payload.clientCode or payload.clientId or "default"
-    client = get_client_profile(client_code)
+    client = resolve_client_profile(client_code, payload.metadata)
     language = detect_language(message, payload.language)
+    if language not in client.supported_languages:
+        language = "en" if "en" in client.supported_languages else client.supported_languages[0]
     intent = detect_intent(message, payload.metadata)
 
     pms = CloudbedsClient(settings)
@@ -55,4 +57,3 @@ async def chat(payload: ChatRequest) -> OliviaResponse:
         rates=rates,
         openai_service=OpenAIService(settings),
     )
-

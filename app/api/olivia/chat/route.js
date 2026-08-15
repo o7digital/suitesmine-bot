@@ -1,4 +1,6 @@
 import { getClientProfile } from "@/config/clients";
+import { findVisitorConversation } from "@/lib/conversations";
+import { isDatabaseConfigured } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -20,16 +22,66 @@ function clean(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function sanitizeHistory(history) {
+  return (Array.isArray(history) ? history : [])
+    .filter(
+      (item) =>
+        (item?.role === "user" || item?.role === "assistant") &&
+        clean(item?.content),
+    )
+    .slice(-12)
+    .map((item) => ({ role: item.role, content: clean(item.content).slice(0, 4000) }));
+}
+
+async function resolveConversationHistory(payload) {
+  const supplied = sanitizeHistory(payload.history);
+  if (supplied.length || !isDatabaseConfigured()) return supplied;
+
+  const clientCode = clean(payload.clientCode || payload.clientId) || "default";
+  const visitorId = clean(payload.visitorId);
+  if (!visitorId) return [];
+
+  try {
+    const conversation = await findVisitorConversation(clientCode, visitorId);
+    const persisted = (conversation?.messages || [])
+      .map((item) => ({
+        role: item.role === "visitor" ? "user" : ["ai", "operator"].includes(item.role) ? "assistant" : "",
+        content: clean(item.content),
+      }))
+      .filter((item) => item.role && item.content);
+
+    const currentMessage = clean(payload.message);
+    const lastMessage = persisted.at(-1);
+    if (lastMessage?.role === "user" && lastMessage.content === currentMessage) {
+      persisted.pop();
+    }
+    return sanitizeHistory(persisted);
+  } catch (error) {
+    console.warn("[olivia] unable to restore conversation history", error);
+    return [];
+  }
+}
+
 async function callOliviaV2(payload) {
   const baseUrl = clean(process.env.OLIVIA_V2_URL).replace(/\/$/, "");
   if (!baseUrl) return null;
 
+  const clientCode = payload.clientCode || payload.clientId || "default";
+  const profile = getClientProfile(clientCode);
+  const siteUrl = clean(profile.siteUrl || profile.website || payload.metadata?.pageUrl);
   const response = await fetch(`${baseUrl}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...payload,
-      clientCode: payload.clientCode || payload.clientId,
+      clientCode,
+      metadata: {
+        ...(payload.metadata || {}),
+        clientName: profile.clientName,
+        clientIndustry: profile.industry,
+        clientKnowledge: profile.knowledge,
+        clientSiteUrl: siteUrl,
+      },
     }),
     cache: "no-store",
   });
@@ -288,7 +340,7 @@ function leadFormResponse({ language, client, details, message }) {
     missingFields: missingContactFields(details),
     leadForm: {
       fields: ["name", "company", "email", "phone", "details"],
-      required: ["name", "company", "email", "phone", "details"],
+      required: ["name", "email", "phone", "details"],
       detailsRows: 3,
       labels: {
         name: language === "en" ? "Name" : language === "fr" ? "Nom" : "Nombre",
@@ -459,6 +511,7 @@ function languageName(language) {
 export async function POST(request) {
   try {
     const payload = await request.json();
+    payload.history = await resolveConversationHistory(payload);
     const requestedLanguage = clean(payload.language) || "es";
     const requestedClientCode = clean(payload.clientCode || payload.clientId) || "default";
 
@@ -480,23 +533,6 @@ export async function POST(request) {
     const preflightMessage = clean(payload.message);
     const preflightMetadata = payload.metadata || {};
     const preflightBookingDraft = preflightMetadata.bookingDraft || {};
-
-    if (
-      requestedClientCode === "vialterna" &&
-      hasAny(preflightMessage, [
-        "info", "information", "details", "request", "quote", "audit", "expert", "contact", "help", "need",
-        "informacion", "detalles", "solicitud", "cotizacion", "asesor", "ayuda", "necesito",
-        "renseignement", "informations", "devis", "besoin", "aide",
-      ])
-    ) {
-      const client = getClientProfile("vialterna");
-      return json(leadFormResponse({
-        language: requestedLanguage,
-        client,
-        details: extractBookingDetails({ message: preflightMessage, metadata: preflightMetadata }),
-        message: preflightMessage,
-      }));
-    }
 
     if (
       requestedClientCode === "suitesmine" &&
@@ -584,12 +620,20 @@ export async function POST(request) {
       });
     }
 
-    if (!isSuitesMine) {
-      const contactReply = contactQualificationReply(language, client, contactDetails, message);
-      if (contactReply) {
-        return json(leadFormResponse({ language, client, details: contactDetails, message }));
-      }
-    }
+    const contactReply = !isSuitesMine
+      ? contactQualificationReply(language, client, contactDetails, message)
+      : "";
+    const leadQualification = contactReply
+      ? leadFormResponse({ language, client, details: contactDetails, message })
+      : null;
+    const leadUi = leadQualification
+      ? {
+          action: leadQualification.action,
+          leadForm: leadQualification.leadForm,
+          collected: leadQualification.collected,
+          missingFields: leadQualification.missingFields,
+        }
+      : {};
 
     if (!process.env.OPENAI_API_KEY) {
       return json({
@@ -599,6 +643,7 @@ export async function POST(request) {
         mode: "fallback",
         clientCode: client.clientCode,
         rates,
+        ...leadUi,
       });
     }
 
@@ -641,21 +686,29 @@ ${isSuitesMine ? `Live Cloudbeds rates for selected dates:\n${ratesText}` : ""}
       },
     };
 
+    const conversationHistory = sanitizeHistory(payload.history);
+
+    const openAIModel = process.env.OPENAI_MODEL || "gpt-5.6-luna";
+    const openAIRequest = {
+      model: openAIModel,
+      input: [
+        { role: "system", content: system },
+        ...conversationHistory,
+        { role: "user", content: JSON.stringify(user) },
+      ],
+      max_output_tokens: 450,
+    };
+    if (!/^(gpt-5|o)/.test(openAIModel)) {
+      openAIRequest.temperature = 0.3;
+    }
+
     const res = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-        input: [
-          { role: "system", content: system },
-          { role: "user", content: JSON.stringify(user) },
-        ],
-        temperature: 0.3,
-        max_output_tokens: 450,
-      }),
+      body: JSON.stringify(openAIRequest),
     });
 
     const data = await res.json();
@@ -667,6 +720,7 @@ ${isSuitesMine ? `Live Cloudbeds rates for selected dates:\n${ratesText}` : ""}
         mode: "openai-error",
         error: data?.error?.message || "OpenAI error",
         rates,
+        ...leadUi,
       });
     }
 
@@ -675,7 +729,7 @@ ${isSuitesMine ? `Live Cloudbeds rates for selected dates:\n${ratesText}` : ""}
       data.output?.flatMap((item) => item.content || []).find((part) => part.type === "output_text")?.text ||
       fallbackReply(language, { checkIn, checkOut });
 
-    return json({ reply, mode: "openai", clientCode: client.clientCode, rates });
+    return json({ reply, mode: "openai", clientCode: client.clientCode, rates, ...leadUi });
   } catch (error) {
     return json({ error: error.message || "Unexpected error" }, 500);
   }

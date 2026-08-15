@@ -69,7 +69,7 @@ export async function GET(request) {
     },
     openai: {
       configured: configured("OPENAI_API_KEY"),
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
     },
     cloudbeds: {
       configured:

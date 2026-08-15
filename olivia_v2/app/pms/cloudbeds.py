@@ -29,12 +29,15 @@ class CloudbedsClient:
             "detailedRates": "true",
         }
 
-        async with httpx.AsyncClient(timeout=12) as client:
-            response = await client.get(url, headers=headers, params=params)
-            if response.status_code >= 400:
-                return []
-            data = response.json()
-            return data.get("data") if isinstance(data.get("data"), list) else []
+        try:
+            async with httpx.AsyncClient(timeout=12) as client:
+                response = await client.get(url, headers=headers, params=params)
+                if response.status_code >= 400:
+                    return []
+                data = response.json()
+                return data.get("data") if isinstance(data.get("data"), list) else []
+        except (httpx.HTTPError, TypeError, ValueError):
+            return []
 
     def _mock_rates(self) -> list[dict[str, Any]]:
         return [
@@ -60,4 +63,3 @@ class CloudbedsClient:
                 "currency": "MXN",
             },
         ]
-

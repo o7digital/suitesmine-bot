@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MessageCircle, Send, Sparkles, X } from "lucide-react";
+import { MessageCircle, Mic, Paperclip, Send, Sparkles, X } from "lucide-react";
 import MessageBubble from "@/components/MessageBubble";
 import DynamicFields from "@/components/DynamicFields";
 import { getVisitorConversation, persistAssistantMessage, persistConversationMessage, sendMessage } from "@/lib/api";
@@ -176,6 +176,8 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [language, setLanguage] = useState("es");
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState([]);
+  const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [metadata, setMetadata] = useState({});
   const [leadForm, setLeadForm] = useState(null);
@@ -237,18 +239,36 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
 
   const handleSend = async (overrideMessage = "") => {
     const leadMode = Boolean(leadForm);
+    const requiredLeadFields =
+      Array.isArray(leadForm?.required) && leadForm.required.length
+        ? leadForm.required
+        : ["name", "email", "phone", "details"];
     const leadComplete =
       !leadMode ||
-      ["name", "company", "email", "phone", "details"].every((key) => String(leadData[key] || "").trim());
-    const message = (overrideMessage || input || (leadMode ? leadData.details : "")).trim();
+      requiredLeadFields.every((key) => String(leadData[key] || "").trim());
+    const message = (overrideMessage || input || (leadMode ? leadData.details : "") || (attachments.length ? "Analyse ce fichier." : "")).trim();
     if (!message || isLoading || !hasConsent) return;
     if (!leadComplete) {
       setMessages((prev) => [...prev, { role: "assistant", content: copy.leadMissing || siteCopy.default[language].leadMissing }]);
       return;
     }
 
-    if (!overrideMessage) setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
+    const conversationHistory = messages
+      .filter(
+        (item) =>
+          (item.role === "user" || item.role === "assistant") &&
+          typeof item.content === "string" &&
+          item.content.trim(),
+      )
+      .slice(-12)
+      .map((item) => ({ role: item.role, content: item.content.trim() }));
+
+    const sentAttachments = attachments;
+    if (!overrideMessage) {
+      setInput("");
+      setAttachments([]);
+    }
+    setMessages((prev) => [...prev, { role: "user", content: message, attachments: sentAttachments }]);
     setIsLoading(true);
 
     try {
@@ -285,10 +305,36 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
 
       const data = await sendMessage({
         clientId,
+        visitorId: visitorId.current,
         message,
         metadata: messageMetadata,
+        history: conversationHistory,
+        attachments: sentAttachments,
       });
       const assistantContent = getAssistantText(data);
+
+      const returnedBookingState = data?.bookingDraft || data?.collected;
+      const bookingIsActive =
+        data?.intent === "booking" ||
+        data?.mode === "booking" ||
+        data?.phase === "booking_intake" ||
+        data?.phase === "availability_check";
+      if (bookingIsActive && returnedBookingState) {
+        const knownBookingFields = Object.fromEntries(
+          Object.entries(returnedBookingState).filter(
+            ([, value]) => value !== null && value !== undefined && String(value).trim() !== "",
+          ),
+        );
+        setMetadata((prev) => ({
+          ...prev,
+          bookingDraft: {
+            ...(prev.bookingDraft || {}),
+            active: true,
+            ...knownBookingFields,
+          },
+        }));
+      }
+
       if (data?.action === "show_lead_form" || data?.leadForm) {
         setLeadForm(data.leadForm || { detailsRows: 3 });
         setLeadData((prev) => ({ ...prev, details: prev.details || data?.leadForm?.initialDetails || message }));
@@ -367,6 +413,11 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                       {msg.attachment.name}
                     </a>
                   )}
+                  {msg.attachments?.map((attachment) => (
+                    <span key={attachment.name} className="mt-2 block text-xs font-semibold">
+                      📎 {attachment.name}
+                    </span>
+                  ))}
                 </MessageBubble>
               ))}
               {copy.actions?.length ? (
@@ -454,6 +505,45 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
               )}
               <DynamicFields metadata={metadata} setMetadata={setMetadata} language={language} />
               <div className="flex items-end gap-2">
+                <label className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-[#ded7c9] bg-white text-[#5f5546] hover:bg-[#f7f2e9]">
+                  <Paperclip className="h-4 w-4" />
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                    className="hidden"
+                    onChange={async (event) => {
+                      const files = Array.from(event.target.files || []).slice(0, 3);
+                      const valid = files.filter((file) => file.size <= 8 * 1024 * 1024);
+                      const encoded = await Promise.all(valid.map((file) => new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve({ name: file.name, mimeType: file.type, dataUrl: reader.result });
+                        reader.readAsDataURL(file);
+                      })));
+                      setAttachments(encoded);
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  aria-label="Dicter un message"
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#ded7c9] ${isListening ? "bg-red-100 text-red-700" : "bg-white text-[#5f5546]"}`}
+                  onClick={() => {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SpeechRecognition) return;
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = language === "fr" ? "fr-FR" : language === "en" ? "en-US" : "es-MX";
+                    recognition.interimResults = false;
+                    recognition.onstart = () => setIsListening(true);
+                    recognition.onend = () => setIsListening(false);
+                    recognition.onerror = () => setIsListening(false);
+                    recognition.onresult = (event) => setInput((value) => `${value} ${event.results[0][0].transcript}`.trim());
+                    recognition.start();
+                  }}
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -470,6 +560,15 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                   <Send className="h-4 w-4" />
                 </button>
               </div>
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 text-xs text-[#5f5546]">
+                  {attachments.map((attachment) => (
+                    <button key={attachment.name} type="button" onClick={() => setAttachments((items) => items.filter((item) => item !== attachment))} className="rounded-full bg-[#efe4cd] px-3 py-1">
+                      {attachment.name} ×
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.section>
         )}

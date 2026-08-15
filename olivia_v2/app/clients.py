@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 
 @dataclass(frozen=True)
@@ -11,6 +11,7 @@ class ClientProfile:
     supported_languages: tuple[str, ...] = ("es", "en", "fr")
     booking_categories: tuple[str, ...] = ()
     integrations: dict[str, str] = field(default_factory=dict)
+    site_domains: tuple[str, ...] = ()
 
 
 CLIENTS: dict[str, ClientProfile] = {
@@ -278,3 +279,30 @@ Avant un suivi commercial, collecter uniquement les informations utiles: nom, em
 def get_client_profile(client_code: str | None) -> ClientProfile:
     key = (client_code or "default").strip().lower()
     return CLIENTS.get(key, CLIENTS["default"])
+
+
+def resolve_client_profile(client_code: str | None, metadata) -> ClientProfile:
+    """Use the server-approved Next.js profile for clients not yet duplicated in Python."""
+    key = (client_code or "default").strip().lower()
+    existing = CLIENTS.get(key)
+    site_url = getattr(metadata, "clientSiteUrl", None) or getattr(metadata, "pageUrl", None)
+    domains: tuple[str, ...] = ()
+    if site_url:
+        from urllib.parse import urlparse
+
+        normalized_url = site_url if "://" in site_url else f"https://{site_url}"
+        hostname = urlparse(normalized_url).hostname
+        if hostname:
+            domains = (hostname.lower(),)
+    if existing:
+        return replace(existing, site_domains=existing.site_domains or domains)
+
+    base = CLIENTS["default"]
+    return replace(
+        base,
+        code=key,
+        name=getattr(metadata, "clientName", None) or key,
+        industry=getattr(metadata, "clientIndustry", None) or "generic",
+        knowledge=getattr(metadata, "clientKnowledge", None) or base.knowledge,
+        site_domains=domains,
+    )

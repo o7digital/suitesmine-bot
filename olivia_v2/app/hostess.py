@@ -77,6 +77,33 @@ def localized_missing_fields(language: str, missing: list[str]) -> list[str]:
             "guests": "number of guests",
             "roomType": "room category",
         },
+        "it": {
+            "name": "nome e cognome",
+            "email": "email",
+            "phone": "telefono",
+            "checkIn": "arrivo",
+            "checkOut": "partenza",
+            "guests": "numero di ospiti",
+            "roomType": "categoria di camera",
+        },
+        "de": {
+            "name": "Vor- und Nachname",
+            "email": "E-Mail",
+            "phone": "Telefon",
+            "checkIn": "Anreise",
+            "checkOut": "Abreise",
+            "guests": "Anzahl der Gäste",
+            "roomType": "Zimmerkategorie",
+        },
+        "ru": {
+            "name": "имя и фамилия",
+            "email": "email",
+            "phone": "телефон",
+            "checkIn": "дата заезда",
+            "checkOut": "дата выезда",
+            "guests": "количество гостей",
+            "roomType": "категория номера",
+        },
     }
     language_labels = labels.get(language, labels["es"])
     return [language_labels.get(field, field) for field in missing]
@@ -93,25 +120,47 @@ def missing_contact_fields(fields) -> list[str]:
     return missing
 
 
-def contact_qualification_reply(language: str, client: ClientProfile, fields, message: str) -> tuple[str, list[str]] | None:
-    missing = missing_contact_fields(fields)
-    if not missing:
-        return None
-    labels = localized_missing_fields(language, missing)
-    if language == "en":
-        return (
-            f"I can help with {client.name}. To give proper follow-up, please send: {', '.join(labels)}.",
-            missing,
-        )
-    if language == "fr":
-        return (
-            f"Je peux vous aider avec {client.name}. Pour assurer le bon suivi, envoyez-moi : {', '.join(labels)}.",
-            missing,
-        )
-    return (
-        f"Puedo ayudarle con {client.name}. Para darle seguimiento correctamente, envíeme: {', '.join(labels)}.",
-        missing,
-    )
+def build_lead_form(language: str, message: str, missing: list[str]) -> dict:
+    labels = {
+        "es": {"name": "Nombre", "company": "Empresa", "email": "Email", "phone": "Teléfono", "details": "Detalles de la solicitud"},
+        "en": {"name": "Name", "company": "Company", "email": "Email", "phone": "Phone", "details": "Request details"},
+        "fr": {"name": "Nom", "company": "Entreprise", "email": "Email", "phone": "Téléphone", "details": "Détails de la demande"},
+        "it": {"name": "Nome", "company": "Azienda", "email": "Email", "phone": "Telefono", "details": "Dettagli della richiesta"},
+        "de": {"name": "Name", "company": "Unternehmen", "email": "E-Mail", "phone": "Telefon", "details": "Details der Anfrage"},
+        "ru": {"name": "Имя", "company": "Компания", "email": "Email", "phone": "Телефон", "details": "Детали запроса"},
+    }
+    return {
+        "fields": ["name", "company", "email", "phone", "details"],
+        "required": [*missing, "details"],
+        "detailsRows": 3,
+        "labels": labels.get(language, labels["en"]),
+        "initialDetails": message,
+    }
+
+
+def generic_fallback_reply(language: str, client: ClientProfile, contact_missing: list[str]) -> str:
+    role = client.role_label.get(language) or client.role_label.get("en") or client.name
+    missing = ", ".join(localized_missing_fields(language, contact_missing))
+    replies = {
+        "es": f"Soy {role}. Cuénteme qué necesita y le orientaré con la información disponible.",
+        "en": f"I am {role}. Tell me what you need and I will guide you with the available information.",
+        "fr": f"Je suis {role}. Expliquez-moi votre besoin et je vous guiderai avec les informations disponibles.",
+        "it": f"Sono {role}. Mi dica di cosa ha bisogno e la guiderò con le informazioni disponibili.",
+        "de": f"Ich bin {role}. Beschreiben Sie Ihr Anliegen, und ich helfe Ihnen mit den verfügbaren Informationen.",
+        "ru": f"Я {role}. Расскажите, что вам нужно, и я помогу на основе доступной информации.",
+    }
+    reply = replies.get(language, replies["en"])
+    if missing:
+        prompts = {
+            "es": f" Para darle seguimiento, también puede compartir: {missing}.",
+            "en": f" For follow-up, you can also share: {missing}.",
+            "fr": f" Pour assurer le suivi, vous pouvez aussi indiquer : {missing}.",
+            "it": f" Per il seguito, può anche indicare: {missing}.",
+            "de": f" Für die weitere Bearbeitung können Sie außerdem Folgendes angeben: {missing}.",
+            "ru": f" Для продолжения вы также можете указать: {missing}.",
+        }
+        reply += prompts.get(language, prompts["en"])
+    return reply
 
 
 ZEVI_DIRECTUS_URL = "https://zevicapital-directus-backend-lc-inmobiliaria.up.railway.app"
@@ -363,22 +412,7 @@ async def build_hostess_response(
             rates=[],
         )
 
-    if client.code != "suitesmine":
-        contact_reply = contact_qualification_reply(language, client, fields, request.message)
-        if contact_reply:
-            reply, contact_missing = contact_reply
-            return OliviaResponse(
-                reply=reply,
-                clientCode=client.code,
-                language=language,
-                intent="lead",
-                phase="qualification",
-                nextAction="collect_contact_details",
-                handoffRecommended=False,
-                collected=fields,
-                missingFields=contact_missing,
-                rates=[],
-            )
+    contact_missing = missing_contact_fields(fields) if client.code != "suitesmine" else []
 
     system = f"""
 You are {client.role_label.get(language) or client.role_label.get("en")}, a proactive AI hostess, not a generic chatbot.
@@ -386,7 +420,10 @@ Speak in {language_name(language)}.
 Mission:
 - welcome the visitor naturally;
 - understand their need;
+- use the recent conversation to resolve short follow-ups and references without making the visitor repeat information;
+- answer the visitor's concrete business question before requesting contact or project details;
 - collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;
+- when missingContactFields are present, end with one brief invitation to provide them; do not make them a condition for answering;
 - if name, email and phone are already present in metadata.lead or collected, do not ask for them again; answer the visitor's business question directly, then ask only for missing project context if needed;
 - answer from approved client context only;
 - keep responses concise and operational;
@@ -408,12 +445,15 @@ Live rates, if relevant:
             "metadata": request.metadata.model_dump(),
             "intent": intent,
             "collected": fields.model_dump(),
+            "missingContactFields": contact_missing,
         },
         ensure_ascii=True,
     )
-    generated = await openai_service.generate(system, user)
-    if generated:
-        reply = generated.strip()
+    generated = await openai_service.generate(system, user, request, client, rates)
+    if generated.text:
+        reply = generated.text.strip()
+    elif client.code != "suitesmine":
+        reply = generic_fallback_reply(language, client, contact_missing)
     elif language == "en":
         reply = f"I am {client.role_label.get('en')}. Tell me your dates, number of guests and preferred category so I can help."
     elif language == "fr":
@@ -425,12 +465,18 @@ Live rates, if relevant:
         reply=reply,
         clientCode=client.code,
         language=language,
-        intent=intent,
-        phase="answer" if intent != "handoff" else "human_handoff",
-        nextAction="reply_to_guest" if intent != "handoff" else "offer_human_operator",
+        intent="lead" if contact_missing and intent != "handoff" else intent,
+        phase="qualification" if contact_missing else ("answer" if intent != "handoff" else "human_handoff"),
+        nextAction="collect_contact_details" if contact_missing else ("reply_to_guest" if intent != "handoff" else "offer_human_operator"),
         handoffRecommended=intent == "handoff",
         collected=fields,
-        missingFields=[],
+        missingFields=contact_missing,
         bookingUrl=booking_url,
         rates=rates,
+        action="show_lead_form" if contact_missing else None,
+        leadForm=build_lead_form(language, request.message, contact_missing) if contact_missing else None,
+        model=generated.model,
+        reasoningTier=generated.tier,
+        toolsUsed=generated.tools_used,
+        sources=generated.sources,
     )
