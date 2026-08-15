@@ -20,10 +20,16 @@ Implemented in `olivia_v2/`:
 - FastAPI app with `GET /health` and `POST /chat`;
 - multi-client profile resolver;
 - Suites Mine hospitality profile;
-- language detection for Spanish, English and French;
+- language detection for Spanish, English, French, Italian, German and Russian;
+- bounded multi-turn memory, restored from persisted conversations when available;
+- answer-first lead qualification shared by every client profile;
 - deterministic booking intake;
 - Cloudbeds rate lookup with demo fallback;
 - OpenAI Responses API for natural FAQ/hostess replies;
+- automatic Luna/Terra/Sol routing according to complexity and sensitivity;
+- isolated file search per client, controlled web search, business function calling;
+- image/PDF input and browser voice dictation;
+- offline and live evaluation scenarios;
 - structured response for inbox and widget integration.
 
 ## Local Run
@@ -57,7 +63,13 @@ curl -s http://localhost:8000/chat \
 
 ```env
 OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-5.6-luna
+OPENAI_MODEL_FAST=gpt-5.6-luna
+OPENAI_MODEL_BALANCED=gpt-5.6-terra
+OPENAI_MODEL_POWERFUL=gpt-5.6-sol
+OPENAI_VECTOR_STORES_JSON={}
+OLIVIA_WEB_SEARCH_ENABLED=true
+OLIVIA_MAX_TOOL_ROUNDS=3
 OLIVIA_DEMO_MODE=true
 CLOUDBEDS_API_KEY=
 CLOUDBEDS_ACCESS_TOKEN=
@@ -66,6 +78,11 @@ CLOUDBEDS_API_BASE=https://api.cloudbeds.com/api/v1.2
 ```
 
 Use `OLIVIA_DEMO_MODE=true` until Cloudbeds availability/rate credentials are confirmed.
+
+Permanent documents are placed in `knowledge/<clientCode>/` and synchronized with
+`python scripts/sync_openai_knowledge.py <clientCode>`. Each client must use a separate
+vector store. Run `python scripts/run_olivia_evals.py` for offline routing checks, or add
+`--url http://localhost:8000/chat` to evaluate real responses.
 
 ## Railway Deployment
 
