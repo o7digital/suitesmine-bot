@@ -389,7 +389,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 sm:bottom-6 sm:right-6">
+    <div className="fixed bottom-5 right-4 z-50 sm:bottom-8 sm:right-8">
       <AnimatePresence>
         {isOpen && (
           <motion.section
@@ -397,7 +397,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="mb-4 flex h-[min(720px,calc(100vh-7rem))] w-[430px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[28px] border border-white/40 bg-[#fffdf8]/95 shadow-[0_38px_95px_-32px_rgba(20,16,10,0.72),0_16px_34px_-24px_rgba(20,16,10,0.6),inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-xl [transform:perspective(1200px)_rotateX(.5deg)_rotateY(-.6deg)]"
+            className="mb-6 flex h-[min(720px,calc(100vh-7rem))] w-[430px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[28px] border border-white/40 bg-[#fffdf8]/95 shadow-[0_46px_78px_-28px_rgba(20,16,10,0.78),0_22px_38px_-26px_rgba(20,16,10,0.64),0_8px_18px_-14px_rgba(200,170,112,.42),inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-xl [transform:perspective(1200px)_translateY(-6px)_rotateX(.5deg)_rotateY(-.6deg)] motion-safe:animate-[olivia-float_5.5s_ease-in-out_infinite]"
           >
             <header className="relative overflow-hidden border-b border-[#ded7c9] bg-[#2b2b2b] px-5 py-4 text-white">
               <div className="absolute inset-x-0 bottom-0 h-px bg-[#c8aa70]" />

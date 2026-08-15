@@ -18,3 +18,7 @@ body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   background: #f6f7fb;
 }
+@keyframes olivia-float {
+  0%, 100% { transform: perspective(1200px) translateY(-6px) rotateX(.5deg) rotateY(-.6deg); }
+  50% { transform: perspective(1200px) translateY(-12px) rotateX(.7deg) rotateY(-.4deg); }
+}
