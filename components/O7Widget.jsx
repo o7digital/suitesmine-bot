@@ -15,6 +15,7 @@ const siteCopy = {
     fr: {
       welcome: WELCOME_MESSAGE,
       online: "Concierge disponible",
+      inactive: "Concierge inactif",
       placeholder: "Posez votre question...",
       send: "Envoyer",
       loading: "Un instant...",
@@ -33,6 +34,7 @@ const siteCopy = {
     es: {
       welcome: "Hola, soy Olivia. Puedo ayudarle con su solicitud.",
       online: "Concierge disponible",
+      inactive: "Concierge inactivo",
       placeholder: "Escriba su pregunta...",
       send: "Enviar",
       loading: "Un momento...",
@@ -51,6 +53,7 @@ const siteCopy = {
     en: {
       welcome: "Hello, I am Olivia. I can help with your request.",
       online: "Concierge available",
+      inactive: "Concierge inactive",
       placeholder: "Ask your question...",
       send: "Send",
       loading: "One moment...",
@@ -69,6 +72,7 @@ const siteCopy = {
     zh: {
       welcome: "您好，我是 Olivia，可以协助您处理咨询。",
       online: "在线服务",
+      inactive: "暂时离开",
       placeholder: "请输入您的问题...",
       send: "发送",
       loading: "请稍等...",
@@ -178,6 +182,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState([]);
   const [isListening, setIsListening] = useState(false);
+  const [isActive, setIsActive] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [metadata, setMetadata] = useState({});
   const [leadForm, setLeadForm] = useState(null);
@@ -190,6 +195,22 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const visitorId = useRef("");
   const receivedIds = useRef(new Set());
   const copy = getCopy(clientId, language);
+
+  useEffect(() => {
+    let timer;
+    const markActive = () => {
+      setIsActive(true);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setIsActive(false), 45000);
+    };
+    const events = ["pointerdown", "keydown", "scroll", "touchstart"];
+    events.forEach((event) => window.addEventListener(event, markActive, { passive: true }));
+    markActive();
+    return () => {
+      window.clearTimeout(timer);
+      events.forEach((event) => window.removeEventListener(event, markActive));
+    };
+  }, []);
 
   useEffect(() => {
     const detectedLanguage = getPageLanguage();
@@ -376,7 +397,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="mb-4 flex h-[min(720px,calc(100vh-7rem))] w-[430px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[24px] border border-[#ded7c9] bg-[#fffdf8] shadow-[0_32px_90px_-45px_rgba(43,43,43,0.65)]"
+            className="mb-4 flex h-[min(720px,calc(100vh-7rem))] w-[430px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[28px] border border-white/40 bg-[#fffdf8]/95 shadow-[0_38px_95px_-32px_rgba(20,16,10,0.72),0_16px_34px_-24px_rgba(20,16,10,0.6),inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-xl [transform:perspective(1200px)_rotateX(.5deg)_rotateY(-.6deg)]"
           >
             <header className="relative overflow-hidden border-b border-[#ded7c9] bg-[#2b2b2b] px-5 py-4 text-white">
               <div className="absolute inset-x-0 bottom-0 h-px bg-[#c8aa70]" />
@@ -387,7 +408,10 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                   </div>
                   <div>
                     <p className="text-base font-semibold tracking-tight">{widgetTitle}</p>
-                    <p className="mt-1 text-xs text-white/75">{copy.online}</p>
+                    <p className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs text-white/80">
+                      <span className={`h-2.5 w-2.5 rounded-full ${isActive ? "bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,.14),0_0_14px_rgba(52,211,153,.8)]" : "bg-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,.14),0_0_14px_rgba(251,191,36,.75)]"}`} />
+                      {isActive ? copy.online : (copy.inactive || "Inactive")}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -628,7 +652,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
       <button
         aria-label={isOpen ? copy.close : copy.open}
         onClick={() => setIsOpen((v) => !v)}
-        className="ml-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#2b2b2b] text-white shadow-[0_22px_60px_-24px_rgba(0,0,0,0.75)] ring-1 ring-[#c8aa70]/35 transition hover:scale-[1.02]"
+        className="ml-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#3d3932] to-[#171512] text-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.78),inset_0_1px_0_rgba(255,255,255,.18)] ring-1 ring-[#c8aa70]/45 transition hover:-translate-y-0.5 hover:scale-[1.04]"
       >
         {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
       </button>
