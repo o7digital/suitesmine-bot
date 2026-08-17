@@ -1,6 +1,8 @@
 import unittest
 from types import SimpleNamespace
+from fastapi.testclient import TestClient
 
+from olivia_v2.app import main as main_module
 from olivia_v2.app.clients import CLIENTS, get_client_profile
 from olivia_v2.app.extraction import detect_intent, extract_fields
 from olivia_v2.app.hostess import build_hostess_response
@@ -40,6 +42,27 @@ class RecordingOpenAIService:
 class BusinessAnswerOpenAIService:
     async def generate(self, system, user, request, client_profile, rates=None):
         return AgentResult("We provide the requested service. I can help you choose the right option.", "gpt-5.6-luna", "fast")
+
+
+class JsonAnswerOpenAIService:
+    async def generate(self, system, user, request, client_profile, rates=None):
+        return AgentResult(
+            """{
+              "summary": ["Client requests a proposal.", "Budget discussion is active."],
+              "urgency": "High",
+              "leadScore": 84,
+              "sentiment": {"label": "Positive", "confidence": 0.86},
+              "intent": "lead",
+              "buyingSignals": ["Asked for pricing", "Requested follow-up"],
+              "tasks": [{"title": "Send proposal", "dueAt": null}],
+              "opportunity": {"detected": true, "title": "Proposal follow-up", "estimatedValue": 25000, "currency": "USD", "confidence": 0.8},
+              "contactInsights": {"summary": "Active commercial exchange.", "engagement": "Responsive"},
+              "suggestedReply": "Thank you for your message."
+            }""",
+            "gpt-5.6-terra",
+            "balanced",
+            ["file_search"],
+        )
 
 
 class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -136,7 +159,8 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                 )
 
                 self.assertIn("requested service", response.reply)
-                if client_code == "suitesmine":
+                # suitesmine never qualifies leads; vialterna only qualifies after an explicit handoff request.
+                if client_code in ("suitesmine", "vialterna"):
                     self.assertIsNone(response.action)
                 else:
                     self.assertEqual(response.action, "show_lead_form")
@@ -147,6 +171,73 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(detect_language("Ciao, vorrei informazioni"), "it")
         self.assertEqual(detect_language("Hallo, ich brauche ein Zimmer"), "de")
         self.assertEqual(detect_language("Привет, нужна цена"), "ru")
+
+
+class EmailEndpointsTests(unittest.TestCase):
+    def setUp(self):
+        self.previous_token = main_module.settings.internal_token
+        main_module.settings.internal_token = "internal-test-token"
+        self.previous_service = main_module.OpenAIService
+        main_module.OpenAIService = lambda settings: JsonAnswerOpenAIService()
+        self.client = TestClient(main_module.app)
+
+    def tearDown(self):
+        main_module.settings.internal_token = self.previous_token
+        main_module.OpenAIService = self.previous_service
+
+    def test_health_endpoint(self):
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["ok"])
+
+    def test_email_analyze_requires_internal_token(self):
+        response = self.client.post("/email/analyze", json={
+            "mailbox": "sales@example.com",
+            "sender": "Jane",
+            "senderEmail": "jane@example.com",
+            "recipients": ["sales@example.com"],
+            "subject": "Proposal",
+            "body": "Can you send pricing?",
+        })
+        self.assertEqual(response.status_code, 401)
+
+    def test_email_analyze_returns_expected_schema(self):
+        response = self.client.post(
+            "/email/analyze",
+            headers={"X-Olivia-Internal-Token": "internal-test-token"},
+            json={
+                "clientCode": "jeanlouisdavid",
+                "mailbox": "ventas@jeanlouisdavid.mx",
+                "sender": "Jane Doe",
+                "senderEmail": "jane@example.com",
+                "recipients": ["ventas@jeanlouisdavid.mx"],
+                "subject": "Bonjour, besoin d'un devis",
+                "body": "Pouvez-vous envoyer une proposition cette semaine ?",
+                "language": "fr",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["urgency"], "High")
+        self.assertEqual(payload["intent"], "lead")
+        self.assertEqual(payload["model"], "gpt-5.6-terra")
+        self.assertEqual(payload["toolsUsed"], ["file_search"])
+
+    def test_email_rewrite_and_compose(self):
+        rewrite = self.client.post(
+            "/email/rewrite",
+            headers={"X-Olivia-Internal-Token": "internal-test-token"},
+            json={"action": "formal", "draft": "hey send me this asap"},
+        )
+        compose = self.client.post(
+            "/email/compose",
+            headers={"X-Olivia-Internal-Token": "internal-test-token"},
+            json={"prompt": "Write a follow-up email", "recipient": "client@example.com", "subject": "Follow-up"},
+        )
+        self.assertEqual(rewrite.status_code, 200)
+        self.assertEqual(compose.status_code, 200)
+        self.assertTrue(rewrite.json()["draft"])
+        self.assertTrue(compose.json()["draft"])
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     web_search_enabled: bool = Field(default=True, alias="OLIVIA_WEB_SEARCH_ENABLED")
     max_tool_rounds: int = Field(default=3, alias="OLIVIA_MAX_TOOL_ROUNDS")
     demo_mode: bool = Field(default=True, alias="OLIVIA_DEMO_MODE")
+    internal_token: str | None = Field(default=None, alias="OLIVIA_INTERNAL_TOKEN")
 
     cloudbeds_api_key: str | None = Field(default=None, alias="CLOUDBEDS_API_KEY")
     cloudbeds_access_token: str | None = Field(default=None, alias="CLOUDBEDS_ACCESS_TOKEN")
