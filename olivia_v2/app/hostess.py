@@ -412,7 +412,10 @@ async def build_hostess_response(
             rates=[],
         )
 
-    contact_missing = missing_contact_fields(fields) if client.code != "suitesmine" else []
+    should_collect_contact = client.code != "suitesmine" and not (
+        client.code == "vialterna" and intent != "handoff"
+    )
+    contact_missing = missing_contact_fields(fields) if should_collect_contact else []
 
     system = f"""
 You are {client.role_label.get(language) or client.role_label.get("en")}, a proactive AI hostess, not a generic chatbot.
