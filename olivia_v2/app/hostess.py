@@ -416,6 +416,11 @@ async def build_hostess_response(
         client.code == "vialterna" and intent != "handoff"
     )
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
+    contact_mission = (
+        "- for Vialterna, never request personal data during ordinary questions; request it only after an explicit request for a quote, call, expert or commercial follow-up;"
+        if client.code == "vialterna"
+        else "- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;"
+    )
 
     system = f"""
 You are {client.role_label.get(language) or client.role_label.get("en")}, a proactive AI hostess, not a generic chatbot.
@@ -425,7 +430,7 @@ Mission:
 - understand their need;
 - use the recent conversation to resolve short follow-ups and references without making the visitor repeat information;
 - answer the visitor's concrete business question before requesting contact or project details;
-- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;
+{contact_mission}
 - when missingContactFields are present, end with one brief invitation to provide them; do not make them a condition for answering;
 - if name, email and phone are already present in metadata.lead or collected, do not ask for them again; answer the visitor's business question directly, then ask only for missing project context if needed;
 - answer from approved client context only;
