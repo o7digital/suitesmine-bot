@@ -550,34 +550,9 @@ export async function POST(request) {
       });
     }
 
-    const preflightMessage = clean(payload.message);
-    const preflightMetadata = payload.metadata || {};
-    const preflightBookingDraft = preflightMetadata.bookingDraft || {};
-
-    if (
-      requestedClientCode === "suitesmine" &&
-      preflightMessage &&
-      isBookingFlow(preflightMessage, preflightBookingDraft)
-    ) {
-      const language = clean(payload.language) || "es";
-      const checkIn = clean(preflightMetadata.checkIn);
-      const checkOut = clean(preflightMetadata.checkOut);
-      const guests = clean(preflightMetadata.guests);
-      const rates = await getCloudbedsRates({ checkIn, checkOut });
-      const bookingDetails = extractBookingDetails({
-        message: preflightMessage,
-        metadata: { ...preflightMetadata, checkIn, checkOut, guests },
-      });
-
-      return json({
-        reply: bookingReply(language, bookingDetails, rates),
-        mode: "booking",
-        clientCode: "suitesmine",
-        rates,
-        bookingDraft: { active: true, ...bookingDetails },
-      });
-    }
-
+    // Booking-flow messages are no longer answered here with a fixed template: they go to
+    // Olivia v2 first so the AI drafts the reply from live Cloudbeds data. The identical
+    // template below only runs as a fallback if the v2 call fails (see catch block).
     try {
       const v2Response = await callOliviaV2(payload);
       const v2ClientCode = clean(v2Response?.clientCode);

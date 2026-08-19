@@ -41,10 +41,14 @@ def build_agent_plan(request: ChatRequest, settings: Settings, vector_store_id: 
     else:
         tier, model, effort = "fast", settings.openai_model_fast, "low"
 
+    # Without a curated vector store yet, fall back to the client's own site via web_search
+    # so every client gets grounded answers, not just the ones with a knowledge base uploaded.
+    use_web = settings.web_search_enabled and (wants_current or not vector_store_id)
+
     return AgentPlan(
         tier=tier,
         model=model,
         reasoning_effort=effort,
-        use_web=settings.web_search_enabled and wants_current,
+        use_web=use_web,
         use_files=bool(vector_store_id),
     )

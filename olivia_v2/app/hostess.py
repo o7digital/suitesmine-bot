@@ -383,34 +383,18 @@ async def build_hostess_response(
             rates=[],
         )
 
-    if intent == "booking" and client.code == "suitesmine":
-        phase, next_action, reply = local_booking_reply(language, fields, missing, rates)
-        return OliviaResponse(
-            reply=reply,
-            clientCode=client.code,
-            language=language,
-            intent="booking",
-            phase=phase,
-            nextAction=next_action,
-            collected=fields,
-            missingFields=missing,
-            bookingUrl=booking_url,
-            rates=rates,
+    # Any client with a live data connector (Cloudbeds rates, Zevi listings, ...) gets that data
+    # injected as ground truth so the AI writes the reply instead of a fixed template.
+    is_booking_flow = intent == "booking" and client.code == "suitesmine"
+    is_property_request = client.code == "zevicapital" and is_zevi_property_request(request.message)
+
+    booking_phase = booking_next_action = booking_fallback_reply = None
+    if is_booking_flow:
+        booking_phase, booking_next_action, booking_fallback_reply = local_booking_reply(
+            language, fields, missing, rates
         )
 
-    if client.code == "zevicapital" and is_zevi_property_request(request.message):
-        return OliviaResponse(
-            reply=zevi_property_reply(language),
-            clientCode=client.code,
-            language=language,
-            intent="lead",
-            phase="answer",
-            nextAction="show_property_list",
-            handoffRecommended=False,
-            collected=fields,
-            missingFields=[],
-            rates=[],
-        )
+    zevi_fallback_reply = zevi_property_reply(language) if is_property_request else None
 
     should_collect_contact = client.code != "suitesmine" and not (
         client.code == "vialterna" and intent != "handoff"
@@ -422,6 +406,31 @@ async def build_hostess_response(
         else "- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;"
     )
 
+    booking_mission = ""
+    if is_booking_flow:
+        readable_missing = ", ".join(localized_missing_fields(language, missing)) if missing else "nothing else"
+        booking_mission = (
+            "\n- the guest is in a reservation flow; use the deterministic booking status below as ground truth "
+            "for availability, pricing and the booking link, never contradict it or invent a different one; "
+            f"if fields are still missing, ask only for: {readable_missing}; valid room categories are "
+            "Estudio/Studio, Suite, Suite Doble/Double Suite, never ask for a room number; "
+            "do not say the reservation is confirmed or paid, payment and confirmation happen only inside Cloudbeds; "
+            "still answer any other question the guest asked in the same message."
+        )
+
+    property_mission = ""
+    if is_property_request:
+        property_mission = (
+            "\n- use the deterministic property data below as ground truth; do not invent properties, prices "
+            "or availability beyond it; help the guest narrow the list by area, budget or use case."
+        )
+
+    live_data_sections = []
+    if is_booking_flow:
+        live_data_sections.append(f"Deterministic booking status (facts, do not contradict):\n{booking_fallback_reply}")
+    if is_property_request:
+        live_data_sections.append(f"Deterministic property data (facts, do not contradict):\n{zevi_fallback_reply}")
+
     system = f"""
 You are {client.role_label.get(language) or client.role_label.get("en")}, a proactive AI hostess, not a generic chatbot.
 Speak in {language_name(language)}.
@@ -430,7 +439,7 @@ Mission:
 - understand their need;
 - use the recent conversation to resolve short follow-ups and references without making the visitor repeat information;
 - answer the visitor's concrete business question before requesting contact or project details;
-{contact_mission}
+{contact_mission}{booking_mission}{property_mission}
 - when missingContactFields are present, end with one brief invitation to provide them; do not make them a condition for answering;
 - if name, email and phone are already present in metadata.lead or collected, do not ask for them again; answer the visitor's business question directly, then ask only for missing project context if needed;
 - answer from approved client context only;
@@ -446,6 +455,8 @@ Title: {request.metadata.model_dump().get("pageTitle", "")}
 
 Live rates, if relevant:
 {format_rates(rates)}
+
+{chr(10).join(live_data_sections)}
 """.strip()
     user = json.dumps(
         {
@@ -460,6 +471,10 @@ Live rates, if relevant:
     generated = await openai_service.generate(system, user, request, client, rates)
     if generated.text:
         reply = generated.text.strip()
+    elif is_booking_flow:
+        reply = booking_fallback_reply
+    elif is_property_request:
+        reply = zevi_fallback_reply
     elif client.code != "suitesmine":
         reply = generic_fallback_reply(language, client, contact_missing)
     elif language == "en":
@@ -469,20 +484,36 @@ Live rates, if relevant:
     else:
         reply = f"Soy {client.role_label.get('es')}. Indiqueme sus fechas, numero de huespedes y categoria preferida."
 
+    if is_booking_flow:
+        resp_intent, resp_phase, resp_next_action = "booking", booking_phase, booking_next_action
+        resp_missing, resp_action, resp_lead_form = missing, None, None
+    elif is_property_request:
+        resp_intent, resp_phase, resp_next_action = "lead", "answer", "show_property_list"
+        resp_missing, resp_action, resp_lead_form = [], None, None
+    else:
+        resp_intent = "lead" if contact_missing and intent != "handoff" else intent
+        resp_phase = "qualification" if contact_missing else ("answer" if intent != "handoff" else "human_handoff")
+        resp_next_action = (
+            "collect_contact_details" if contact_missing else ("reply_to_guest" if intent != "handoff" else "offer_human_operator")
+        )
+        resp_missing = contact_missing
+        resp_action = "show_lead_form" if contact_missing else None
+        resp_lead_form = build_lead_form(language, request.message, contact_missing) if contact_missing else None
+
     return OliviaResponse(
         reply=reply,
         clientCode=client.code,
         language=language,
-        intent="lead" if contact_missing and intent != "handoff" else intent,
-        phase="qualification" if contact_missing else ("answer" if intent != "handoff" else "human_handoff"),
-        nextAction="collect_contact_details" if contact_missing else ("reply_to_guest" if intent != "handoff" else "offer_human_operator"),
+        intent=resp_intent,
+        phase=resp_phase,
+        nextAction=resp_next_action,
         handoffRecommended=intent == "handoff",
         collected=fields,
-        missingFields=contact_missing,
+        missingFields=resp_missing,
         bookingUrl=booking_url,
         rates=rates,
-        action="show_lead_form" if contact_missing else None,
-        leadForm=build_lead_form(language, request.message, contact_missing) if contact_missing else None,
+        action=resp_action,
+        leadForm=resp_lead_form,
         model=generated.model,
         reasoningTier=generated.tier,
         toolsUsed=generated.tools_used,

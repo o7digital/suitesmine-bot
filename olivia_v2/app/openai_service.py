@@ -64,7 +64,7 @@ class OpenAIService:
         plan = build_agent_plan(request, self.settings, vector_store_id)
         input_items: list[dict] = [
             {"role": "system", "content": system},
-            *[{"role": message.role, "content": message.content} for message in request.history[-12:]],
+            *[{"role": message.role, "content": message.content} for message in request.history[-24:]],
             {"role": "user", "content": self._user_content(request, user)},
         ]
         tools: list[dict] = [*FUNCTION_TOOLS]
@@ -76,7 +76,7 @@ class OpenAIService:
             tools.append({"type": "web_search", "filters": {"allowed_domains": list(client_profile.site_domains)}})
             include.append("web_search_call.action.sources")
 
-        options = {"model": plan.model, "input": input_items, "tools": tools, "reasoning": {"effort": plan.reasoning_effort}, "max_output_tokens": 700}
+        options = {"model": plan.model, "input": input_items, "tools": tools, "reasoning": {"effort": plan.reasoning_effort}, "max_output_tokens": 1000}
         if include:
             options["include"] = include
         if request.visitorId:
@@ -96,7 +96,7 @@ class OpenAIService:
                     outputs.append({"type": "function_call_output", "call_id": call.call_id, "output": json.dumps(result)})
                 response = await self.client.responses.create(
                     model=plan.model, previous_response_id=response.id, input=outputs, tools=tools,
-                    reasoning={"effort": plan.reasoning_effort}, max_output_tokens=700,
+                    reasoning={"effort": plan.reasoning_effort}, max_output_tokens=1000,
                     **({"include": include} if include else {}),
                 )
             output_types = {getattr(item, "type", "") for item in response.output}
