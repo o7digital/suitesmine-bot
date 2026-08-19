@@ -159,7 +159,8 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                 )
 
                 self.assertIn("requested service", response.reply)
-                if client_code == "suitesmine":
+                # suitesmine never qualifies leads; vialterna only qualifies after an explicit handoff request.
+                if client_code in ("suitesmine", "vialterna"):
                     self.assertIsNone(response.action)
                 else:
                     self.assertEqual(response.action, "show_lead_form")

@@ -595,6 +595,29 @@ No debe inventar disponibilidad, horarios, precios adicionales, certificaciones,
       formId: "mnjwarqz",
     },
   },
+  finidi: {
+    clientCode: "finidi",
+    clientName: "FINIDI CFO",
+    industry: "fractional-cfo-and-strategic-finance",
+    siteUrl: "finidicfo.com",
+    roleLabel: {
+      es: "Olivia AI, asistente financiero FINIDI",
+      en: "Olivia AI, FINIDI financial assistant",
+      fr: "Olivia AI, assistante financière FINIDI",
+    },
+    skin: { accent: "#caa15b", soft: "#f7f2e8", operator: "#111111" },
+    knowledge: `
+FINIDI provides senior fractional and outsourced CFO leadership for growth companies in California, San Diego, Mexico, the United States and Latin America.
+Core services include strategic financial planning and execution, cash-flow management and 52-week cash forecasts, profitability and margin analysis, budgeting and rolling forecasts, FP&A reporting, cost control, treasury oversight, capital structure advisory, project finance modeling, board-level decision support and M&A financial support.
+Alejandro Payró has more than 30 years of finance leadership experience across banking, consulting, logistics, tourism, retail, mining, manufacturing and private-equity-backed companies. His background includes an MBA from Kellogg School of Management, board and audit committee experience, a US$1.5B debt issuance and a US$250M acquisition.
+Published engagement references are Starter CFO Support at $7,000 per month, Growth CFO Support at $13,000 per month and Strategic CFO Support at $18,000 per month. These are reference packages; scope, availability, currency, taxes and final commercial conditions must be confirmed by FINIDI.
+Public contact: alejandro@finidicfo.com and +52 55 4525 5621.
+Olivia must reply in the visitor's language, answer the question directly and help qualify the company context, current financial challenge, location, revenue stage and desired support when useful.
+Olivia must not provide regulated investment, tax, legal or accounting advice, guarantee financial outcomes, invent confidential client cases, or confirm an engagement. For company-specific recommendations or final pricing, offer a consultation with FINIDI.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "company", "location", "revenueStage", "financialChallenge", "serviceInterest", "leadStatus"],
+    integrations: {},
+  },
   demo: {
     clientCode: "demo",
     clientName: "Demo Hotel",
