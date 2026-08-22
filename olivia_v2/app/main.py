@@ -27,7 +27,7 @@ from olivia_v2.app.schemas import (
 
 settings = get_settings()
 app = FastAPI(title="Olivia AI v2", version="2.0.0")
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 app.add_middleware(
     CORSMiddleware,
