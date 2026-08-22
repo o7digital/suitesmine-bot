@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 
 from fastapi import FastAPI, Header, HTTPException
@@ -26,6 +27,7 @@ from olivia_v2.app.schemas import (
 
 settings = get_settings()
 app = FastAPI(title="Olivia AI v2", version="2.0.0")
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,6 +64,32 @@ def _extract_json_object(text: str) -> dict:
     if start < 0 or end <= start:
         raise ValueError("JSON object not found")
     return json.loads(cleaned[start : end + 1])
+
+
+def _log_ai_operation(
+    *,
+    channel: str,
+    operation: str,
+    client_code: str,
+    model: str | None,
+    tier: str | None,
+    tools_used: list[str],
+) -> None:
+    logger.info(
+        "olivia_ai %s",
+        json.dumps(
+            {
+                "channel": channel,
+                "client": client_code,
+                "model": model,
+                "operation": operation,
+                "tier": tier,
+                "tools": tools_used,
+            },
+            separators=(",", ":"),
+            sort_keys=True,
+        ),
+    )
 
 
 def _email_chat_request(payload: EmailMessageContext) -> tuple[ChatRequest, str, str]:
@@ -138,7 +166,16 @@ If a value is unknown, use null or an empty list/string where appropriate. Keep 
     parsed["model"] = result.model
     parsed["reasoningTier"] = result.tier
     parsed["toolsUsed"] = result.tools_used
-    return EmailAnalysisResponse.model_validate(parsed)
+    response = EmailAnalysisResponse.model_validate(parsed)
+    _log_ai_operation(
+        channel="email",
+        operation="analyze",
+        client_code=client.code,
+        model=result.model,
+        tier=result.tier,
+        tools_used=result.tools_used,
+    )
+    return response
 
 
 async def _rewrite_email(payload: EmailRewriteRequest) -> EmailRewriteResponse:
@@ -169,6 +206,14 @@ async def _rewrite_email(payload: EmailRewriteRequest) -> EmailRewriteResponse:
     )
     if not result.text:
         raise HTTPException(status_code=503, detail="Olivia AI unavailable")
+    _log_ai_operation(
+        channel="email",
+        operation="rewrite",
+        client_code=client.code,
+        model=result.model,
+        tier=result.tier,
+        tools_used=result.tools_used,
+    )
     return EmailRewriteResponse(draft=result.text.strip(), model=result.model, reasoningTier=result.tier, toolsUsed=result.tools_used)
 
 
@@ -193,6 +238,14 @@ async def _compose_email(payload: EmailComposeRequest) -> EmailComposeResponse:
     )
     if not result.text:
         raise HTTPException(status_code=503, detail="Olivia AI unavailable")
+    _log_ai_operation(
+        channel="email",
+        operation="compose",
+        client_code=client.code,
+        model=result.model,
+        tier=result.tier,
+        tools_used=result.tools_used,
+    )
     return EmailComposeResponse(draft=result.text.strip(), model=result.model, reasoningTier=result.tier, toolsUsed=result.tools_used)
 
 
@@ -214,7 +267,7 @@ async def chat(payload: ChatRequest) -> OliviaResponse:
     if client.integrations.get("booking") == "cloudbeds":
         rates = await pms.get_rates(payload.metadata.checkIn, payload.metadata.checkOut)
 
-    return await build_hostess_response(
+    response = await build_hostess_response(
         request=payload,
         client=client,
         language=language,
@@ -222,6 +275,15 @@ async def chat(payload: ChatRequest) -> OliviaResponse:
         rates=rates,
         openai_service=OpenAIService(settings),
     )
+    _log_ai_operation(
+        channel=payload.source,
+        operation="chat",
+        client_code=client.code,
+        model=response.model,
+        tier=response.reasoningTier,
+        tools_used=response.toolsUsed,
+    )
+    return response
 
 
 @app.post("/email/analyze", response_model=EmailAnalysisResponse)

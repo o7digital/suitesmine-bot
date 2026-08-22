@@ -216,26 +216,32 @@ class EmailEndpointsTests(unittest.TestCase):
         self.assertEqual(response.json()["detail"], "Internal authentication is not configured")
 
     def test_email_analyze_returns_expected_schema(self):
-        response = self.client.post(
-            "/email/analyze",
-            headers={"X-Olivia-Internal-Token": "internal-test-token"},
-            json={
-                "clientCode": "jeanlouisdavid",
-                "mailbox": "ventas@jeanlouisdavid.mx",
-                "sender": "Jane Doe",
-                "senderEmail": "jane@example.com",
-                "recipients": ["ventas@jeanlouisdavid.mx"],
-                "subject": "Bonjour, besoin d'un devis",
-                "body": "Pouvez-vous envoyer une proposition cette semaine ?",
-                "language": "fr",
-            },
-        )
+        with self.assertLogs(main_module.logger, level="INFO") as captured:
+            response = self.client.post(
+                "/email/analyze",
+                headers={"X-Olivia-Internal-Token": "internal-test-token"},
+                json={
+                    "clientCode": "jeanlouisdavid",
+                    "mailbox": "ventas@jeanlouisdavid.mx",
+                    "sender": "Jane Doe",
+                    "senderEmail": "jane@example.com",
+                    "recipients": ["ventas@jeanlouisdavid.mx"],
+                    "subject": "Bonjour, besoin d'un devis",
+                    "body": "Pouvez-vous envoyer une proposition cette semaine ?",
+                    "language": "fr",
+                },
+            )
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["urgency"], "High")
         self.assertEqual(payload["intent"], "lead")
         self.assertEqual(payload["model"], "gpt-5.6-terra")
         self.assertEqual(payload["toolsUsed"], ["file_search"])
+        event = captured.output[-1]
+        self.assertIn('"channel":"email"', event)
+        self.assertIn('"client":"jeanlouisdavid"', event)
+        self.assertIn('"operation":"analyze"', event)
+        self.assertNotIn("jane@example.com", event)
 
     def test_email_rewrite_and_compose(self):
         rewrite = self.client.post(
