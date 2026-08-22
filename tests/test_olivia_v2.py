@@ -201,6 +201,20 @@ class EmailEndpointsTests(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 401)
 
+    def test_email_endpoints_fail_closed_without_server_token(self):
+        main_module.settings.internal_token = None
+        response = self.client.post("/email/analyze", json={
+            "mailbox": "sales@example.com",
+            "sender": "Jane",
+            "senderEmail": "jane@example.com",
+            "recipients": ["sales@example.com"],
+            "subject": "Proposal",
+            "body": "Can you send pricing?",
+        })
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["detail"], "Internal authentication is not configured")
+
     def test_email_analyze_returns_expected_schema(self):
         response = self.client.post(
             "/email/analyze",

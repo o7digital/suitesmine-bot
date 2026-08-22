@@ -46,7 +46,9 @@ async def health() -> dict:
 
 def _require_internal_token(x_olivia_internal_token: str | None) -> None:
     expected = settings.internal_token
-    if expected and x_olivia_internal_token != expected:
+    if not expected:
+        raise HTTPException(status_code=503, detail="Internal authentication is not configured")
+    if x_olivia_internal_token != expected:
         raise HTTPException(status_code=401, detail="Invalid internal token")
 
 
