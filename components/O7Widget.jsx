@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { MessageCircle, Mic, Paperclip, Send, Sparkles, X } from "lucide-react";
 import MessageBubble from "@/components/MessageBubble";
 import DynamicFields from "@/components/DynamicFields";
-import { getVisitorConversation, persistAssistantMessage, persistConversationMessage, sendMessage } from "@/lib/api";
+import { getVisitorConversation, getWidgetIdentity, persistAssistantMessage, persistConversationMessage, sendMessage } from "@/lib/api";
 
 const WELCOME_MESSAGE =
   "Bonjour, je suis votre concierge Suites Mine. Je peux vous aider avec les disponibilités, tarifs, réservations et informations sur votre séjour.";
@@ -189,6 +189,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [leadData, setLeadData] = useState({ name: "", company: "", email: "", phone: "", details: "" });
   const [hasConsent, setHasConsent] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [widgetIdentity, setWidgetIdentity] = useState("");
   const [messages, setMessages] = useState([
     { role: "assistant", content: WELCOME_MESSAGE },
   ]);
@@ -230,14 +231,31 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   }, [clientId]);
 
   useEffect(() => {
-    if (!hasConsent) return undefined;
+    let cancelled = false;
+    getWidgetIdentity()
+      .then((data) => {
+        if (!cancelled && data.clientCode === clientId) setWidgetIdentity(data.identity);
+      })
+      .catch(() => {
+        if (!cancelled) setWidgetIdentity("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId]);
+
+  useEffect(() => {
+    if (!hasConsent || !widgetIdentity) return undefined;
     visitorId.current =
       window.localStorage.getItem("oliviaVisitorId") || window.crypto.randomUUID();
     window.localStorage.setItem("oliviaVisitorId", visitorId.current);
 
     const poll = async () => {
       try {
-        const data = await getVisitorConversation({ clientCode: clientId, visitorId: visitorId.current });
+        const data = await getVisitorConversation(
+          { clientCode: clientId, visitorId: visitorId.current },
+          widgetIdentity,
+        );
         const incoming = (data.messages || []).filter(
           (message) => message.role === "operator" && !receivedIds.current.has(message.id)
         );
@@ -256,7 +274,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
     };
     const timer = window.setInterval(poll, 4000);
     return () => window.clearInterval(timer);
-  }, [clientId, hasConsent]);
+  }, [clientId, hasConsent, widgetIdentity]);
 
   const handleSend = async (overrideMessage = "") => {
     const leadMode = Boolean(leadForm);
@@ -268,7 +286,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
       !leadMode ||
       requiredLeadFields.every((key) => String(leadData[key] || "").trim());
     const message = (overrideMessage || input || (leadMode ? leadData.details : "") || (attachments.length ? "Analyse ce fichier." : "")).trim();
-    if (!message || isLoading || !hasConsent) return;
+    if (!message || isLoading || !hasConsent || !widgetIdentity) return;
     if (!leadComplete) {
       setMessages((prev) => [...prev, { role: "assistant", content: copy.leadMissing || siteCopy.default[language].leadMissing }]);
       return;
@@ -308,30 +326,36 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
         : metadata;
       let storedConversation = null;
       try {
-        storedConversation = await persistConversationMessage({
-          clientCode: clientId,
-          visitorId: visitorId.current,
-          content: message,
-          metadata: messageMetadata,
-          source: "website",
-          visitorName: leadData.name,
-          email: leadData.email,
-          phone: leadData.phone,
-        });
+        storedConversation = await persistConversationMessage(
+          {
+            clientCode: clientId,
+            visitorId: visitorId.current,
+            content: message,
+            metadata: messageMetadata,
+            source: "website",
+            visitorName: leadData.name,
+            email: leadData.email,
+            phone: leadData.phone,
+          },
+          widgetIdentity,
+        );
       } catch {}
 
       if (storedConversation?.conversation?.status === "manual") {
         return;
       }
 
-      const data = await sendMessage({
-        clientId,
-        visitorId: visitorId.current,
-        message,
-        metadata: messageMetadata,
-        history: conversationHistory,
-        attachments: sentAttachments,
-      });
+      const data = await sendMessage(
+        {
+          clientId,
+          visitorId: visitorId.current,
+          message,
+          metadata: messageMetadata,
+          history: conversationHistory,
+          attachments: sentAttachments,
+        },
+        widgetIdentity,
+      );
       const assistantContent = getAssistantText(data);
 
       const returnedBookingState = data?.bookingDraft || data?.collected;
@@ -368,12 +392,15 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
         { role: "assistant", content: assistantContent },
       ]);
       try {
-        await persistAssistantMessage({
-          clientCode: clientId,
-          visitorId: visitorId.current,
-          content: assistantContent,
-          model: data.model,
-        });
+        await persistAssistantMessage(
+          {
+            clientCode: clientId,
+            visitorId: visitorId.current,
+            content: assistantContent,
+            model: data.model,
+          },
+          widgetIdentity,
+        );
       } catch {}
     } catch {
       setMessages((prev) => [

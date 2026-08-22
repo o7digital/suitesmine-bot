@@ -1,4 +1,5 @@
-import { getClientProfile } from "@/config/clients";
+import { clients, getClientProfile } from "@/config/clients";
+import { resolveRequestClient, serverApprovedMetadata } from "@/lib/client-identity.mjs";
 import { findVisitorConversation } from "@/lib/conversations";
 import { isDatabaseConfigured } from "@/lib/db";
 
@@ -7,7 +8,7 @@ export const runtime = "nodejs";
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, X-Olivia-Widget-Identity",
 };
 
 function json(data, status = 200) {
@@ -33,11 +34,10 @@ function sanitizeHistory(history) {
     .map((item) => ({ role: item.role, content: clean(item.content).slice(0, 4000) }));
 }
 
-async function resolveConversationHistory(payload) {
+async function resolveConversationHistory(payload, clientCode) {
   const supplied = sanitizeHistory(payload.history);
   if (supplied.length || !isDatabaseConfigured()) return supplied;
 
-  const clientCode = clean(payload.clientCode || payload.clientId) || "default";
   const visitorId = clean(payload.visitorId);
   if (!visitorId) return [];
 
@@ -65,23 +65,21 @@ async function resolveConversationHistory(payload) {
 async function callOliviaV2(payload) {
   const baseUrl = clean(process.env.OLIVIA_V2_URL).replace(/\/$/, "");
   if (!baseUrl) return null;
+  const internalToken = clean(process.env.OLIVIA_INTERNAL_TOKEN);
+  if (!internalToken) throw new Error("OLIVIA_INTERNAL_TOKEN is required for Olivia v2");
 
-  const clientCode = payload.clientCode || payload.clientId || "default";
+  const clientCode = payload.clientCode;
   const profile = getClientProfile(clientCode);
-  const siteUrl = clean(profile.siteUrl || profile.website || payload.metadata?.pageUrl);
   const response = await fetch(`${baseUrl}/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Olivia-Internal-Token": internalToken,
+    },
     body: JSON.stringify({
       ...payload,
       clientCode,
-      metadata: {
-        ...(payload.metadata || {}),
-        clientName: profile.clientName,
-        clientIndustry: profile.industry,
-        clientKnowledge: profile.knowledge,
-        clientSiteUrl: siteUrl,
-      },
+      metadata: serverApprovedMetadata(profile, payload.metadata),
     }),
     cache: "no-store",
   });
@@ -531,9 +529,16 @@ function languageName(language) {
 export async function POST(request) {
   try {
     const payload = await request.json();
-    payload.history = await resolveConversationHistory(payload);
+    let requestedClientCode;
+    try {
+      requestedClientCode = resolveRequestClient(request, payload.clientCode || payload.clientId, clients);
+    } catch {
+      return json({ error: "Invalid widget identity" }, 401);
+    }
+    payload.clientCode = requestedClientCode;
+    delete payload.clientId;
+    payload.history = await resolveConversationHistory(payload, requestedClientCode);
     const requestedLanguage = clean(payload.language) || "es";
-    const requestedClientCode = clean(payload.clientCode || payload.clientId) || "default";
 
     if (requestedClientCode === "suitesmine" && isSpecialBookingRequest(payload)) {
       const replies = {
@@ -581,7 +586,7 @@ export async function POST(request) {
     }
 
     const language = clean(payload.language) || "es";
-    const clientCode = clean(payload.clientCode || payload.clientId) || "default";
+    const clientCode = requestedClientCode;
     const client = getClientProfile(clientCode);
     const message = clean(payload.message);
     const metadata = payload.metadata || {};

@@ -68,6 +68,7 @@ OPENAI_MODEL_FAST=gpt-5.6-luna
 OPENAI_MODEL_BALANCED=gpt-5.6-terra
 OPENAI_MODEL_POWERFUL=gpt-5.6-sol
 OPENAI_VECTOR_STORES_JSON={}
+OLIVIA_INTERNAL_TOKEN=
 OLIVIA_WEB_SEARCH_ENABLED=true
 OLIVIA_MAX_TOOL_ROUNDS=3
 OLIVIA_DEMO_MODE=true
@@ -81,7 +82,10 @@ Use `OLIVIA_DEMO_MODE=true` until Cloudbeds availability/rate credentials are co
 
 Permanent documents are placed in `knowledge/<clientCode>/` and synchronized with
 `python scripts/sync_openai_knowledge.py <clientCode>`. Each client must use a separate
-vector store. Run `python scripts/run_olivia_evals.py` for offline routing checks, or add
+vector store. Synchronization creates and validates the replacement before atomically
+switching the mapping and deleting the previous store. Use `--dry-run` to validate local
+inputs without API calls and `--keep-old` to retain the previous store after a successful
+switch. Run `python scripts/run_olivia_evals.py` for offline routing checks, or add
 `--url http://localhost:8000/chat` to evaluate real responses.
 
 ## Railway Deployment
@@ -108,7 +112,16 @@ When the Python service is deployed, add this server-side variable to the Next/V
 
 ```env
 OLIVIA_V2_URL=https://your-railway-service.up.railway.app
+OLIVIA_INTERNAL_TOKEN=
+OLIVIA_WIDGET_SIGNING_SECRET=
 ```
+
+`OLIVIA_INTERNAL_TOKEN` must have the same secret value in Next/Vercel and the Python
+service. `OLIVIA_WIDGET_SIGNING_SECRET` stays only in Next/Vercel and signs short-lived
+widget identities; neither value is exposed to browser code. Every configured client's
+`siteUrl` must match the hostname serving that client's widget API. The server binds that
+hostname to the approved `clientCode`, so browser JSON and page metadata cannot select a
+different client profile, conversation, integration, web-search domain, or vector store.
 
 Then `/api/olivia/chat` proxies to:
 

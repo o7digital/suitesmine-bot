@@ -1,4 +1,6 @@
 import { isDatabaseConfigured } from "@/lib/db";
+import { clients } from "@/config/clients";
+import { resolveRequestClient } from "@/lib/client-identity.mjs";
 import { addMessage, findVisitorConversation, upsertConversation } from "@/lib/conversations";
 import { translateVisitorMessageForOperator } from "@/lib/operator-translation";
 
@@ -7,7 +9,7 @@ export const runtime = "nodejs";
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, X-Olivia-Widget-Identity",
 };
 
 function json(data, status = 200) {
@@ -43,7 +45,12 @@ function extractContactDetails(text = "", metadata = {}) {
 export async function GET(request) {
   if (!isDatabaseConfigured()) return json({ configured: false, messages: [] });
   const url = new URL(request.url);
-  const clientCode = clean(url.searchParams.get("clientCode")) || "default";
+  let clientCode;
+  try {
+    clientCode = resolveRequestClient(request, url.searchParams.get("clientCode"), clients);
+  } catch {
+    return json({ error: "Invalid widget identity" }, 401);
+  }
   const visitorId = clean(url.searchParams.get("visitorId"));
   if (!visitorId) return json({ error: "visitorId is required" }, 400);
 
@@ -61,6 +68,12 @@ export async function POST(request) {
   }
 
   const payload = await request.json().catch(() => ({}));
+  let clientCode;
+  try {
+    clientCode = resolveRequestClient(request, payload.clientCode, clients);
+  } catch {
+    return json({ error: "Invalid widget identity" }, 401);
+  }
   const visitorId = clean(payload.visitorId);
   const content = clean(payload.content);
   if (!visitorId || !content) {
@@ -69,7 +82,7 @@ export async function POST(request) {
 
   const extracted = extractContactDetails(content, payload.metadata);
   const conversation = await upsertConversation({
-    clientCode: payload.clientCode,
+    clientCode,
     visitorId,
     visitorName: payload.visitorName || extracted.visitorName,
     email: payload.email || extracted.email,
@@ -110,7 +123,13 @@ export async function POST(request) {
 export async function PATCH(request) {
   if (!isDatabaseConfigured()) return json({ error: "Conversation storage is not configured" }, 503);
   const payload = await request.json().catch(() => ({}));
-  const conversation = await findVisitorConversation(payload.clientCode, payload.visitorId);
+  let clientCode;
+  try {
+    clientCode = resolveRequestClient(request, payload.clientCode, clients);
+  } catch {
+    return json({ error: "Invalid widget identity" }, 401);
+  }
+  const conversation = await findVisitorConversation(clientCode, payload.visitorId);
   if (!conversation) return json({ error: "Conversation not found" }, 404);
   if (conversation.status !== "ai") return json({ skipped: true, status: conversation.status });
 

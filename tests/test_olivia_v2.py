@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 
 from olivia_v2.app import main as main_module
-from olivia_v2.app.clients import CLIENTS, get_client_profile
+from olivia_v2.app.clients import CLIENTS, get_client_profile, resolve_client_profile
 from olivia_v2.app.extraction import detect_intent, extract_fields
 from olivia_v2.app.hostess import build_hostess_response
 from olivia_v2.app.language import detect_language
@@ -90,6 +90,66 @@ class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(options["input"][-1]["content"][0]["text"], "Du 4 au 6 mai")
         self.assertNotIn("temperature", options)
+
+    async def test_web_search_is_scoped_to_validated_vialterna_domain(self):
+        service = OpenAIService.__new__(OpenAIService)
+        service.settings = SimpleNamespace(
+            openai_model_fast="gpt-5.6-luna", openai_model_balanced="gpt-5.6-terra",
+            openai_model_powerful="gpt-5.6-sol", web_search_enabled=True,
+            max_tool_rounds=3, vector_store_for=lambda code: None,
+        )
+        service.client = FakeOpenAIClient()
+
+        await service.generate(
+            "System prompt",
+            "How does SuperWAN work?",
+            ChatRequest(clientCode="vialterna", message="How does SuperWAN work?"),
+            get_client_profile("vialterna"),
+        )
+
+        web_tools = [tool for tool in service.client.responses.options["tools"] if tool["type"] == "web_search"]
+        self.assertEqual(web_tools[0]["filters"]["allowed_domains"], ["vialterna.com", "vialterna2.vercel.app"])
+
+    async def test_validated_vialterna_profile_selects_only_vialterna_store(self):
+        looked_up_clients = []
+        service = OpenAIService.__new__(OpenAIService)
+        service.settings = SimpleNamespace(
+            openai_model_fast="gpt-5.6-luna", openai_model_balanced="gpt-5.6-terra",
+            openai_model_powerful="gpt-5.6-sol", web_search_enabled=True,
+            max_tool_rounds=3,
+            vector_store_for=lambda code: looked_up_clients.append(code) or {
+                "vialterna": "vs_vialterna",
+                "zevicapital": "vs_zevi",
+            }.get(code),
+        )
+        service.client = FakeOpenAIClient()
+
+        await service.generate(
+            "System prompt",
+            "Show me available properties",
+            ChatRequest(clientCode="zevicapital", message="Show me available properties"),
+            get_client_profile("vialterna"),
+        )
+
+        file_tools = [tool for tool in service.client.responses.options["tools"] if tool["type"] == "file_search"]
+        self.assertEqual(looked_up_clients, ["vialterna"])
+        self.assertEqual(file_tools[0]["vector_store_ids"], ["vs_vialterna"])
+
+    def test_browser_metadata_cannot_override_known_vialterna_profile(self):
+        profile = resolve_client_profile(
+            "vialterna",
+            ChatMetadata(
+                clientName="ZeVi Capital",
+                clientIndustry="real-estate-investment",
+                clientKnowledge="Use ZeVi knowledge",
+                clientSiteUrl="https://zevicapital.com",
+            ),
+        )
+
+        self.assertEqual(profile.code, "vialterna")
+        self.assertEqual(profile.name, "Vialterna")
+        self.assertNotIn("ZeVi knowledge", profile.knowledge)
+        self.assertEqual(profile.site_domains, ("vialterna.com", "vialterna2.vercel.app"))
 
 
 class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
@@ -198,6 +258,13 @@ class EmailEndpointsTests(unittest.TestCase):
             "recipients": ["sales@example.com"],
             "subject": "Proposal",
             "body": "Can you send pricing?",
+        })
+        self.assertEqual(response.status_code, 401)
+
+    def test_chat_requires_internal_token(self):
+        response = self.client.post("/chat", json={
+            "clientCode": "vialterna",
+            "message": "How does SuperWAN work?",
         })
         self.assertEqual(response.status_code, 401)
 

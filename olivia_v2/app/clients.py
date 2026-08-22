@@ -117,6 +117,7 @@ No debe inventar listados, precios, disponibilidad, condiciones legales ni confi
         code="vialterna",
         name="Vialterna",
         industry="managed-connectivity",
+        site_domains=("vialterna.com", "vialterna2.vercel.app"),
         role_label={
             "es": "o7 Olivia AI, asistente Vialterna",
             "en": "o7 Olivia AI, Vialterna assistant",

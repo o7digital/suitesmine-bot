@@ -250,7 +250,11 @@ async def _compose_email(payload: EmailComposeRequest) -> EmailComposeResponse:
 
 
 @app.post("/chat", response_model=OliviaResponse)
-async def chat(payload: ChatRequest) -> OliviaResponse:
+async def chat(
+    payload: ChatRequest,
+    x_olivia_internal_token: str | None = Header(default=None),
+) -> OliviaResponse:
+    _require_internal_token(x_olivia_internal_token)
     message = payload.message.strip()
     if not message:
         raise HTTPException(status_code=400, detail="message is required")
