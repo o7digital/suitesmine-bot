@@ -1,8 +1,8 @@
-# Guía de usuario — Sofia Channel Manager
+# Guía de usuario — Olivia AI Channel Manager
 
 Jean Louis David México · 30 de junio de 2026
 
-Acceso: [Sofia Channel Manager](https://suitesmine-e3g2m7175-olivier-steineur.vercel.app/inbox?client=jeanlouisdavid)
+Acceso: [Olivia AI Channel Manager](https://suitesmine-e3g2m7175-olivier-steineur.vercel.app/inbox?client=jeanlouisdavid)
 
 ## 1. Bandeja de entrada
 
@@ -12,11 +12,11 @@ Este espacio muestra únicamente las conversaciones asociadas con Jean Louis Dav
 
 - Seleccione una conversación en la columna central.
 - **Prendre la main** permite responder manualmente y pausa la IA.
-- **Rendre à l’IA** devuelve la conversación a Sofia.
+- **Rendre à l’IA** devuelve la conversación a Olivia AI.
 - **Solve** cierra una solicitud terminada.
 - El panel derecho muestra los datos y el contexto de la solicitud.
 
-La conversación histórica visible fue importada desde Formspree y está identificada como importación. No se inventó ninguna respuesta de Sofia.
+La conversación histórica visible fue importada desde Formspree y está identificada como importación. No se inventó ninguna respuesta de Olivia AI.
 
 ## 2. Automatizaciones
 
