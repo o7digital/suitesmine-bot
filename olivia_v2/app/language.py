@@ -1,9 +1,10 @@
 import re
 
 
-def detect_language(text: str, requested: str | None = None) -> str:
-    if requested in {"es", "en", "fr", "it", "de", "ru"}:
-        return requested
+def detect_language(text: str, requested: str | None = None, default: str = "es") -> str:
+    normalized = (requested or "").strip().lower()
+    if normalized in {"es", "en", "fr", "it", "de", "ru"}:
+        return normalized
 
     value = text.lower()
     if re.search(r"\b(ciao|grazie|camera|disponibilita|prenotazione|prezzo)\b", value):
@@ -16,9 +17,14 @@ def detect_language(text: str, requested: str | None = None) -> str:
         return "fr"
     if re.search(r"\b(hola|gracias|habitacion|disponibilidad|reserva|precio|huesped)\b", value):
         return "es"
-    if re.search(r"\b(hello|thanks|room|availability|booking|price|guest)\b", value):
+    if re.search(
+        r"\b(hello|hi|thanks|thank you|regards|dear|please|room|availability|"
+        r"booking|price|guest|order|account|confirm|confirmation|email|invoice|"
+        r"payment|support|team|link|help)\b",
+        value,
+    ):
         return "en"
-    return "es"
+    return default
 
 
 def language_name(language: str) -> str:

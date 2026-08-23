@@ -118,7 +118,7 @@ def _email_chat_request(payload: EmailMessageContext) -> tuple[ChatRequest, str,
         attachments=[],
     )
     client = resolve_client_profile(client_code, metadata)
-    language = detect_language(payload.body, payload.language)
+    language = detect_language(payload.body, payload.language, default="en")
     if language not in client.supported_languages:
         language = "en" if "en" in client.supported_languages else client.supported_languages[0]
     return request, client_code, language

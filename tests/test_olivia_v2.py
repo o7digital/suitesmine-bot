@@ -232,6 +232,23 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(detect_language("Hallo, ich brauche ein Zimmer"), "de")
         self.assertEqual(detect_language("Привет, нужна цена"), "ru")
 
+    def test_auto_requested_language_is_not_treated_as_explicit(self):
+        # "auto" (sent by Olivia One Mail) must fall through to detection,
+        # not be treated as an unsupported explicit language code.
+        self.assertEqual(detect_language("Bonjour, merci beaucoup", "auto"), "fr")
+
+    def test_default_fallback_is_configurable_and_defaults_to_spanish(self):
+        ambiguous_text = "12345 - see attachment"
+        self.assertEqual(detect_language(ambiguous_text), "es")
+        self.assertEqual(detect_language(ambiguous_text, default="en"), "en")
+
+    def test_generic_business_english_is_detected_without_hospitality_keywords(self):
+        support_email = (
+            "Dear Customer, Thank you for reaching out to our Support team. "
+            "To help us confirm your request, could you please clarify the details?"
+        )
+        self.assertEqual(detect_language(support_email, "auto", default="en"), "en")
+
 
 class EmailEndpointsTests(unittest.TestCase):
     def setUp(self):
