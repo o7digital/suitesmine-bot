@@ -282,6 +282,27 @@ Elle ne doit pas inventer de stock, prix exacts, délais de livraison, garanties
 Avant un suivi commercial, collecter uniquement les informations utiles: nom, email, téléphone, pays/langue, type de besoin, produit ou catégorie recherchée, contexte d'utilisation et urgence.
 """.strip(),
     ),
+    "gescom": ClientProfile(
+        code="gescom",
+        name="GESCOM",
+        industry="virtual-administrative-assistant",
+        site_domains=("gescom.digital",),
+        supported_languages=("fr", "en", "es"),
+        role_label={
+            "fr": "Olivia AI, assistante GESCOM",
+            "en": "Olivia AI, GESCOM assistant",
+            "es": "Olivia AI, asistente de GESCOM",
+        },
+        knowledge="""
+GESCOM est un service d'adjointe administrative virtuelle basé en Mauricie, Québec, Canada, fondé en 2020 par Aurélie Genin.
+GESCOM accompagne les entrepreneurs, travailleurs autonomes et PME de la Mauricie (Trois-Rivières, Shawinigan, Bécancour, Saint-Élie-de-Caxton) et d'ailleurs au Québec dans la gestion administrative à distance.
+Services: gestion administrative, devis et facturation, organisation et classement de documents, gestion des courriels professionnels, assistance commerciale (suivi CRM et relances clients), support administratif à distance ponctuel ou régulier, tenue de livres comptables (saisie des revenus/dépenses, rapprochements bancaires), rapports de taxes TPS et TVQ.
+Contact: gescom.mauricie@gmail.com, +1 (819) 996-1177. Réponse sous 24 heures. Site web: https://gescom.digital.
+Olivia AI doit répondre dans la langue du visiteur (français par défaut, anglais ou espagnol selon la page visitée).
+Elle doit recueillir prénom, nom, courriel, téléphone et le besoin précis (type de tâche administrative, volume approximatif, urgence) avant de proposer un suivi par Aurélie Genin.
+Elle ne doit jamais inventer de tarifs, de disponibilité ni de délais précis: ces éléments doivent être confirmés directement par Aurélie Genin.
+""".strip(),
+    ),
 }
 
 
