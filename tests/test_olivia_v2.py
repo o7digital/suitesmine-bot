@@ -135,6 +135,34 @@ class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(looked_up_clients, ["vialterna"])
         self.assertEqual(file_tools[0]["vector_store_ids"], ["vs_vialterna"])
 
+    async def test_touski_profile_scopes_file_and_web_search(self):
+        looked_up_clients = []
+        service = OpenAIService.__new__(OpenAIService)
+        service.settings = SimpleNamespace(
+            openai_model_fast="gpt-5.6-luna", openai_model_balanced="gpt-5.6-terra",
+            openai_model_powerful="gpt-5.6-sol", web_search_enabled=True,
+            max_tool_rounds=3,
+            vector_store_for=lambda code: looked_up_clients.append(code) or "vs_touski",
+        )
+        service.client = FakeOpenAIClient()
+
+        await service.generate(
+            "System prompt",
+            "Quelle est la sélection actuelle pour choisir un GPS hors réseau?",
+            ChatRequest(clientCode="touski", language="fr", message="Quelle est la sélection actuelle pour choisir un GPS hors réseau?"),
+            get_client_profile("touski"),
+        )
+
+        tools = service.client.responses.options["tools"]
+        self.assertEqual(looked_up_clients, ["touski"])
+        self.assertEqual([tool for tool in tools if tool["type"] == "file_search"][0]["vector_store_ids"], ["vs_touski"])
+        self.assertEqual([tool for tool in tools if tool["type"] == "web_search"][0]["filters"]["allowed_domains"], ["touski.online"])
+
+    def test_touski_profile_supports_site_languages_and_domain(self):
+        profile = get_client_profile("touski")
+        self.assertEqual(profile.supported_languages, ("fr", "en", "es", "de"))
+        self.assertEqual(profile.site_domains, ("touski.online",))
+
     def test_browser_metadata_cannot_override_known_vialterna_profile(self):
         profile = resolve_client_profile(
             "vialterna",

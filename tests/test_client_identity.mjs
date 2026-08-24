@@ -7,6 +7,7 @@ process.env.OLIVIA_INTERNAL_TOKEN = "unit-test-internal-secret";
 const {
   clientCodeForSiteHost,
   issueWidgetIdentity,
+  requestSiteHost,
   resolveRequestClient,
   serverApprovedMetadata,
   verifyWidgetIdentity,
@@ -15,6 +16,7 @@ const {
 const clientProfiles = {
   vialterna: { clientCode: "vialterna", siteUrl: "vialterna2.vercel.app" },
   zevicapital: { clientCode: "zevicapital", siteUrl: "zevicapital.com" },
+  touski: { clientCode: "touski", siteUrl: "touski.online" },
 };
 
 function requestFor(origin, identity = "", internalToken = "") {
@@ -93,4 +95,16 @@ test("browser metadata cannot override the server-approved tenant profile", () =
     clientSiteUrl: "vialterna2.vercel.app",
     pageTitle: "Visitor page",
   });
+});
+
+test("cross-origin TOUSKI widget identity is bound to the browser Origin", () => {
+  const origin = "https://touski.online";
+  const identity = issueWidgetIdentity("touski", origin, clientProfiles);
+  const request = {
+    url: "https://olivia-ai.o7digital.com/api/olivia/chat",
+    headers: { get: (name) => name.toLowerCase() === "origin" ? origin : name.toLowerCase() === "x-olivia-widget-identity" ? identity : "" },
+  };
+
+  assert.equal(requestSiteHost(request), "touski.online");
+  assert.equal(resolveRequestClient(request, "touski", clientProfiles), "touski");
 });
