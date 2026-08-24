@@ -166,7 +166,7 @@ Do not invent listings, prices, availability, legal terms or transaction confirm
     clientCode: "vialterna",
     clientName: "Vialterna",
     industry: "managed-connectivity",
-    siteUrl: "vialterna2.vercel.app",
+    siteUrl: "vialterna.com",
     roleLabel: {
       es: "o7 Olivia AI Asistente",
       en: "o7 Olivia AI Assistant",
