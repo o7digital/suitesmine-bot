@@ -181,6 +181,31 @@ class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
+    async def test_vialterna_general_information_clarifies_without_lead_form(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="Quiero más información",
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertEqual(response.phase, "answer")
+        self.assertEqual(response.nextAction, "clarify_need")
+        self.assertIn("1. Conocer los servicios", response.reply)
+        self.assertIn("2. Contactar a un asesor", response.reply)
+        self.assertIn("3. Hacer otra pregunta", response.reply)
+        self.assertIsNone(response.action)
+        self.assertIsNone(response.leadForm)
+        self.assertEqual(response.missingFields, [])
+
     def test_booking_draft_survives_a_short_follow_up(self):
         metadata = ChatMetadata(
             bookingDraft={

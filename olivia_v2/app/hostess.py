@@ -15,6 +15,51 @@ from olivia_v2.app.openai_service import OpenAIService
 from olivia_v2.app.schemas import ChatRequest, OliviaResponse
 
 
+def is_vague_information_request(message: str) -> bool:
+    """Return True when Vialterna should clarify instead of qualifying a lead."""
+    normalized = " ".join(message.casefold().strip(" .!?¡¿").split())
+    exact_requests = {
+        "hola", "buenas", "informacion", "información",
+        "quiero informacion", "quiero información",
+        "quiero mas informacion", "quiero más información",
+        "necesito informacion", "necesito información",
+        "me puede dar informacion", "me puede dar información",
+        "quiero un poco de info", "quiero un poco de informacion",
+        "quiero un poco de información", "necesito un poco de info",
+        "hello", "hi", "information", "i need information",
+        "i would like some information", "bonjour", "informations",
+        "je voudrais des informations", "je veux des informations",
+    }
+    return normalized in exact_requests
+
+
+def vialterna_clarification_reply(language: str) -> str:
+    replies = {
+        "es": (
+            "Claro. ¿Qué le gustaría saber?\n\n"
+            "1. Conocer los servicios de Vialterna\n"
+            "2. Contactar a un asesor\n"
+            "3. Hacer otra pregunta\n\n"
+            "Puede responder con el número o escribir su pregunta con sus propias palabras."
+        ),
+        "en": (
+            "Of course. What would you like to know?\n\n"
+            "1. Explore Vialterna services\n"
+            "2. Contact an advisor\n"
+            "3. Ask another question\n\n"
+            "Reply with the number or write your question in your own words."
+        ),
+        "fr": (
+            "Bien sûr. Que souhaitez-vous savoir ?\n\n"
+            "1. Découvrir les services de Vialterna\n"
+            "2. Contacter un conseiller\n"
+            "3. Poser une autre question\n\n"
+            "Répondez avec le numéro ou écrivez directement votre question."
+        ),
+    }
+    return replies.get(language, replies["es"])
+
+
 def build_booking_url(language: str, fields) -> str:
     base = (
         "https://hotels.cloudbeds.com/en/reservation/UeErs0"
@@ -350,6 +395,22 @@ async def build_hostess_response(
     fields = extract_fields(request.message, request.metadata)
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
+
+    if client.code == "vialterna" and is_vague_information_request(request.message):
+        return OliviaResponse(
+            reply=vialterna_clarification_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="faq",
+            phase="answer",
+            nextAction="clarify_need",
+            handoffRecommended=False,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action=None,
+            leadForm=None,
+        )
 
     if client.code == "suitesmine" and (
         is_large_group_request(request.message)
