@@ -163,6 +163,14 @@ class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(profile.supported_languages, ("fr", "en", "es", "de"))
         self.assertEqual(profile.site_domains, ("touski.online",))
 
+    def test_kallista_profile_is_isolated_to_its_site(self):
+        profile = get_client_profile("kallistacafe")
+        self.assertEqual(profile.name, "KALLISTA Café")
+        self.assertEqual(profile.supported_languages, ("es", "en"))
+        self.assertEqual(profile.site_domains, ("kallistacafe.com",))
+        self.assertIn("Mar Negro 204", profile.knowledge)
+        self.assertIn("ilustrativos", profile.knowledge)
+
     def test_browser_metadata_cannot_override_known_vialterna_profile(self):
         profile = resolve_client_profile(
             "vialterna",

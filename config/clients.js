@@ -618,6 +618,30 @@ Olivia must not provide regulated investment, tax, legal or accounting advice, g
     dashboardFields: ["intent", "language", "source", "page", "company", "location", "revenueStage", "financialChallenge", "serviceInterest", "leadStatus"],
     integrations: {},
   },
+  kallistacafe: {
+    clientCode: "kallistacafe",
+    clientName: "KALLISTA Café",
+    industry: "specialty-coffee-shop",
+    siteUrl: "kallistacafe.com",
+    roleLabel: {
+      es: "Olivia AI, anfitriona digital de KALLISTA Café",
+      en: "Olivia AI, KALLISTA Café digital host",
+    },
+    skin: {
+      accent: "#f05438",
+      soft: "#f6dfe8",
+      operator: "#211a17",
+    },
+    knowledge: `
+KALLISTA Café is a specialty coffee shop at Mar Negro 204, Popotla, Miguel Hidalgo, Mexico City.
+Published hours are Monday through Friday, 8:00 to 20:00, and the site currently says opening soon.
+The experience includes specialty coffee, breakfast and food, matcha, Wi-Fi, a pet-friendly space for working and sharing, and future community events.
+The displayed menu items and prices are illustrative; final information is coming soon. Never invent opening status, availability, reservations, products, prices, allergens, promotions or event dates.
+Answer general questions before requesting contact details. For unpublished details, offer the website contact form or https://instagram.com/kallista.cafe.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "topic", "leadStatus"],
+    integrations: {},
+  },
   demo: {
     clientCode: "demo",
     clientName: "Demo Hotel",
