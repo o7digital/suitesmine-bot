@@ -457,13 +457,16 @@ async def build_hostess_response(
 
     zevi_fallback_reply = zevi_property_reply(language) if is_property_request else None
 
+    answer_first_clients = {"vialterna", "kallistacafe"}
     should_collect_contact = client.code != "suitesmine" and not (
-        client.code == "vialterna" and intent != "handoff"
+        client.code in answer_first_clients and intent != "handoff"
     )
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
     contact_mission = (
         "- for Vialterna, never request personal data during ordinary questions; request it only after an explicit request for a quote, call, expert or commercial follow-up;"
         if client.code == "vialterna"
+        else "- for KALLISTA Café, never request personal data during ordinary questions; offer the site contact form or Instagram only when the visitor requests human follow-up or needs confirmation of unpublished information;"
+        if client.code == "kallistacafe"
         else "- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;"
     )
 
