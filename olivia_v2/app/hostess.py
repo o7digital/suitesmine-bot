@@ -60,6 +60,28 @@ def vialterna_clarification_reply(language: str) -> str:
     return replies.get(language, replies["es"])
 
 
+def vialterna_qualification_reply(language: str) -> str:
+    replies = {
+        "es": (
+            "Antes de pedirte tus datos de contacto, necesito entender mejor la solicitud:\n\n"
+            "- ¿A qué se dedica la empresa?\n"
+            "- ¿Cuántos sitios tienen y de qué tipo son?\n"
+            "- ¿Cuál es el problema actual o la solución que buscan?\n"
+            "- ¿Qué nivel de urgencia tiene el proyecto?\n\n"
+            "Con estas respuestas prepararé el contexto y, al final, te pediré los datos para que un asesor pueda dar seguimiento."
+        ),
+        "en": (
+            "Before requesting your contact details, I need to understand the request better:\n\n"
+            "- What does the company do?\n"
+            "- How many sites do you have and what type are they?\n"
+            "- What is the current problem or desired solution?\n"
+            "- How urgent is the project?\n\n"
+            "I will prepare the context from these answers and request your contact details only at the end."
+        ),
+    }
+    return replies.get(language, replies["es"])
+
+
 def build_booking_url(language: str, fields) -> str:
     base = (
         "https://hotels.cloudbeds.com/en/reservation/UeErs0"
@@ -571,6 +593,9 @@ Live rates, if relevant:
         reply = f"Je suis {client.role_label.get('fr')}. Indiquez-moi vos dates, le nombre de voyageurs et la categorie souhaitee."
     else:
         reply = f"Soy {client.role_label.get('es')}. Indiqueme sus fechas, numero de huespedes y categoria preferida."
+
+    if client.code == "vialterna" and vialterna_handoff_flow and not vialterna_qualification_complete:
+        reply = vialterna_qualification_reply(language)
 
     if is_booking_flow:
         resp_intent, resp_phase, resp_next_action = "booking", booking_phase, booking_next_action

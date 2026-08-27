@@ -562,7 +562,11 @@ export async function POST(request) {
       const v2Response = await callOliviaV2(payload);
       const v2ClientCode = clean(v2Response?.clientCode);
       if (v2Response && (!requestedClientCode || requestedClientCode === "default" || v2ClientCode === requestedClientCode)) {
-        if (v2ClientCode === "vialterna" && !requestsHumanFollowUp(payload.message)) {
+        if (
+          v2ClientCode === "vialterna"
+          && payload?.metadata?.handoffStage !== "qualified"
+          && !requestsHumanFollowUp(payload.message)
+        ) {
           return json({
             ...v2Response,
             intent: v2Response.intent === "lead" ? "faq" : v2Response.intent,
