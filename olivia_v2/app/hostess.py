@@ -165,7 +165,7 @@ def missing_contact_fields(fields) -> list[str]:
     return missing
 
 
-def build_lead_form(language: str, message: str, missing: list[str]) -> dict:
+def build_lead_form(language: str, message: str, missing: list[str], client_code: str = "") -> dict:
     labels = {
         "es": {"name": "Nombre", "company": "Empresa", "email": "Email", "phone": "Teléfono", "details": "Detalles de la solicitud"},
         "en": {"name": "Name", "company": "Company", "email": "Email", "phone": "Phone", "details": "Request details"},
@@ -174,6 +174,18 @@ def build_lead_form(language: str, message: str, missing: list[str]) -> dict:
         "de": {"name": "Name", "company": "Unternehmen", "email": "E-Mail", "phone": "Telefon", "details": "Details der Anfrage"},
         "ru": {"name": "Имя", "company": "Компания", "email": "Email", "phone": "Телефон", "details": "Детали запроса"},
     }
+    if client_code == "vialterna":
+        vialterna_labels = {
+            "es": {"firstName": "Nombre", "lastName": "Apellido", "email": "Email", "phone": "Teléfono", "details": "Motivo de la solicitud"},
+            "en": {"firstName": "First name", "lastName": "Last name", "email": "Email", "phone": "Phone", "details": "Reason for the request"},
+        }
+        return {
+            "fields": ["firstName", "lastName", "email", "phone", "details"],
+            "required": ["firstName", "lastName", "email", "phone", "details"],
+            "detailsRows": 3,
+            "labels": vialterna_labels.get(language, vialterna_labels["es"]),
+            "initialDetails": message,
+        }
     return {
         "fields": ["name", "company", "email", "phone", "details"],
         "required": [*missing, "details"],
@@ -458,12 +470,24 @@ async def build_hostess_response(
     zevi_fallback_reply = zevi_property_reply(language) if is_property_request else None
 
     answer_first_clients = {"vialterna", "kallistacafe"}
+    vialterna_handoff_flow = client.code == "vialterna" and (
+        intent == "handoff" or request.metadata.handoffStage == "qualified"
+    )
+    vialterna_qualification_complete = (
+        client.code == "vialterna" and request.metadata.handoffStage == "qualified"
+    )
     should_collect_contact = client.code != "suitesmine" and not (
         client.code in answer_first_clients and intent != "handoff"
     )
+    if client.code == "vialterna":
+        should_collect_contact = vialterna_handoff_flow and vialterna_qualification_complete
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
     contact_mission = (
-        "- for Vialterna, never request personal data during ordinary questions; request it only after an explicit request for a quote, call, expert or commercial follow-up;"
+        (
+            "- for Vialterna, the visitor has requested human follow-up and already answered the qualification questions; briefly summarize the need, then invite them to complete the contact form;"
+            if vialterna_qualification_complete
+            else "- for Vialterna, never request personal data yet; when the visitor requests a quote, call, expert or commercial follow-up, first ask concise qualification questions about the company, number/type of sites, current problem or desired solution, urgency and useful project context;"
+        )
         if client.code == "vialterna"
         else "- for KALLISTA Café, never request personal data during ordinary questions; offer the site contact form or Instagram only when the visitor requests human follow-up or needs confirmation of unpublished information;"
         if client.code == "kallistacafe"
@@ -554,7 +578,12 @@ Live rates, if relevant:
     elif is_property_request:
         resp_intent, resp_phase, resp_next_action = "lead", "answer", "show_property_list"
         resp_missing, resp_action, resp_lead_form = [], None, None
+    elif client.code == "vialterna" and vialterna_handoff_flow and not vialterna_qualification_complete:
+        resp_intent, resp_phase, resp_next_action = "lead", "qualification", "qualify_business_need"
+        resp_missing, resp_action, resp_lead_form = [], None, None
     else:
+        if vialterna_handoff_flow:
+            intent = "handoff"
         resp_intent = "lead" if contact_missing and intent != "handoff" else intent
         resp_phase = "qualification" if contact_missing else ("answer" if intent != "handoff" else "human_handoff")
         resp_next_action = (
@@ -562,7 +591,7 @@ Live rates, if relevant:
         )
         resp_missing = contact_missing
         resp_action = "show_lead_form" if contact_missing else None
-        resp_lead_form = build_lead_form(language, request.message, contact_missing) if contact_missing else None
+        resp_lead_form = build_lead_form(language, request.message, contact_missing, client.code) if contact_missing else None
 
     return OliviaResponse(
         reply=reply,
@@ -571,7 +600,9 @@ Live rates, if relevant:
         intent=resp_intent,
         phase=resp_phase,
         nextAction=resp_next_action,
-        handoffRecommended=intent == "handoff",
+        handoffRecommended=intent == "handoff" and not (
+            client.code == "vialterna" and vialterna_handoff_flow and not vialterna_qualification_complete
+        ),
         collected=fields,
         missingFields=resp_missing,
         bookingUrl=booking_url,

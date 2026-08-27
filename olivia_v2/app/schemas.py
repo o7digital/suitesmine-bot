@@ -36,6 +36,7 @@ class ChatMetadata(BaseModel):
     pageContent: str | None = None
     bookingDraft: dict[str, Any] = Field(default_factory=dict)
     lead: dict[str, Any] = Field(default_factory=dict)
+    handoffStage: str | None = None
     clientName: str | None = None
     clientIndustry: str | None = None
     clientKnowledge: str | None = Field(default=None, max_length=20000)

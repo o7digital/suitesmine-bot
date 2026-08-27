@@ -214,6 +214,54 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(response.leadForm)
         self.assertEqual(response.missingFields, [])
 
+    async def test_vialterna_handoff_qualifies_need_before_requesting_contact_details(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="Quiero que me contacte un asesor para revisar mi red",
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="handoff",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertEqual(response.phase, "qualification")
+        self.assertEqual(response.nextAction, "qualify_business_need")
+        self.assertIsNone(response.action)
+        self.assertIsNone(response.leadForm)
+        self.assertFalse(response.handoffRecommended)
+
+    async def test_vialterna_requests_complete_contact_details_after_qualification(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="Somos una cadena con 12 sucursales, necesitamos respaldo urgente para evitar caídas.",
+            metadata=ChatMetadata(handoffStage="qualified"),
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertEqual(response.phase, "qualification")
+        self.assertEqual(response.action, "show_lead_form")
+        self.assertEqual(
+            response.leadForm["fields"],
+            ["firstName", "lastName", "email", "phone", "details"],
+        )
+        self.assertEqual(response.leadForm["required"], response.leadForm["fields"])
+        self.assertEqual(response.leadForm["labels"]["details"], "Motivo de la solicitud")
+
     def test_booking_draft_survives_a_short_follow_up(self):
         metadata = ChatMetadata(
             bookingDraft={
