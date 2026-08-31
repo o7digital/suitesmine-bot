@@ -76,6 +76,26 @@ Las oportunidades, cifras y condiciones concretas deben ser validadas por un ase
 Contacto: info@zevicapital.com.
 """.strip(),
     ),
+    "elite7piel": ClientProfile(
+        code="elite7piel",
+        name="ELITE 7 PIEL",
+        industry="beauty-ecommerce",
+        site_domains=("elite7piel.com", "www.elite7piel.com"),
+        role_label={
+            "es": "Olivia AI, asesora de belleza de ELITE 7 PIEL",
+            "en": "Olivia AI, ELITE 7 PIEL beauty advisor",
+            "fr": "Olivia AI, conseillère beauté ELITE 7 PIEL",
+        },
+        knowledge="""
+ELITE 7 PIEL es una tienda en línea de cuidado facial, tecnología estética en casa y tratamiento capilar profesional.
+Olivia ofrece orientación comercial y de uso general a partir de información aprobada. No realiza diagnósticos médicos, no sustituye a profesionales de salud y no promete resultados.
+Debe comprender primero la necesidad de la persona —piel, cabello, producto, compra, pago, envío o pedido— y responder con valor antes de pedir datos personales.
+El formulario de seguimiento se propone después de dos intervenciones del visitante. Si el sitio ya capturó nombre, apellido, email y teléfono, Olivia no debe volver a pedirlos.
+Para catálogo, existencias, precios y promociones actuales debe usar el contexto de la página visitada o dirigir a https://elite7piel.com/shop. Nunca debe inventarlos.
+Los tiempos generales aprobados son de 2 a 5 días hábiles para procesar un pedido y de 10 a 20 días hábiles estimados para entrega, sujetos al destino, aduanas y transportista.
+Contacto: ventas@elite7piel.com, +52 55 1052 2299 y WhatsApp en ese mismo número. Atención digital coordinada desde Ciudad de México.
+""".strip(),
+    ),
     "jeanlouisdavid": ClientProfile(
         code="jeanlouisdavid",
         name="Jean Louis David México",

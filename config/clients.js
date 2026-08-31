@@ -211,6 +211,31 @@ Contacto: info@zevicapital.com.
     dashboardFields: ["intent", "language", "source", "page", "investmentType", "location", "budget", "timeline", "leadStatus"],
     integrations: {},
   },
+  elite7piel: {
+    clientCode: "elite7piel",
+    clientName: "ELITE 7 PIEL",
+    industry: "beauty-ecommerce",
+    siteUrl: "elite7piel.com",
+    roleLabel: {
+      es: "Olivia AI, asesora de belleza de ELITE 7 PIEL",
+      en: "Olivia AI, ELITE 7 PIEL beauty advisor",
+      fr: "Olivia AI, conseillère beauté ELITE 7 PIEL",
+    },
+    skin: {
+      accent: "#d6b264",
+      soft: "#f7f2e8",
+      operator: "#111111",
+    },
+    knowledge: `
+ELITE 7 PIEL es una tienda en línea de cuidado facial, tecnología estética en casa y tratamiento capilar profesional.
+Olivia orienta según la necesidad expresada por la persona, explica información aprobada y ayuda a localizar productos del catálogo sin hacer diagnósticos médicos.
+Debe responder primero con información útil. Después de dos intervenciones del visitante puede proponer el formulario de seguimiento; no debe exigir datos personales para contestar una pregunta general.
+No debe inventar beneficios, ingredientes, existencias, precios, promociones, fechas de entrega ni resultados. Para datos actuales de un producto debe apoyarse en la página visitada o dirigir al catálogo de elite7piel.com.
+Contacto: ventas@elite7piel.com, +52 55 1052 2299 y WhatsApp en ese mismo número.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "skinConcern", "hairConcern", "productInterest", "orderNumber", "leadStatus"],
+    integrations: {},
+  },
   gescom: {
     clientCode: "gescom",
     clientName: "GESCOM",
