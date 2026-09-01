@@ -78,11 +78,19 @@ def vialterna_pricing_reply(language: str) -> str:
     return replies.get(language, replies["es"])
 
 
-def vialterna_greeting_reply(language: str) -> str:
+def vialterna_greeting_reply(language: str, message: str = "") -> str:
+    normalized = message.casefold()
+    if language == "es":
+        if "tardes" in normalized:
+            return "¡Hola, buenas tardes! Claro, con gusto. ¿En qué podemos ayudarle?"
+        if "noches" in normalized:
+            return "¡Hola, buenas noches! Claro, con gusto. ¿En qué podemos ayudarle?"
+        if "día" in normalized or "dia" in normalized or "días" in normalized or "dias" in normalized:
+            return "¡Hola, buenos días! Claro, con gusto. ¿En qué podemos ayudarle?"
     replies = {
-        "es": "¡Hola! Soy Olivia, asistente de Vialterna. ¿En qué podemos ayudarle hoy?",
-        "en": "Hello! I’m Olivia, Vialterna’s assistant. How can we help you today?",
-        "fr": "Bonjour ! Je suis Olivia, l’assistante de Vialterna. Comment pouvons-nous vous aider aujourd’hui ?",
+        "es": "¡Hola! Claro, con gusto. ¿En qué podemos ayudarle hoy?",
+        "en": "Hello! Of course, happy to help. How can we assist you today?",
+        "fr": "Bonjour ! Bien sûr, avec plaisir. Comment pouvons-nous vous aider aujourd’hui ?",
     }
     return replies.get(language, replies["es"])
 
@@ -477,7 +485,7 @@ async def build_hostess_response(
 
     if client.code == "vialterna" and not request.history:
         return OliviaResponse(
-            reply=vialterna_greeting_reply(language),
+            reply=vialterna_greeting_reply(language, request.message),
             clientCode=client.code,
             language=language,
             intent="faq",

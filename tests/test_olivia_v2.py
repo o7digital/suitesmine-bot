@@ -207,7 +207,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.phase, "greeting")
         self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("Soy Olivia", response.reply)
+        self.assertIn("Claro, con gusto", response.reply)
         self.assertIn("podemos ayudarle", response.reply)
         self.assertIsNone(response.action)
         self.assertIsNone(response.leadForm)
@@ -230,7 +230,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("Soy Olivia", response.reply)
+        self.assertIn("buenas tardes", response.reply)
         self.assertIsNone(response.leadForm)
 
     async def test_vialterna_pricing_goes_directly_to_simple_form_handoff(self):
@@ -380,7 +380,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                 )
 
                 if client_code == "vialterna":
-                    self.assertIn("How can we help you today", response.reply)
+                    self.assertIn("How can we assist you today", response.reply)
                 else:
                     self.assertIn("requested service", response.reply)
                 # suitesmine never qualifies leads; vialterna only qualifies after an explicit handoff request.
