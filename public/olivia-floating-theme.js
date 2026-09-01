@@ -18,7 +18,6 @@
     }
     .olivia-presence-dot {width:9px;height:9px;flex:0 0 auto;border-radius:999px;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.14),0 0 14px rgba(34,197,94,.8);transition:.25s ease}
     .olivia-presence-inactive .olivia-presence-dot {background:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.14),0 0 14px rgba(245,158,11,.75)}
-    :is(.olivia-lead,.sofia-lead,.node-olivia-lead,.cenote-olivia-lead,.sofia-cervantes-lead,.conchita-lead,.o7-chat-lead,[class*="olivia"][class*="lead"],[class*="sofia"][class*="lead"]) {display:none!important}
     :is(.olivia-chat__toggle,.sofia-toggle,.olivia-toggle,[class*="olivia"][class*="toggle"]) {border-radius:999px!important;box-shadow:0 24px 42px -18px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.16)!important}
     @keyframes olivia-shared-float {0%,100%{transform:perspective(1200px) translateY(-6px) rotateX(.45deg) rotateY(-.45deg)}50%{transform:perspective(1200px) translateY(-12px) rotateX(.65deg) rotateY(-.25deg)}}
     @media(prefers-reduced-motion:reduce){:is(.olivia-chat__panel,.sofia-panel,.olivia-panel,.cenote-olivia-panel,.sofia-cervantes-panel,.conchita-panel,[class*="olivia"][class*="panel"]){animation:none!important}}
@@ -36,8 +35,17 @@
         status.prepend(dot);
       }
     });
-    document.querySelectorAll('.olivia-form input,.olivia-form button,.olivia-compose input,.olivia-compose button,.sofia-composer input,.sofia-composer button,.conchita-composer input,.conchita-composer button').forEach((control) => control.removeAttribute('disabled'));
   };
+
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest(
+      '.olivia-consent a,.sofia-consent a,.conchita-consent a,[class*="consent"] a[href]',
+    );
+    if (!link) return;
+    event.preventDefault();
+    event.stopPropagation();
+    window.open(link.href, '_blank', 'noopener,noreferrer');
+  }, true);
   const setInactive = (inactive) => {
     decorate();
     document.querySelectorAll(statusSelector).forEach((status) => status.classList.toggle('olivia-presence-inactive', inactive));
