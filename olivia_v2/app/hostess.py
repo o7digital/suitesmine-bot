@@ -1,4 +1,5 @@
 import json
+import re
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -18,8 +19,16 @@ from olivia_v2.app.schemas import ChatRequest, OliviaResponse
 def is_vague_information_request(message: str) -> bool:
     """Return True when Vialterna should clarify instead of qualifying a lead."""
     normalized = " ".join(message.casefold().strip(" .!?¡¿").split())
+    normalized = re.sub(
+        r"^(?:(?:hola|buen(?:os días|os dias|as tardes|as noches)|qué tal|que tal|"
+        r"hello|hi|good (?:morning|afternoon|evening)|bonjour|bonsoir)[, ]*)+",
+        "",
+        normalized,
+    ).strip()
     exact_requests = {
-        "hola", "buenas", "informacion", "información",
+        "", "buenas", "informacion", "información", "info",
+        "busco informacion", "busco información", "busco info",
+        "deseo informacion", "deseo información", "deseo info",
         "quiero informacion", "quiero información",
         "quiero mas informacion", "quiero más información",
         "necesito informacion", "necesito información",
@@ -36,25 +45,16 @@ def is_vague_information_request(message: str) -> bool:
 def vialterna_clarification_reply(language: str) -> str:
     replies = {
         "es": (
-            "Claro. ¿Qué le gustaría saber?\n\n"
-            "1. Conocer los servicios de Vialterna\n"
-            "2. Contactar a un asesor\n"
-            "3. Hacer otra pregunta\n\n"
-            "Puede responder con el número o escribir su pregunta con sus propias palabras."
+            "Claro, con gusto. ¿Qué tipo de información estás buscando? "
+            "Cuéntame brevemente qué necesita tu empresa y te orientaré."
         ),
         "en": (
-            "Of course. What would you like to know?\n\n"
-            "1. Explore Vialterna services\n"
-            "2. Contact an advisor\n"
-            "3. Ask another question\n\n"
-            "Reply with the number or write your question in your own words."
+            "Of course, happy to help. What kind of information are you looking for? "
+            "Tell me briefly what your company needs and I’ll guide you."
         ),
         "fr": (
-            "Bien sûr. Que souhaitez-vous savoir ?\n\n"
-            "1. Découvrir les services de Vialterna\n"
-            "2. Contacter un conseiller\n"
-            "3. Poser une autre question\n\n"
-            "Répondez avec le numéro ou écrivez directement votre question."
+            "Bien sûr, avec plaisir. Quel type d’information recherchez-vous ? "
+            "Expliquez-moi brièvement le besoin de votre entreprise et je vous orienterai."
         ),
     }
     return replies.get(language, replies["es"])

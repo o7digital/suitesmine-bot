@@ -207,12 +207,31 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.phase, "answer")
         self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("1. Conocer los servicios", response.reply)
-        self.assertIn("2. Contactar a un asesor", response.reply)
-        self.assertIn("3. Hacer otra pregunta", response.reply)
+        self.assertIn("Claro, con gusto", response.reply)
+        self.assertIn("qué necesita tu empresa", response.reply)
         self.assertIsNone(response.action)
         self.assertIsNone(response.leadForm)
         self.assertEqual(response.missingFields, [])
+
+    async def test_vialterna_greeting_with_information_request_stays_natural(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="Hola buenas tardes, busco información",
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertEqual(response.nextAction, "clarify_need")
+        self.assertIn("Claro, con gusto", response.reply)
+        self.assertIsNone(response.leadForm)
 
     async def test_vialterna_handoff_qualifies_need_before_requesting_contact_details(self):
         request = ChatRequest(
