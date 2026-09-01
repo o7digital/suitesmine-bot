@@ -205,10 +205,10 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertEqual(response.phase, "answer")
+        self.assertEqual(response.phase, "greeting")
         self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("Claro, con gusto", response.reply)
-        self.assertIn("qué necesita tu empresa", response.reply)
+        self.assertIn("Soy Olivia", response.reply)
+        self.assertIn("podemos ayudarle", response.reply)
         self.assertIsNone(response.action)
         self.assertIsNone(response.leadForm)
         self.assertEqual(response.missingFields, [])
@@ -230,7 +230,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("Claro, con gusto", response.reply)
+        self.assertIn("Soy Olivia", response.reply)
         self.assertIsNone(response.leadForm)
 
     async def test_vialterna_pricing_goes_directly_to_simple_form_handoff(self):
@@ -238,6 +238,10 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             clientCode="vialterna",
             language="es",
             message="Quiero saber los precios",
+            history=[
+                ConversationMessage(role="user", content="Buenas tardes"),
+                ConversationMessage(role="assistant", content="¿En qué podemos ayudarle hoy?"),
+            ],
         )
 
         response = await build_hostess_response(
@@ -259,6 +263,10 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             clientCode="vialterna",
             language="es",
             message="Quiero que me contacte un asesor para revisar mi red",
+            history=[
+                ConversationMessage(role="user", content="Buenas tardes"),
+                ConversationMessage(role="assistant", content="¿En qué podemos ayudarle hoy?"),
+            ],
         )
 
         response = await build_hostess_response(
@@ -270,11 +278,11 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertEqual(response.phase, "qualification")
-        self.assertEqual(response.nextAction, "qualify_business_need")
-        self.assertIsNone(response.action)
-        self.assertIsNone(response.leadForm)
-        self.assertFalse(response.handoffRecommended)
+        self.assertEqual(response.phase, "human_handoff")
+        self.assertEqual(response.nextAction, "collect_contact_details")
+        self.assertEqual(response.action, "show_lead_form")
+        self.assertIsNotNone(response.leadForm)
+        self.assertTrue(response.handoffRecommended)
 
     async def test_vialterna_requests_complete_contact_details_after_qualification(self):
         request = ChatRequest(
@@ -282,6 +290,10 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             language="es",
             message="Somos una cadena con 12 sucursales, necesitamos respaldo urgente para evitar caídas.",
             metadata=ChatMetadata(handoffStage="qualified"),
+            history=[
+                ConversationMessage(role="user", content="Buenas tardes"),
+                ConversationMessage(role="assistant", content="¿En qué podemos ayudarle hoy?"),
+            ],
         )
 
         response = await build_hostess_response(
@@ -293,14 +305,14 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertEqual(response.phase, "qualification")
+        self.assertEqual(response.phase, "human_handoff")
         self.assertEqual(response.action, "show_lead_form")
         self.assertEqual(
             response.leadForm["fields"],
-            ["firstName", "lastName", "email", "phone", "details"],
+            ["firstName", "lastName", "company", "email", "phone", "details"],
         )
         self.assertEqual(response.leadForm["required"], response.leadForm["fields"])
-        self.assertEqual(response.leadForm["labels"]["details"], "Motivo de la solicitud")
+        self.assertEqual(response.leadForm["labels"]["details"], "Necesidad")
 
     def test_booking_draft_survives_a_short_follow_up(self):
         metadata = ChatMetadata(
@@ -367,7 +379,10 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                     openai_service=BusinessAnswerOpenAIService(),
                 )
 
-                self.assertIn("requested service", response.reply)
+                if client_code == "vialterna":
+                    self.assertIn("How can we help you today", response.reply)
+                else:
+                    self.assertIn("requested service", response.reply)
                 # suitesmine never qualifies leads; vialterna only qualifies after an explicit handoff request.
                 if client_code in ("suitesmine", "vialterna", "kallistacafe"):
                     self.assertIsNone(response.action)

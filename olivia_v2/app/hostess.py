@@ -78,6 +78,33 @@ def vialterna_pricing_reply(language: str) -> str:
     return replies.get(language, replies["es"])
 
 
+def vialterna_greeting_reply(language: str) -> str:
+    replies = {
+        "es": "¡Hola! Soy Olivia, asistente de Vialterna. ¿En qué podemos ayudarle hoy?",
+        "en": "Hello! I’m Olivia, Vialterna’s assistant. How can we help you today?",
+        "fr": "Bonjour ! Je suis Olivia, l’assistante de Vialterna. Comment pouvons-nous vous aider aujourd’hui ?",
+    }
+    return replies.get(language, replies["es"])
+
+
+def vialterna_advisor_handoff_reply(language: str) -> str:
+    replies = {
+        "es": (
+            "Claro, con gusto. Lo canalizo con un asesor. ¿Me puede dejar, por favor, "
+            "su nombre, apellido, empresa, email, teléfono y necesidad en el formulario?"
+        ),
+        "en": (
+            "Of course, with pleasure. I’ll connect you with an advisor. Please leave your "
+            "first name, last name, company, email, phone number and request in the form."
+        ),
+        "fr": (
+            "Bien sûr, avec plaisir. Je vous mets en relation avec un conseiller. Merci de laisser "
+            "votre prénom, nom, entreprise, email, téléphone et besoin dans le formulaire."
+        ),
+    }
+    return replies.get(language, replies["es"])
+
+
 def vialterna_qualification_reply(language: str) -> str:
     replies = {
         "es": (
@@ -216,12 +243,12 @@ def build_lead_form(language: str, message: str, missing: list[str], client_code
     }
     if client_code == "vialterna":
         vialterna_labels = {
-            "es": {"firstName": "Nombre", "lastName": "Apellido", "email": "Email", "phone": "Teléfono", "details": "Motivo de la solicitud"},
-            "en": {"firstName": "First name", "lastName": "Last name", "email": "Email", "phone": "Phone", "details": "Reason for the request"},
+            "es": {"firstName": "Nombre", "lastName": "Apellido", "company": "Empresa", "email": "Email", "phone": "Teléfono", "details": "Necesidad"},
+            "en": {"firstName": "First name", "lastName": "Last name", "company": "Company", "email": "Email", "phone": "Phone", "details": "Request"},
         }
         return {
-            "fields": ["firstName", "lastName", "email", "phone", "details"],
-            "required": ["firstName", "lastName", "email", "phone", "details"],
+            "fields": ["firstName", "lastName", "company", "email", "phone", "details"],
+            "required": ["firstName", "lastName", "company", "email", "phone", "details"],
             "detailsRows": 3,
             "labels": vialterna_labels.get(language, vialterna_labels["es"]),
             "initialDetails": message,
@@ -447,6 +474,38 @@ async def build_hostess_response(
     fields = extract_fields(request.message, request.metadata)
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
+
+    if client.code == "vialterna" and not request.history:
+        return OliviaResponse(
+            reply=vialterna_greeting_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="faq",
+            phase="greeting",
+            nextAction="clarify_need",
+            handoffRecommended=False,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action=None,
+            leadForm=None,
+        )
+
+    if client.code == "vialterna" and request.history:
+        return OliviaResponse(
+            reply=vialterna_advisor_handoff_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="handoff",
+            phase="human_handoff",
+            nextAction="collect_contact_details",
+            handoffRecommended=True,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action="show_lead_form",
+            leadForm=build_lead_form(language, request.message, [], client.code),
+        )
 
     if client.code == "vialterna" and is_vague_information_request(request.message):
         return OliviaResponse(
