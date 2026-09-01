@@ -73,16 +73,16 @@ def vialterna_clarification_reply(language: str) -> str:
 def vialterna_pricing_reply(language: str) -> str:
     replies = {
         "es": (
-            "Los precios los valida un asesor de Vialterna según las necesidades y el alcance de cada proyecto. "
-            "No puedo proporcionar una cifra desde este chat. Si desea hablar con un asesor, indíquemelo y con gusto le ayudo."
+            "Los precios deben ser preparados y validados por un asesor comercial de Vialterna según las necesidades "
+            "y el alcance de cada proyecto. Por favor, deje sus datos en el formulario y un asesor dará seguimiento a su solicitud."
         ),
         "en": (
-            "Vialterna pricing is validated by an advisor according to each project's needs and scope. "
-            "I cannot provide a figure in this chat. If you would like to speak with an advisor, tell me and I will help."
+            "Pricing must be prepared and validated by a Vialterna sales advisor according to each project's needs and scope. "
+            "Please leave your details in the form and an advisor will follow up on your request."
         ),
         "fr": (
-            "Les tarifs Vialterna sont validés par un conseiller selon les besoins et le périmètre de chaque projet. "
-            "Je ne peux pas communiquer de montant dans ce chat. Si vous souhaitez parler à un conseiller, dites-le-moi."
+            "Les tarifs doivent être préparés et validés par un conseiller commercial Vialterna selon les besoins et le périmètre du projet. "
+            "Merci de laisser vos coordonnées dans le formulaire afin qu’un conseiller donne suite à votre demande."
         ),
     }
     return replies.get(language, replies["es"])
@@ -593,14 +593,14 @@ async def build_hostess_response(
             clientCode=client.code,
             language=language,
             intent="pricing",
-            phase="answer",
-            nextAction="reply_to_guest",
-            handoffRecommended=False,
+            phase="human_handoff",
+            nextAction="collect_contact_details",
+            handoffRecommended=True,
             collected=fields,
             missingFields=[],
             rates=[],
-            action=None,
-            leadForm=None,
+            action="show_lead_form",
+            leadForm=build_lead_form(language, request.message, [], client.code),
         )
 
     if client.code == "vialterna" and is_vialterna_technical_question(request.message):
@@ -723,7 +723,7 @@ Mission:
 - use the recent conversation to resolve short follow-ups and references without making the visitor repeat information;
 - answer the visitor's concrete business question before requesting contact or project details;
 {contact_mission}{booking_mission}{property_mission}
-- for Vialterna, never provide prices, technical explanations, technical advice, configurations, specifications, architecture, coverage or SLA details; state calmly that a Vialterna specialist must validate them and do not trigger contact collection unless the visitor explicitly asks to speak with a person;
+- for Vialterna, never provide prices, technical explanations, technical advice, configurations, specifications, architecture, coverage or SLA details; a price, quote or proposal request must be routed to the commercial contact form, while a technical question must only state calmly that a specialist must validate it without automatically collecting contact details;
 - when missingContactFields are present, end with one brief invitation to provide them; do not make them a condition for answering;
 - if name, email and phone are already present in metadata.lead or collected, do not ask for them again; answer the visitor's business question directly, then ask only for missing project context if needed;
 - answer from approved client context only;

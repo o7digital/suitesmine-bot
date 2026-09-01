@@ -279,7 +279,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(response.handoffRecommended)
         self.assertIsNone(response.leadForm)
 
-    async def test_vialterna_pricing_declines_without_form_handoff(self):
+    async def test_vialterna_pricing_routes_to_commercial_form_without_giving_price(self):
         request = ChatRequest(
             clientCode="vialterna",
             language="es",
@@ -299,11 +299,12 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertIsNone(response.action)
-        self.assertFalse(response.handoffRecommended)
+        self.assertEqual(response.action, "show_lead_form")
+        self.assertTrue(response.handoffRecommended)
         self.assertIn("precios", response.reply)
-        self.assertIn("No puedo proporcionar", response.reply)
-        self.assertIsNone(response.leadForm)
+        self.assertIn("asesor comercial", response.reply)
+        self.assertNotRegex(response.reply, r"\$|\b\d+[.,]?\d*\s*(?:MXN|USD|pesos|dólares)\b")
+        self.assertIsNotNone(response.leadForm)
 
     async def test_vialterna_technical_question_declines_without_form_handoff(self):
         request = ChatRequest(
