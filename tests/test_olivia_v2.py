@@ -233,6 +233,27 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Claro, con gusto", response.reply)
         self.assertIsNone(response.leadForm)
 
+    async def test_vialterna_pricing_goes_directly_to_simple_form_handoff(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="Quiero saber los precios",
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="pricing",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertEqual(response.action, "show_lead_form")
+        self.assertTrue(response.handoffRecommended)
+        self.assertIn("Claro, con gusto", response.reply)
+        self.assertIn("formulario", response.reply)
+
     async def test_vialterna_handoff_qualifies_need_before_requesting_contact_details(self):
         request = ChatRequest(
             clientCode="vialterna",

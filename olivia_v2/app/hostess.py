@@ -60,6 +60,24 @@ def vialterna_clarification_reply(language: str) -> str:
     return replies.get(language, replies["es"])
 
 
+def vialterna_pricing_reply(language: str) -> str:
+    replies = {
+        "es": (
+            "Claro, con gusto. Para ofrecerle un precio adecuado, le compartiré un formulario "
+            "para que deje sus datos y un asesor de Vialterna prepare su propuesta."
+        ),
+        "en": (
+            "Of course, with pleasure. To provide the right price, I’ll share a short form where "
+            "you can leave your details so a Vialterna advisor can prepare your proposal."
+        ),
+        "fr": (
+            "Bien sûr, avec plaisir. Pour vous proposer un tarif adapté, je vais vous présenter "
+            "un court formulaire afin qu’un conseiller Vialterna prépare votre proposition."
+        ),
+    }
+    return replies.get(language, replies["es"])
+
+
 def vialterna_qualification_reply(language: str) -> str:
     replies = {
         "es": (
@@ -443,6 +461,22 @@ async def build_hostess_response(
             missingFields=[],
             rates=[],
             action=None,
+            leadForm=None,
+        )
+
+    if client.code == "vialterna" and intent == "pricing":
+        return OliviaResponse(
+            reply=vialterna_pricing_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="pricing",
+            phase="human_handoff",
+            nextAction="collect_contact_details",
+            handoffRecommended=True,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action="show_lead_form",
             leadForm=None,
         )
 
