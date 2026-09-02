@@ -309,33 +309,6 @@ function missingContactFields(details) {
   ].filter(Boolean);
 }
 
-function contactFieldLabels(language, missing) {
-  const labels = {
-    en: { name: "first and last name", email: "email", phone: "phone" },
-    fr: { name: "prénom et nom", email: "email", phone: "téléphone" },
-    es: { name: "nombre y apellido", email: "email", phone: "teléfono" },
-  }[language] || { name: "nombre y apellido", email: "email", phone: "teléfono" };
-  return missing.map((field) => labels[field]);
-}
-
-function contactQualificationReply(language, client, details, message) {
-  const missing = missingContactFields(details);
-  if (!missing.length) return "";
-  const labels = contactFieldLabels(language, missing).join(", ");
-  const leadIn = clean(message)
-    ? {
-        en: `I can help with ${client.clientName}. To give proper follow-up, please send: ${labels}.`,
-        fr: `Je peux vous aider avec ${client.clientName}. Pour assurer le bon suivi, envoyez-moi : ${labels}.`,
-        es: `Puedo ayudarle con ${client.clientName}. Para darle seguimiento correctamente, envíeme: ${labels}.`,
-      }
-    : {
-        en: `Hello, I am ${client.roleLabel.en || "Olivia AI"}. Please send ${labels} so I can assist you.`,
-        fr: `Bonjour, je suis ${client.roleLabel.fr || "Olivia AI"}. Envoyez-moi ${labels} afin que je puisse vous aider.`,
-        es: `Hola, soy ${client.roleLabel.es || "Olivia AI"}. Envíeme ${labels} para poder atenderle.`,
-      };
-  return (leadIn[language] || leadIn.es);
-}
-
 function leadFormResponse({ language, client, details, message }) {
   const reply =
     {
@@ -344,6 +317,31 @@ function leadFormResponse({ language, client, details, message }) {
       es: `Déjenos sus datos de contacto y los detalles de su solicitud para que un experto de ${client.clientName} pueda dar seguimiento.`,
     }[language] ||
     `Déjenos sus datos de contacto y los detalles de su solicitud para que un experto de ${client.clientName} pueda dar seguimiento.`;
+
+  const b2bClients = new Set([
+    "default", "vialterna", "zevicapital", "gescom", "aoitgroup", "infrasegura",
+    "securyti", "homedesignmarques", "diicsacv", "kabin", "finidi",
+  ]);
+  const detailLabels = {
+    vialterna: { es: "Necesidad", en: "Request", fr: "Besoin" },
+    zevicapital: { es: "Proyecto, zona y presupuesto", en: "Project, area and budget", fr: "Projet, zone et budget" },
+    elite7piel: { es: "Producto o necesidad", en: "Product or need", fr: "Produit ou besoin" },
+    jeanlouisdavid: { es: "Servicio, sucursal y fecha", en: "Service, branch and date", fr: "Service, salon et date" },
+    cervantesbienesraices: { es: "Operación, zona y presupuesto", en: "Transaction, area and budget", fr: "Opération, zone et budget" },
+    eliteridemexico: { es: "Ruta, fecha y pasajeros", en: "Route, date and passengers", fr: "Trajet, date et passagers" },
+    goldenhealth: { es: "Motivo de consulta", en: "Reason for consultation", fr: "Motif de consultation" },
+    gescom: { es: "Necesidad administrativa", en: "Administrative need", fr: "Besoin administratif" },
+  };
+  const labelsByLanguage = {
+    es: { firstName: "Nombre", lastName: "Apellido", company: "Empresa", email: "Email", phone: "Teléfono", details: "Necesidad" },
+    en: { firstName: "First name", lastName: "Last name", company: "Company", email: "Email", phone: "Phone", details: "Request" },
+    fr: { firstName: "Prénom", lastName: "Nom", company: "Entreprise", email: "Email", phone: "Téléphone", details: "Besoin" },
+  };
+  const labels = { ...(labelsByLanguage[language] || labelsByLanguage.es) };
+  labels.details = detailLabels[client.clientCode]?.[language] || labels.details;
+  const fields = ["firstName", "lastName"];
+  if (b2bClients.has(client.clientCode)) fields.push("company");
+  fields.push("email", "phone", "details");
 
   return {
     reply,
@@ -357,22 +355,13 @@ function leadFormResponse({ language, client, details, message }) {
     },
     missingFields: missingContactFields(details),
     leadForm: {
-      fields: ["name", "company", "email", "phone", "details"],
-      required: ["name", "email", "phone", "details"],
+      fields,
+      required: fields,
       detailsRows: 3,
-      labels: {
-        name: language === "en" ? "Name" : language === "fr" ? "Nom" : "Nombre",
-        company: language === "en" ? "Company" : language === "fr" ? "Entreprise" : "Empresa",
-        email: "Email",
-        phone: language === "en" ? "Phone" : language === "fr" ? "Téléphone" : "Teléfono",
-        details:
-          language === "en"
-            ? "Request info details"
-            : language === "fr"
-              ? "Détails de la demande"
-              : "Detalles de la solicitud",
-      },
+      labels,
       initialDetails: clean(message),
+      delayMinMs: 5000,
+      delayMaxMs: 12000,
     },
   };
 }
@@ -562,21 +551,6 @@ export async function POST(request) {
       const v2Response = await callOliviaV2(payload);
       const v2ClientCode = clean(v2Response?.clientCode);
       if (v2Response && (!requestedClientCode || requestedClientCode === "default" || v2ClientCode === requestedClientCode)) {
-        if (
-          v2ClientCode === "vialterna"
-          && payload?.metadata?.handoffStage !== "qualified"
-          && !requestsHumanFollowUp(payload.message)
-        ) {
-          return json({
-            ...v2Response,
-            intent: v2Response.intent === "lead" ? "faq" : v2Response.intent,
-            phase: "answer",
-            nextAction: "reply_to_guest",
-            missingFields: [],
-            action: null,
-            leadForm: null,
-          });
-        }
         return json(v2Response);
       }
       if (v2Response) {
@@ -635,10 +609,13 @@ export async function POST(request) {
       });
     }
 
-    const contactReply = !isSuitesMine && !(client.clientCode === "vialterna" && !requestsHumanFollowUp(message))
-      ? contactQualificationReply(language, client, contactDetails, message)
-      : "";
-    const leadQualification = contactReply
+    const priorVisitorTurns = sanitizeHistory(payload.history)
+      .filter((item) => item.role === "user").length;
+    const naturalLeadFlow = !isSuitesMine && client.clientCode !== "kallistacafe";
+    const shouldOpenLeadForm = naturalLeadFlow
+      && missingContactFields(contactDetails).length > 0
+      && (priorVisitorTurns >= 1 || requestsHumanFollowUp(message));
+    const leadQualification = shouldOpenLeadForm
       ? leadFormResponse({ language, client, details: contactDetails, message })
       : null;
     const leadUi = leadQualification
@@ -652,9 +629,9 @@ export async function POST(request) {
 
     if (!process.env.OPENAI_API_KEY) {
       return json({
-        reply: isSuitesMine
+        reply: leadQualification?.reply || (isSuitesMine
           ? fallbackReply(language, { checkIn, checkOut })
-          : genericFallbackReply(language, client),
+          : genericFallbackReply(language, client)),
         mode: "fallback",
         clientCode: client.clientCode,
         rates,
@@ -668,7 +645,7 @@ Respond in ${languageName(language)}.
 Use the approved website and FAQ context below. Be concise, helpful, and natural.
 Do not invent information that is not present in the approved context.
 If dates/guests are already provided in metadata, do not ask for them again.
-For every non-hotel client, qualify the visitor as a business lead: keep track of first and last name, email and phone, then collect the minimum project context useful for the client.
+For every non-hotel client, keep the conversation natural. On the first visitor exchange, answer briefly and ask what they need without requesting personal data. After the need is clear, route the request to the brand's advisor and use the form supplied by the application.
 ${hasLeadContact ? `The visitor contact details are already collected: ${leadName}, ${clean(lead.email)}, ${clean(lead.phone)}. Do not ask for name, email or phone again under any circumstance. Answer the business question directly, then ask only for missing project/product context if needed.` : "If name, email and phone are already present in metadata.lead or collected, do not ask for them again. Answer the visitor's business question directly, then ask only for the missing project context if needed."}
 ${isSuitesMine ? `
 If the guest wants to reserve, collect only missing fields:
@@ -729,9 +706,9 @@ ${isSuitesMine ? `Live Cloudbeds rates for selected dates:\n${ratesText}` : ""}
     const data = await res.json();
     if (!res.ok) {
       return json({
-        reply: isSuitesMine
+        reply: leadQualification?.reply || (isSuitesMine
           ? fallbackReply(language, { checkIn, checkOut })
-          : genericFallbackReply(language, client),
+          : genericFallbackReply(language, client)),
         mode: "openai-error",
         error: data?.error?.message || "OpenAI error",
         rates,
@@ -740,6 +717,7 @@ ${isSuitesMine ? `Live Cloudbeds rates for selected dates:\n${ratesText}` : ""}
     }
 
     const reply =
+      leadQualification?.reply ||
       data.output_text ||
       data.output?.flatMap((item) => item.content || []).find((part) => part.type === "output_text")?.text ||
       fallbackReply(language, { checkIn, checkOut });

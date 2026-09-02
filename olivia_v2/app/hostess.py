@@ -17,7 +17,7 @@ from olivia_v2.app.schemas import ChatRequest, OliviaResponse
 
 
 def is_vague_information_request(message: str) -> bool:
-    """Return True when Vialterna should clarify instead of qualifying a lead."""
+    """Return True when Olivia should clarify instead of opening a lead form."""
     normalized = " ".join(message.casefold().strip(" .!?¡¿").split())
     normalized = re.sub(
         r"^(?:(?:hola|buen(?:os días|os dias|as tardes|as noches)|qué tal|que tal|"
@@ -52,28 +52,6 @@ def is_vialterna_greeting(message: str) -> bool:
     ))
 
 
-def vialterna_clarification_reply(language: str) -> str:
-    replies = {
-        "es": (
-            "Claro, con gusto. ¿Qué tipo de información estás buscando? "
-            "Cuéntame brevemente qué necesita tu empresa y te orientaré."
-        ),
-        "en": (
-            "Of course, happy to help. What kind of information are you looking for? "
-            "Tell me briefly what your company needs and I’ll guide you."
-        ),
-        "fr": (
-            "Bien sûr, avec plaisir. Quel type d’information recherchez-vous ? "
-            "Expliquez-moi brièvement le besoin de votre entreprise et je vous orienterai."
-        ),
-    }
-    return replies.get(language, replies["es"])
-
-
-def vialterna_pricing_reply(language: str) -> str:
-    return vialterna_advisor_handoff_reply(language)
-
-
 def is_vialterna_technical_question(message: str) -> bool:
     """Keep technical consulting and implementation details with human specialists."""
     normalized = message.casefold()
@@ -88,15 +66,6 @@ def is_vialterna_technical_question(message: str) -> bool:
         "how do", "recomiend", "recommend", "technical", "técnic", "tecnic",
     )
     return any(term in normalized for term in technical_terms)
-
-
-def is_vialterna_explicit_handoff_request(message: str) -> bool:
-    normalized = message.casefold()
-    return any(term in normalized for term in (
-        "hablar con", "contactarme", "me contacte", "me contacten", "contáctenme", "contactenme", "llámenme", "llamenme",
-        "quiero un asesor", "quiero una llamada", "quiero un experto", "whatsapp",
-        "talk to", "speak to", "call me", "contact me", "i want an advisor",
-    ))
 
 
 def vialterna_technical_reply(language: str) -> str:
@@ -134,42 +103,54 @@ def vialterna_greeting_reply(language: str, message: str = "") -> str:
     return replies.get(language, replies["es"])
 
 
-def vialterna_advisor_handoff_reply(language: str) -> str:
+def visitor_turn_count(request: ChatRequest) -> int:
+    """Count completed visitor turns without treating the widget welcome as a turn."""
+    return sum(1 for item in request.history if item.role == "user")
+
+
+def uses_natural_lead_handoff(client: ClientProfile) -> bool:
+    """Keep transactional and answer-only experiences out of the generic sales handoff."""
+    return client.code not in {"suitesmine", "kallistacafe"}
+
+
+def advisor_handoff_reply(language: str, client: ClientProfile) -> str:
     replies = {
         "es": (
-            "Claro, con mucho gusto. Le canalizo con uno de nuestros asesores. "
+            f"Claro, con mucho gusto. Le canalizo con un asesor de {client.name}. "
             "Enseguida le comparto nuestro formulario para que pueda dejarnos sus datos."
         ),
         "en": (
-            "Of course, with pleasure. I’ll connect you with one of our advisors. "
-            "I’ll share our form with you now so you can leave your details."
+            f"Of course, with pleasure. I’ll connect you with a {client.name} advisor. "
+            "I’ll share our form with you shortly so you can leave your details."
         ),
         "fr": (
-            "Bien sûr, avec plaisir. Je vous mets en relation avec l’un de nos conseillers. "
-            "Je vous transmets maintenant notre formulaire afin que vous puissiez laisser vos coordonnées."
+            f"Bien sûr, avec plaisir. Je vous mets en relation avec un conseiller {client.name}. "
+            "Je vous transmets notre formulaire dans un instant afin que vous puissiez laisser vos coordonnées."
+        ),
+        "it": (
+            f"Certamente, con piacere. La metto in contatto con un consulente di {client.name}. "
+            "Tra poco le mostrerò il modulo per lasciare i suoi dati."
+        ),
+        "de": (
+            f"Sehr gern. Ich leite Ihre Anfrage an einen Berater von {client.name} weiter. "
+            "Gleich zeige ich Ihnen unser Formular, in dem Sie Ihre Kontaktdaten hinterlassen können."
+        ),
+        "ru": (
+            f"Конечно. Я передам ваш запрос консультанту {client.name}. "
+            "Через несколько секунд появится форма, где можно оставить контактные данные."
         ),
     }
     return replies.get(language, replies["es"])
 
 
-def vialterna_qualification_reply(language: str) -> str:
+def clarification_reply(language: str, client: ClientProfile) -> str:
     replies = {
-        "es": (
-            "Antes de pedirte tus datos de contacto, necesito entender mejor la solicitud:\n\n"
-            "- ¿A qué se dedica la empresa?\n"
-            "- ¿Cuántos sitios tienen y de qué tipo son?\n"
-            "- ¿Cuál es el problema actual o la solución que buscan?\n"
-            "- ¿Qué nivel de urgencia tiene el proyecto?\n\n"
-            "Con estas respuestas prepararé el contexto y, al final, te pediré los datos para que un asesor pueda dar seguimiento."
-        ),
-        "en": (
-            "Before requesting your contact details, I need to understand the request better:\n\n"
-            "- What does the company do?\n"
-            "- How many sites do you have and what type are they?\n"
-            "- What is the current problem or desired solution?\n"
-            "- How urgent is the project?\n\n"
-            "I will prepare the context from these answers and request your contact details only at the end."
-        ),
+        "es": f"Claro, con gusto. ¿Qué tipo de información busca sobre {client.name}? Cuénteme brevemente qué necesita.",
+        "en": f"Of course, happy to help. What would you like to know about {client.name}? Tell me briefly what you need.",
+        "fr": f"Bien sûr, avec plaisir. Que souhaitez-vous savoir sur {client.name} ? Expliquez-moi brièvement votre besoin.",
+        "it": f"Certamente. Che cosa desidera sapere su {client.name}? Mi descriva brevemente la sua richiesta.",
+        "de": f"Sehr gern. Was möchten Sie über {client.name} wissen? Beschreiben Sie kurz Ihr Anliegen.",
+        "ru": f"Конечно. Что вы хотели бы узнать о {client.name}? Кратко опишите ваш запрос.",
     }
     return replies.get(language, replies["es"])
 
@@ -279,33 +260,70 @@ def missing_contact_fields(fields) -> list[str]:
     return missing
 
 
-def build_lead_form(language: str, message: str, missing: list[str], client_code: str = "") -> dict:
-    labels = {
-        "es": {"name": "Nombre", "company": "Empresa", "email": "Email", "phone": "Teléfono", "details": "Detalles de la solicitud"},
-        "en": {"name": "Name", "company": "Company", "email": "Email", "phone": "Phone", "details": "Request details"},
-        "fr": {"name": "Nom", "company": "Entreprise", "email": "Email", "phone": "Téléphone", "details": "Détails de la demande"},
-        "it": {"name": "Nome", "company": "Azienda", "email": "Email", "phone": "Telefono", "details": "Dettagli della richiesta"},
-        "de": {"name": "Name", "company": "Unternehmen", "email": "E-Mail", "phone": "Telefon", "details": "Details der Anfrage"},
-        "ru": {"name": "Имя", "company": "Компания", "email": "Email", "phone": "Телефон", "details": "Детали запроса"},
+def build_lead_form(
+    language: str,
+    message: str,
+    missing: list[str],
+    client_code: str = "",
+    industry: str = "",
+) -> dict:
+    del missing  # The handoff form is intentionally complete and consistent.
+    b2b_industries = {
+        "managed-connectivity", "real-estate-investment", "virtual-administrative-assistant",
+        "virtual-administrative-services", "construction-and-maintenance",
+        "wood-construction-and-furniture", "tax-accounting-financial-consulting",
+        "financial-consulting", "cybersecurity", "technology", "generic",
+        "global-it-services-and-cybersecurity", "infrastructure-security-and-it-services",
+        "cybersecurity-and-managed-it", "fractional-cfo-and-strategic-finance",
     }
-    if client_code == "vialterna":
-        vialterna_labels = {
-            "es": {"firstName": "Nombre", "lastName": "Apellido", "company": "Empresa", "email": "Email", "phone": "Teléfono", "details": "Necesidad"},
-            "en": {"firstName": "First name", "lastName": "Last name", "company": "Company", "email": "Email", "phone": "Phone", "details": "Request"},
-        }
-        return {
-            "fields": ["firstName", "lastName", "company", "email", "phone", "details"],
-            "required": ["firstName", "lastName", "company", "email", "phone", "details"],
-            "detailsRows": 3,
-            "labels": vialterna_labels.get(language, vialterna_labels["es"]),
-            "initialDetails": message,
-        }
+    detail_labels = {
+        "vialterna": {"es": "Necesidad", "en": "Request", "fr": "Besoin"},
+        "zevicapital": {"es": "Proyecto, zona y presupuesto", "en": "Project, area and budget", "fr": "Projet, zone et budget"},
+        "elite7piel": {"es": "Producto o necesidad", "en": "Product or need", "fr": "Produit ou besoin"},
+        "jeanlouisdavid": {"es": "Servicio, sucursal y fecha", "en": "Service, branch and date", "fr": "Service, salon et date"},
+        "cervantesbienesraices": {"es": "Operación, zona y presupuesto", "en": "Transaction, area and budget", "fr": "Opération, zone et budget"},
+        "cusi": {"es": "Ocasión, entrega y presupuesto", "en": "Occasion, delivery and budget", "fr": "Occasion, livraison et budget"},
+        "lacasaquecanta": {"es": "Fechas, huéspedes y solicitud", "en": "Dates, guests and request", "fr": "Dates, voyageurs et demande"},
+        "homedesignmarques": {"es": "Proyecto, medidas y ciudad", "en": "Project, dimensions and city", "fr": "Projet, dimensions et ville"},
+        "diicsacv": {"es": "Proyecto, ubicación y urgencia", "en": "Project, location and urgency", "fr": "Projet, lieu et urgence"},
+        "kabin": {"es": "Servicio y breve descripción", "en": "Service and brief description", "fr": "Service et brève description"},
+        "eliteridemexico": {"es": "Ruta, fecha y pasajeros", "en": "Route, date and passengers", "fr": "Trajet, date et passagers"},
+        "goldenhealth": {"es": "Motivo de consulta", "en": "Reason for consultation", "fr": "Motif de consultation"},
+        "touski": {"es": "Producto y uso previsto", "en": "Product and intended use", "fr": "Produit et utilisation prévue"},
+        "gescom": {"es": "Necesidad administrativa", "en": "Administrative need", "fr": "Besoin administratif"},
+        "archivomac": {"es": "Equipo y reparación", "en": "Device and repair", "fr": "Appareil et réparation"},
+        "dosalga": {"es": "Producto o consulta", "en": "Product or request", "fr": "Produit ou demande"},
+        "aoitgroup": {"es": "Necesidad tecnológica", "en": "Technology need", "fr": "Besoin technologique"},
+        "infrasegura": {"es": "Necesidad tecnológica", "en": "Technology need", "fr": "Besoin technologique"},
+        "securyti": {"es": "Necesidad de seguridad o TI", "en": "Security or IT need", "fr": "Besoin sécurité ou TI"},
+        "lacaqc": {"es": "Fechas, huéspedes y solicitud", "en": "Dates, guests and request", "fr": "Dates, voyageurs et demande"},
+        "nodejewelry": {"es": "Pieza o pedido privado", "en": "Piece or private order", "fr": "Pièce ou commande privée"},
+        "neurodiversa": {"es": "Motivo de consulta", "en": "Reason for consultation", "fr": "Motif de consultation"},
+        "cenotemaravilla": {"es": "Fecha, visitantes y actividad", "en": "Date, visitors and activity", "fr": "Date, visiteurs et activité"},
+        "finidi": {"es": "Necesidad financiera", "en": "Financial need", "fr": "Besoin financier"},
+    }
+    localized_labels = {
+        "es": {"firstName": "Nombre", "lastName": "Apellido", "company": "Empresa", "email": "Email", "phone": "Teléfono", "details": "Necesidad"},
+        "en": {"firstName": "First name", "lastName": "Last name", "company": "Company", "email": "Email", "phone": "Phone", "details": "Request"},
+        "fr": {"firstName": "Prénom", "lastName": "Nom", "company": "Entreprise", "email": "Email", "phone": "Téléphone", "details": "Besoin"},
+        "it": {"firstName": "Nome", "lastName": "Cognome", "company": "Azienda", "email": "Email", "phone": "Telefono", "details": "Richiesta"},
+        "de": {"firstName": "Vorname", "lastName": "Nachname", "company": "Unternehmen", "email": "E-Mail", "phone": "Telefon", "details": "Anfrage"},
+        "ru": {"firstName": "Имя", "lastName": "Фамилия", "company": "Компания", "email": "Email", "phone": "Телефон", "details": "Запрос"},
+    }
+    labels = dict(localized_labels.get(language, localized_labels["es"]))
+    labels["details"] = detail_labels.get(client_code, {}).get(language, labels["details"])
+    fields = ["firstName", "lastName"]
+    if industry in b2b_industries or client_code == "vialterna":
+        fields.append("company")
+    fields.extend(["email", "phone", "details"])
     return {
-        "fields": ["name", "company", "email", "phone", "details"],
-        "required": [*missing, "details"],
+        "fields": fields,
+        "required": fields,
         "detailsRows": 3,
-        "labels": labels.get(language, labels["en"]),
+        "labels": labels,
         "initialDetails": message,
+        "delayMinMs": 5000,
+        "delayMaxMs": 12000,
     }
 
 
@@ -521,8 +539,12 @@ async def build_hostess_response(
     fields = extract_fields(request.message, request.metadata)
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
+    prior_visitor_turns = visitor_turn_count(request)
+    contact_missing = missing_contact_fields(fields)
+    is_property_request = client.code == "zevicapital" and is_zevi_property_request(request.message)
+    natural_lead_flow = uses_natural_lead_handoff(client) and not is_property_request
 
-    if client.code == "vialterna" and is_vialterna_greeting(request.message):
+    if natural_lead_flow and prior_visitor_turns == 0 and is_vialterna_greeting(request.message):
         return OliviaResponse(
             reply=vialterna_greeting_reply(language, request.message),
             clientCode=client.code,
@@ -538,25 +560,9 @@ async def build_hostess_response(
             leadForm=None,
         )
 
-    if client.code == "vialterna" and request.history:
+    if natural_lead_flow and prior_visitor_turns == 0 and is_vague_information_request(request.message):
         return OliviaResponse(
-            reply=vialterna_advisor_handoff_reply(language),
-            clientCode=client.code,
-            language=language,
-            intent="handoff",
-            phase="human_handoff",
-            nextAction="collect_contact_details",
-            handoffRecommended=True,
-            collected=fields,
-            missingFields=[],
-            rates=[],
-            action="show_lead_form",
-            leadForm=build_lead_form(language, request.message, [], client.code),
-        )
-
-    if client.code == "vialterna" and is_vague_information_request(request.message):
-        return OliviaResponse(
-            reply=vialterna_clarification_reply(language),
+            reply=clarification_reply(language, client),
             clientCode=client.code,
             language=language,
             intent="faq",
@@ -570,15 +576,17 @@ async def build_hostess_response(
             leadForm=None,
         )
 
-    if client.code == "vialterna" and (
-        is_vialterna_explicit_handoff_request(request.message)
-        or request.metadata.handoffStage == "qualified"
-    ):
+    should_open_lead_form = (
+        natural_lead_flow
+        and bool(contact_missing)
+        and (prior_visitor_turns >= 1 or intent in {"pricing", "handoff"})
+    )
+    if should_open_lead_form:
         return OliviaResponse(
-            reply=vialterna_advisor_handoff_reply(language),
+            reply=advisor_handoff_reply(language, client),
             clientCode=client.code,
             language=language,
-            intent="handoff",
+            intent="pricing" if intent == "pricing" else "handoff",
             phase="human_handoff",
             nextAction="collect_contact_details",
             handoffRecommended=True,
@@ -586,23 +594,9 @@ async def build_hostess_response(
             missingFields=[],
             rates=[],
             action="show_lead_form",
-            leadForm=build_lead_form(language, request.message, [], client.code),
-        )
-
-    if client.code == "vialterna" and intent == "pricing":
-        return OliviaResponse(
-            reply=vialterna_pricing_reply(language),
-            clientCode=client.code,
-            language=language,
-            intent="pricing",
-            phase="human_handoff",
-            nextAction="collect_contact_details",
-            handoffRecommended=True,
-            collected=fields,
-            missingFields=[],
-            rates=[],
-            action="show_lead_form",
-            leadForm=build_lead_form(language, request.message, [], client.code),
+            leadForm=build_lead_form(
+                language, request.message, contact_missing, client.code, client.industry
+            ),
         )
 
     if client.code == "vialterna" and is_vialterna_technical_question(request.message):
@@ -656,8 +650,6 @@ async def build_hostess_response(
     # Any client with a live data connector (Cloudbeds rates, Zevi listings, ...) gets that data
     # injected as ground truth so the AI writes the reply instead of a fixed template.
     is_booking_flow = intent == "booking" and client.code == "suitesmine"
-    is_property_request = client.code == "zevicapital" and is_zevi_property_request(request.message)
-
     booking_phase = booking_next_action = booking_fallback_reply = None
     if is_booking_flow:
         booking_phase, booking_next_action, booking_fallback_reply = local_booking_reply(
@@ -666,26 +658,16 @@ async def build_hostess_response(
 
     zevi_fallback_reply = zevi_property_reply(language) if is_property_request else None
 
-    answer_first_clients = {"vialterna", "kallistacafe"}
-    vialterna_handoff_flow = client.code == "vialterna" and (
-        intent == "handoff" or request.metadata.handoffStage == "qualified"
+    answer_first_clients = {"kallistacafe"}
+    should_collect_contact = (
+        not natural_lead_flow
+        and client.code != "suitesmine"
+        and not (client.code in answer_first_clients and intent != "handoff")
     )
-    vialterna_qualification_complete = (
-        client.code == "vialterna" and request.metadata.handoffStage == "qualified"
-    )
-    should_collect_contact = client.code != "suitesmine" and not (
-        client.code in answer_first_clients and intent != "handoff"
-    )
-    if client.code == "vialterna":
-        should_collect_contact = vialterna_handoff_flow and vialterna_qualification_complete
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
     contact_mission = (
-        (
-            "- for Vialterna, the visitor has requested human follow-up and already answered the qualification questions; briefly summarize the need, then invite them to complete the contact form;"
-            if vialterna_qualification_complete
-            else "- for Vialterna, never request personal data yet; when the visitor requests a quote, call, expert or commercial follow-up, first ask concise qualification questions about the company, number/type of sites, current problem or desired solution, urgency and useful project context;"
-        )
-        if client.code == "vialterna"
+        "- this is the first visitor exchange: answer briefly from approved information and ask one natural question to understand the need; do not request personal data or mention the form yet;"
+        if natural_lead_flow
         else "- for KALLISTA Café, never request personal data during ordinary questions; offer the site contact form or Instagram only when the visitor requests human follow-up or needs confirmation of unpublished information;"
         if client.code == "kallistacafe"
         else "- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;"
@@ -770,21 +752,13 @@ Live rates, if relevant:
     else:
         reply = f"Soy {client.role_label.get('es')}. Indiqueme sus fechas, numero de huespedes y categoria preferida."
 
-    if client.code == "vialterna" and vialterna_handoff_flow and not vialterna_qualification_complete:
-        reply = vialterna_qualification_reply(language)
-
     if is_booking_flow:
         resp_intent, resp_phase, resp_next_action = "booking", booking_phase, booking_next_action
         resp_missing, resp_action, resp_lead_form = missing, None, None
     elif is_property_request:
         resp_intent, resp_phase, resp_next_action = "lead", "answer", "show_property_list"
         resp_missing, resp_action, resp_lead_form = [], None, None
-    elif client.code == "vialterna" and vialterna_handoff_flow and not vialterna_qualification_complete:
-        resp_intent, resp_phase, resp_next_action = "lead", "qualification", "qualify_business_need"
-        resp_missing, resp_action, resp_lead_form = [], None, None
     else:
-        if vialterna_handoff_flow:
-            intent = "handoff"
         resp_intent = "lead" if contact_missing and intent != "handoff" else intent
         resp_phase = "qualification" if contact_missing else ("answer" if intent != "handoff" else "human_handoff")
         resp_next_action = (
@@ -792,7 +766,11 @@ Live rates, if relevant:
         )
         resp_missing = contact_missing
         resp_action = "show_lead_form" if contact_missing else None
-        resp_lead_form = build_lead_form(language, request.message, contact_missing, client.code) if contact_missing else None
+        resp_lead_form = (
+            build_lead_form(language, request.message, contact_missing, client.code, client.industry)
+            if contact_missing
+            else None
+        )
 
     return OliviaResponse(
         reply=reply,
@@ -801,9 +779,7 @@ Live rates, if relevant:
         intent=resp_intent,
         phase=resp_phase,
         nextAction=resp_next_action,
-        handoffRecommended=intent == "handoff" and not (
-            client.code == "vialterna" and vialterna_handoff_flow and not vialterna_qualification_complete
-        ),
+        handoffRecommended=intent == "handoff",
         collected=fields,
         missingFields=resp_missing,
         bookingUrl=booking_url,

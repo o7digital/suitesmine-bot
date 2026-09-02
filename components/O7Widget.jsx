@@ -186,7 +186,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   const [isLoading, setIsLoading] = useState(false);
   const [metadata, setMetadata] = useState({});
   const [leadForm, setLeadForm] = useState(null);
-  const [leadData, setLeadData] = useState({ name: "", company: "", email: "", phone: "", details: "" });
+  const [leadData, setLeadData] = useState({});
   const [hasConsent, setHasConsent] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [widgetIdentity, setWidgetIdentity] = useState("");
@@ -195,7 +195,12 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
   ]);
   const visitorId = useRef("");
   const receivedIds = useRef(new Set());
+  const leadFormTimer = useRef(null);
   const copy = getCopy(clientId, language);
+  const leadFields = Array.isArray(leadForm?.fields) && leadForm.fields.length
+    ? leadForm.fields
+    : ["firstName", "lastName", "company", "email", "phone", "details"];
+  const leadInputFields = leadFields.filter((key) => key !== "details");
 
   useEffect(() => {
     let timer;
@@ -227,8 +232,15 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
       dataConsent: savedConsent,
       dataConsentAt: savedConsent ? window.localStorage.getItem(`oliviaConsentAt:${clientId}`) : undefined,
     }));
+    visitorId.current = window.crypto.randomUUID();
+    receivedIds.current.clear();
+    window.clearTimeout(leadFormTimer.current);
+    setLeadForm(null);
+    setLeadData({});
     setMessages([{ role: "assistant", content: getCopy(clientId, detectedLanguage).welcome }]);
   }, [clientId]);
+
+  useEffect(() => () => window.clearTimeout(leadFormTimer.current), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -246,9 +258,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
 
   useEffect(() => {
     if (!hasConsent || !widgetIdentity) return undefined;
-    visitorId.current =
-      window.localStorage.getItem("oliviaVisitorId") || window.crypto.randomUUID();
-    window.localStorage.setItem("oliviaVisitorId", visitorId.current);
+    if (!visitorId.current) visitorId.current = window.crypto.randomUUID();
 
     const poll = async () => {
       try {
@@ -311,16 +321,19 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
     setIsLoading(true);
 
     try {
+      const normalizedLead = Object.fromEntries(
+        Object.entries(leadData).map(([key, value]) => [key, String(value || "").trim()]),
+      );
+      const visitorName =
+        normalizedLead.name ||
+        [normalizedLead.firstName, normalizedLead.lastName].filter(Boolean).join(" ");
       const messageMetadata = leadMode
         ? {
             ...metadata,
             lead: {
               ...(metadata.lead || {}),
-              name: leadData.name.trim(),
-              company: leadData.company.trim(),
-              email: leadData.email.trim(),
-              phone: leadData.phone.trim(),
-              details: leadData.details.trim(),
+              ...normalizedLead,
+              name: visitorName,
             },
           }
         : metadata;
@@ -333,9 +346,9 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
             content: message,
             metadata: messageMetadata,
             source: "website",
-            visitorName: leadData.name,
-            email: leadData.email,
-            phone: leadData.phone,
+            visitorName,
+            email: normalizedLead.email || "",
+            phone: normalizedLead.phone || "",
           },
           widgetIdentity,
         );
@@ -380,17 +393,28 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
         }));
       }
 
-      if (data?.action === "show_lead_form" || data?.leadForm) {
-        setLeadForm(data.leadForm || { detailsRows: 3 });
-        setLeadData((prev) => ({ ...prev, details: prev.details || data?.leadForm?.initialDetails || message }));
-      } else if (leadMode) {
-        setLeadForm(null);
-      }
-
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: assistantContent },
       ]);
+      if (data?.action === "show_lead_form" || data?.leadForm) {
+        const nextLeadForm = data.leadForm || { detailsRows: 3 };
+        const minimumDelay = Number(nextLeadForm.delayMinMs) || 5000;
+        const maximumDelay = Math.max(minimumDelay, Number(nextLeadForm.delayMaxMs) || 12000);
+        const formDelay = minimumDelay + Math.floor(Math.random() * (maximumDelay - minimumDelay + 1));
+        window.clearTimeout(leadFormTimer.current);
+        leadFormTimer.current = window.setTimeout(() => {
+          setLeadForm(nextLeadForm);
+          setLeadData((prev) => ({
+            ...prev,
+            details: prev.details || nextLeadForm.initialDetails || message,
+          }));
+        }, formDelay);
+      } else if (leadMode) {
+        window.clearTimeout(leadFormTimer.current);
+        setLeadForm(null);
+        setLeadData({});
+      }
       try {
         await persistAssistantMessage(
           {
@@ -534,7 +558,7 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                     {copy.leadPrompt || siteCopy.default[language].leadPrompt}
                   </p>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {["name", "company", "email", "phone"].map((key) => (
+                    {leadInputFields.map((key) => (
                       <input
                         key={key}
                         type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
@@ -544,13 +568,15 @@ export default function O7Widget({ clientId = "default", title = "O7 IA Chat" })
                         className="h-10 rounded-lg border border-[#ded7c9] bg-white px-3 text-sm text-[#2b2b2b] outline-none ring-[#c8aa70] placeholder:text-[#9b907d] focus:ring-2"
                       />
                     ))}
-                    <textarea
-                      value={leadData.details || ""}
-                      rows={leadForm.detailsRows || 3}
-                      placeholder={leadForm.labels?.details || copy.lead?.details || "Details"}
-                      onChange={(event) => setLeadData((prev) => ({ ...prev, details: event.target.value }))}
-                      className="min-h-[82px] rounded-lg border border-[#ded7c9] bg-white px-3 py-2 text-sm text-[#2b2b2b] outline-none ring-[#c8aa70] placeholder:text-[#9b907d] focus:ring-2 sm:col-span-2"
-                    />
+                    {leadFields.includes("details") && (
+                      <textarea
+                        value={leadData.details || ""}
+                        rows={leadForm.detailsRows || 3}
+                        placeholder={leadForm.labels?.details || copy.lead?.details || "Details"}
+                        onChange={(event) => setLeadData((prev) => ({ ...prev, details: event.target.value }))}
+                        className="min-h-[82px] rounded-lg border border-[#ded7c9] bg-white px-3 py-2 text-sm text-[#2b2b2b] outline-none ring-[#c8aa70] placeholder:text-[#9b907d] focus:ring-2 sm:col-span-2"
+                      />
+                    )}
                   </div>
                 </div>
               )}
