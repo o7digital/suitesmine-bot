@@ -301,8 +301,8 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.action, "show_lead_form")
         self.assertTrue(response.handoffRecommended)
-        self.assertIn("precios", response.reply)
-        self.assertIn("asesor comercial", response.reply)
+        self.assertIn("Claro, con mucho gusto", response.reply)
+        self.assertIn("nuestro formulario", response.reply)
         self.assertNotRegex(response.reply, r"\$|\b\d+[.,]?\d*\s*(?:MXN|USD|pesos|dólares)\b")
         self.assertIsNotNone(response.leadForm)
 
@@ -352,6 +352,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.action, "show_lead_form")
         self.assertIsNotNone(response.leadForm)
         self.assertTrue(response.handoffRecommended)
+        self.assertIn("nuestro formulario", response.reply)
 
     async def test_vialterna_requests_complete_contact_details_after_qualification(self):
         request = ChatRequest(
