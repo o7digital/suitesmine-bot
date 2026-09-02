@@ -90,13 +90,13 @@ def vialterna_greeting_reply(language: str, message: str = "") -> str:
     normalized = message.casefold()
     if language == "es":
         if "tardes" in normalized:
-            return "¡Hola, buenas tardes! Claro, con gusto. ¿En qué podemos ayudarle?"
+            return "¡Hola, buenas tardes! ¿En qué podemos ayudarle?"
         if "noches" in normalized:
-            return "¡Hola, buenas noches! Claro, con gusto. ¿En qué podemos ayudarle?"
+            return "¡Hola, buenas noches! ¿En qué podemos ayudarle?"
         if "día" in normalized or "dia" in normalized or "días" in normalized or "dias" in normalized:
-            return "¡Hola, buenos días! Claro, con gusto. ¿En qué podemos ayudarle?"
+            return "¡Hola, buenos días! ¿En qué podemos ayudarle?"
     replies = {
-        "es": "¡Hola! Claro, con gusto. ¿En qué podemos ayudarle hoy?",
+        "es": "¡Hola! ¿En qué podemos ayudarle hoy?",
         "en": "Hello! Of course, happy to help. How can we assist you today?",
         "fr": "Bonjour ! Bien sûr, avec plaisir. Comment pouvons-nous vous aider aujourd’hui ?",
     }
