@@ -72,11 +72,11 @@ def vialterna_technical_reply(language: str) -> str:
     replies = {
         "es": (
             "Para asegurar una respuesta correcta, las preguntas técnicas deben ser revisadas por un especialista de Vialterna. "
-            "No puedo dar asesoría técnica desde este chat. Si desea hablar con un especialista, indíquemelo y con gusto le ayudo."
+            "Compártanos sus datos y lo contactaremos a la brevedad."
         ),
         "en": (
             "To ensure an accurate answer, technical questions must be reviewed by a Vialterna specialist. "
-            "I cannot provide technical advice in this chat. If you would like to speak with a specialist, tell me and I will help."
+            "Please share your contact details and we will contact you shortly."
         ),
         "fr": (
             "Pour garantir une réponse exacte, les questions techniques doivent être examinées par un spécialiste Vialterna. "
@@ -543,6 +543,7 @@ async def build_hostess_response(
     contact_missing = missing_contact_fields(fields)
     is_property_request = client.code == "zevicapital" and is_zevi_property_request(request.message)
     natural_lead_flow = uses_natural_lead_handoff(client) and not is_property_request
+    is_vialterna_technical = client.code == "vialterna" and is_vialterna_technical_question(request.message)
 
     if natural_lead_flow and prior_visitor_turns == 0 and is_vialterna_greeting(request.message):
         return OliviaResponse(
@@ -578,6 +579,7 @@ async def build_hostess_response(
 
     should_open_lead_form = (
         natural_lead_flow
+        and not is_vialterna_technical
         and bool(contact_missing)
         and (prior_visitor_turns >= 1 or intent in {"pricing", "handoff"})
     )
@@ -599,20 +601,22 @@ async def build_hostess_response(
             ),
         )
 
-    if client.code == "vialterna" and is_vialterna_technical_question(request.message):
+    if is_vialterna_technical:
         return OliviaResponse(
             reply=vialterna_technical_reply(language),
             clientCode=client.code,
             language=language,
             intent="faq",
-            phase="answer",
-            nextAction="reply_to_guest",
-            handoffRecommended=False,
+            phase="human_handoff",
+            nextAction="collect_contact_details",
+            handoffRecommended=True,
             collected=fields,
             missingFields=[],
             rates=[],
-            action=None,
-            leadForm=None,
+            action="show_lead_form",
+            leadForm=build_lead_form(
+                language, request.message, contact_missing, client.code, client.industry
+            ),
         )
 
     if client.code == "suitesmine" and (

@@ -315,7 +315,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertIn("Le canalizo", response.reply)
+        self.assertIn("Compártanos sus datos", response.reply)
         self.assertNotIn("SD-WAN", response.reply)
         self.assertEqual(response.phase, "human_handoff")
         self.assertTrue(response.handoffRecommended)
@@ -348,26 +348,26 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotRegex(response.reply, r"\$|\b\d+[.,]?\d*\s*(?:MXN|USD|pesos|dólares)\b")
         self.assertIsNotNone(response.leadForm)
 
-    async def test_vialterna_technical_question_declines_without_form_handoff(self):
-        request = ChatRequest(
-            clientCode="vialterna",
-            language="es",
-            message="¿Cómo funciona SD-WAN y cómo configuro el failover?",
+    async def test_vialterna_technical_question_requests_contact_details(self):
+        cases = (
+            ("es", "¿Cómo funciona SD-WAN y cómo configuro el failover?", "Compártanos sus datos"),
+            ("en", "How do I configure SD-WAN failover?", "Please share your contact details"),
         )
+        for language, message, expected in cases:
+            with self.subTest(language=language):
+                response = await build_hostess_response(
+                    request=ChatRequest(clientCode="vialterna", language=language, message=message),
+                    client=get_client_profile("vialterna"),
+                    language=language,
+                    intent="faq",
+                    rates=[],
+                    openai_service=BusinessAnswerOpenAIService(),
+                )
 
-        response = await build_hostess_response(
-            request=request,
-            client=get_client_profile("vialterna"),
-            language="es",
-            intent="faq",
-            rates=[],
-            openai_service=BusinessAnswerOpenAIService(),
-        )
-
-        self.assertIn("preguntas técnicas", response.reply)
-        self.assertIsNone(response.action)
-        self.assertFalse(response.handoffRecommended)
-        self.assertIsNone(response.leadForm)
+                self.assertIn(expected, response.reply)
+                self.assertEqual(response.action, "show_lead_form")
+                self.assertTrue(response.handoffRecommended)
+                self.assertIsNotNone(response.leadForm)
 
     async def test_vialterna_handoff_qualifies_need_before_requesting_contact_details(self):
         request = ChatRequest(
