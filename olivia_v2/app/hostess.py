@@ -538,6 +538,22 @@ async def build_hostess_response(
             leadForm=None,
         )
 
+    if client.code == "vialterna" and request.history:
+        return OliviaResponse(
+            reply=vialterna_advisor_handoff_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="handoff",
+            phase="human_handoff",
+            nextAction="collect_contact_details",
+            handoffRecommended=True,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action="show_lead_form",
+            leadForm=build_lead_form(language, request.message, [], client.code),
+        )
+
     if client.code == "vialterna" and is_vague_information_request(request.message):
         return OliviaResponse(
             reply=vialterna_clarification_reply(language),
