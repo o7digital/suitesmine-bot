@@ -86,6 +86,32 @@ def vialterna_technical_reply(language: str) -> str:
     return replies.get(language, replies["es"])
 
 
+def is_raquel_technical_question(message: str) -> bool:
+    normalized = message.casefold()
+    terms = (
+        "estructura", "estructural", "ciment", "muro de carga", "instalación",
+        "instalacion", "eléctric", "electric", "hidrául", "hidraul", "plano",
+        "cálculo", "calculo", "normativa", "permiso", "licencia", "viabilidad",
+        "material", "aislamiento", "impermeabil", "demoler", "construcción",
+        "construction", "structural", "foundation", "load-bearing", "technical",
+        "building code", "planning permission", "feasibility", "how to build",
+        "cómo construir", "como construir", "recommend", "recomiend",
+    )
+    return any(term in normalized for term in terms)
+
+
+def raquel_technical_reply(language: str) -> str:
+    replies = {
+        "es": "Para asegurar una respuesta correcta, las preguntas técnicas deben ser revisadas por Raquel Hedo o un especialista. Compártenos tus datos y un breve mensaje, y te contactaremos a la brevedad.",
+        "en": "To ensure an accurate answer, technical questions must be reviewed by Raquel Hedo or a specialist. Please share your contact details and a brief message, and we will contact you shortly.",
+        "fr": "Pour garantir une réponse exacte, les questions techniques doivent être examinées par Raquel Hedo ou un spécialiste. Partagez vos coordonnées et un bref message, et nous vous contacterons rapidement.",
+        "it": "Per garantire una risposta corretta, le domande tecniche devono essere esaminate da Raquel Hedo o da uno specialista. Condivida i suoi dati e un breve messaggio e la contatteremo al più presto.",
+        "de": "Für eine korrekte Antwort müssen technische Fragen von Raquel Hedo oder einer Fachperson geprüft werden. Teilen Sie uns Ihre Kontaktdaten und eine kurze Nachricht mit; wir melden uns zeitnah.",
+        "pt": "Para garantir uma resposta correta, as perguntas técnicas devem ser analisadas por Raquel Hedo ou por um especialista. Compartilhe seus dados e uma breve mensagem, e entraremos em contato em breve.",
+    }
+    return replies.get(language, replies["es"])
+
+
 def vialterna_greeting_reply(language: str, message: str = "") -> str:
     normalized = message.casefold()
     if language == "es":
@@ -557,6 +583,7 @@ async def build_hostess_response(
     is_property_request = client.code == "zevicapital" and is_zevi_property_request(request.message)
     natural_lead_flow = uses_natural_lead_handoff(client) and not is_property_request
     is_vialterna_technical = client.code == "vialterna" and is_vialterna_technical_question(request.message)
+    is_raquel_technical = client.code == "raquelhedo" and is_raquel_technical_question(request.message)
 
     if natural_lead_flow and prior_visitor_turns == 0 and is_vialterna_greeting(request.message):
         return OliviaResponse(
@@ -593,6 +620,7 @@ async def build_hostess_response(
     should_open_lead_form = (
         natural_lead_flow
         and not is_vialterna_technical
+        and not is_raquel_technical
         and bool(contact_missing)
         and (prior_visitor_turns >= 1 or intent in {"pricing", "handoff"})
     )
@@ -630,6 +658,15 @@ async def build_hostess_response(
             leadForm=build_lead_form(
                 language, request.message, contact_missing, client.code, client.industry
             ),
+        )
+
+    if is_raquel_technical:
+        return OliviaResponse(
+            reply=raquel_technical_reply(language), clientCode=client.code,
+            language=language, intent="faq", phase="human_handoff",
+            nextAction="collect_contact_details", handoffRecommended=True,
+            collected=fields, missingFields=[], rates=[], action="show_lead_form",
+            leadForm=build_lead_form(language, request.message, contact_missing, client.code, client.industry),
         )
 
     if client.code == "suitesmine" and (
@@ -725,6 +762,7 @@ Mission:
 - answer the visitor's concrete business question before requesting contact or project details;
 {contact_mission}{booking_mission}{property_mission}
 - for Vialterna, never provide prices, technical explanations, technical advice, configurations, specifications, architecture, coverage or SLA details; a price, quote or proposal request must be routed to the commercial contact form, while a technical question must only state calmly that a specialist must validate it without automatically collecting contact details;
+- for Raquel Hedo, never provide technical, structural, regulatory or feasibility advice, or invent fees, budgets, schedules or availability; route those questions to Raquel or a specialist and collect contact details plus the project message;
 - when missingContactFields are present, end with one brief invitation to provide them; do not make them a condition for answering;
 - if name, email and phone are already present in metadata.lead or collected, do not ask for them again; answer the visitor's business question directly, then ask only for missing project context if needed;
 - answer from approved client context only;

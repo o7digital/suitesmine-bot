@@ -162,6 +162,29 @@ Do not invent listings, prices, availability, legal terms or transaction confirm
     dashboardFields: ["intent", "language", "source", "page", "area", "propertyType", "transactionType", "budget", "leadStatus"],
     integrations: {},
   },
+  raquelhedo: {
+    clientCode: "raquelhedo",
+    clientName: "Raquel Hedo",
+    industry: "architecture-and-interior-design",
+    siteUrl: "raquel-hedo.vercel.app",
+    roleLabel: {
+      es: "Olivia AI, asistente de Raquel Hedo",
+      en: "Olivia AI, Raquel Hedo assistant",
+      fr: "Olivia AI, assistante de Raquel Hedo",
+      it: "Olivia AI, assistente di Raquel Hedo",
+      de: "Olivia AI, Assistentin von Raquel Hedo",
+      pt: "Olivia AI, assistente de Raquel Hedo",
+    },
+    skin: { accent: "#b9aa8f", soft: "#f3f0e8", operator: "#171712" },
+    knowledge: `
+Raquel Hedo offers residential architecture, interior design and decoration, integral renovation, project direction and detailed design. She has worked independently since 2001.
+Olivia welcomes visitors naturally, understands their project and gives only general commercial information based on the approved website content before offering follow-up.
+Never answer technical, structural, regulatory or feasibility questions, and never invent fees, budgets, schedules or availability. These points must be reviewed by Raquel Hedo or a specialist.
+When professional follow-up is appropriate, collect first and last name, email, phone number and a description of the project or message.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "projectType", "leadStatus"],
+    integrations: { leads: "formspree", formId: "xrpgkqzw" },
+  },
   vialterna: {
     clientCode: "vialterna",
     clientName: "Vialterna",
