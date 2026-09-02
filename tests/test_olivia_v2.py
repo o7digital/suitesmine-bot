@@ -351,6 +351,11 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
     async def test_vialterna_technical_question_requests_contact_details(self):
         cases = (
             ("es", "¿Cómo funciona SD-WAN y cómo configuro el failover?", "Compártanos sus datos"),
+            (
+                "es",
+                "Requiero conectar las terminales de cobro y el punto de venta de varias sucursales. Vi que manejan conectividad, ¿me podrían brindar más información?",
+                "Compártanos sus datos",
+            ),
             ("en", "How do I configure SD-WAN failover?", "Please share your contact details"),
         )
         for language, message, expected in cases:

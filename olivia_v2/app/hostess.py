@@ -64,6 +64,10 @@ def is_vialterna_technical_question(message: str) -> bool:
         "diagnóst", "diagnost", "cobertura", "coverage", "sla", "sim", "esim", "iot",
         "lte", "5g", "satel", "fibra", "cómo funciona", "como funciona", "how does",
         "how do", "recomiend", "recommend", "technical", "técnic", "tecnic",
+        "conectar", "connect ", "conectividad", "connectivity", "terminal de cobro",
+        "terminales de cobro", "payment terminal", "punto de venta", "puntos de venta",
+        "point of sale", "pos terminal", "sucursales", "branches", "interrupciones",
+        "interruptions", "respaldo", "redundancy", "multioperador", "multi-operator",
     )
     return any(term in normalized for term in technical_terms)
 
