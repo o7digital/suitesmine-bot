@@ -114,6 +114,19 @@ def uses_natural_lead_handoff(client: ClientProfile) -> bool:
 
 
 def advisor_handoff_reply(language: str, client: ClientProfile) -> str:
+    if client.code == "vialterna":
+        vialterna_replies = {
+            "es": (
+                "Para asegurar una respuesta correcta, las preguntas técnicas deben ser revisadas por un especialista de Vialterna. "
+                "Compártanos sus datos y lo contactaremos a la brevedad."
+            ),
+            "en": (
+                "To ensure an accurate answer, technical questions must be reviewed by a Vialterna specialist. "
+                "Please share your contact details and we will contact you shortly."
+            ),
+        }
+        if language in vialterna_replies:
+            return vialterna_replies[language]
     replies = {
         "es": (
             f"Claro, con mucho gusto. Le canalizo con un asesor de {client.name}. "

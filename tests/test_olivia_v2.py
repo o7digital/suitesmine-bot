@@ -226,8 +226,8 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.action, "show_lead_form")
         self.assertTrue(response.handoffRecommended)
-        self.assertIn("Le canalizo", response.reply)
-        self.assertIn("nuestro formulario", response.reply)
+        self.assertIn("Compártanos sus datos", response.reply)
+        self.assertIn("lo contactaremos a la brevedad", response.reply)
         self.assertNotIn("Edge", response.reply)
 
     async def test_vialterna_general_information_clarifies_without_lead_form(self):
@@ -343,8 +343,8 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.action, "show_lead_form")
         self.assertTrue(response.handoffRecommended)
-        self.assertIn("Claro, con mucho gusto", response.reply)
-        self.assertIn("nuestro formulario", response.reply)
+        self.assertIn("Compártanos sus datos", response.reply)
+        self.assertIn("lo contactaremos a la brevedad", response.reply)
         self.assertNotRegex(response.reply, r"\$|\b\d+[.,]?\d*\s*(?:MXN|USD|pesos|dólares)\b")
         self.assertIsNotNone(response.leadForm)
 
@@ -394,7 +394,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.action, "show_lead_form")
         self.assertIsNotNone(response.leadForm)
         self.assertTrue(response.handoffRecommended)
-        self.assertIn("nuestro formulario", response.reply)
+        self.assertIn("lo contactaremos a la brevedad", response.reply)
 
     async def test_vialterna_requests_complete_contact_details_after_qualification(self):
         request = ChatRequest(
