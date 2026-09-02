@@ -189,6 +189,21 @@ class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
+    async def test_zevi_and_elite_greetings_match_vialterna_natural_opening(self):
+        cases = (("zevicapital", "en", "hello", "Hello!"), ("eliteridemexico", "es", "hola", "¡Hola!"))
+        for client_code, language, message, expected in cases:
+            with self.subTest(client=client_code):
+                response = await build_hostess_response(
+                    request=ChatRequest(clientCode=client_code, language=language, message=message),
+                    client=get_client_profile(client_code), language=language, intent="faq", rates=[],
+                    openai_service=BusinessAnswerOpenAIService(),
+                )
+                self.assertTrue(response.reply.startswith(expected))
+                self.assertEqual(response.phase, "greeting")
+                self.assertEqual(response.nextAction, "clarify_need")
+                self.assertIsNone(response.action)
+                self.assertIsNone(response.leadForm)
+
     async def test_vialterna_second_turn_information_request_hands_off_gently(self):
         request = ChatRequest(
             clientCode="vialterna",
