@@ -42,12 +42,15 @@ def detect_intent(message: str, metadata: ChatMetadata) -> str:
         return "booking"
     if has_any(text, ["disponib", "available", "availability", "hay", "fechas"]):
         return "availability"
-    if has_any(text, ["precio", "price", "rate", "tarifa", "costo", "cost"]):
+    if has_any(text, [
+        "precio", "price", "rate", "tarifa", "costo", "cost", "cotizacion",
+        "presupuesto", "propuesta", "proposal", "quote", "quotation", "budget",
+    ]):
         return "pricing"
     if has_any(text, [
         "humano", "persona", "llamar", "whatsapp", "contact", "telefono", "email",
-        "asesor", "experto", "cotizacion", "presupuesto", "propuesta", "demo",
-        "advisor", "expert", "quote", "proposal", "sales rep", "call me", "talk to", "speak to",
+        "asesor", "experto", "demo", "advisor", "expert", "sales rep",
+        "call me", "talk to", "speak to",
     ]):
         return "handoff"
     return "faq"

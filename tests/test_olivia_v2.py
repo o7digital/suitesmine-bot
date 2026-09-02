@@ -205,10 +205,10 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertEqual(response.phase, "greeting")
+        self.assertEqual(response.phase, "answer")
         self.assertEqual(response.nextAction, "clarify_need")
         self.assertIn("Claro, con gusto", response.reply)
-        self.assertIn("podemos ayudarle", response.reply)
+        self.assertIn("información", response.reply)
         self.assertIsNone(response.action)
         self.assertIsNone(response.leadForm)
         self.assertEqual(response.missingFields, [])
@@ -230,10 +230,56 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("buenas tardes", response.reply)
+        self.assertIn("información", response.reply)
         self.assertIsNone(response.leadForm)
 
-    async def test_vialterna_pricing_goes_directly_to_simple_form_handoff(self):
+    async def test_vialterna_first_concrete_question_uses_ai(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="¿Qué servicios comerciales ofrecen para cadenas de tiendas?",
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertEqual(response.reply, "We provide the requested service. I can help you choose the right option.")
+        self.assertEqual(response.phase, "answer")
+        self.assertEqual(response.nextAction, "reply_to_guest")
+        self.assertIsNone(response.action)
+
+    async def test_vialterna_follow_up_technical_question_declines_without_forcing_handoff(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="¿Y cómo funciona SD-WAN?",
+            history=[
+                ConversationMessage(role="user", content="Tenemos cortes frecuentes."),
+                ConversationMessage(role="assistant", content="Podemos reforzar la continuidad."),
+            ],
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertIn("preguntas técnicas", response.reply)
+        self.assertEqual(response.phase, "answer")
+        self.assertFalse(response.handoffRecommended)
+        self.assertIsNone(response.leadForm)
+
+    async def test_vialterna_pricing_routes_to_commercial_form_without_giving_price(self):
         request = ChatRequest(
             clientCode="vialterna",
             language="es",
@@ -256,7 +302,30 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.action, "show_lead_form")
         self.assertTrue(response.handoffRecommended)
         self.assertIn("Claro, con mucho gusto", response.reply)
-        self.assertIn("formulario", response.reply)
+        self.assertIn("nuestro formulario", response.reply)
+        self.assertNotRegex(response.reply, r"\$|\b\d+[.,]?\d*\s*(?:MXN|USD|pesos|dólares)\b")
+        self.assertIsNotNone(response.leadForm)
+
+    async def test_vialterna_technical_question_declines_without_form_handoff(self):
+        request = ChatRequest(
+            clientCode="vialterna",
+            language="es",
+            message="¿Cómo funciona SD-WAN y cómo configuro el failover?",
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("vialterna"),
+            language="es",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertIn("preguntas técnicas", response.reply)
+        self.assertIsNone(response.action)
+        self.assertFalse(response.handoffRecommended)
+        self.assertIsNone(response.leadForm)
 
     async def test_vialterna_handoff_qualifies_need_before_requesting_contact_details(self):
         request = ChatRequest(
@@ -380,10 +449,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                     openai_service=BusinessAnswerOpenAIService(),
                 )
 
-                if client_code == "vialterna":
-                    self.assertIn("How can we assist you today", response.reply)
-                else:
-                    self.assertIn("requested service", response.reply)
+                self.assertIn("requested service", response.reply)
                 # suitesmine never qualifies leads; vialterna only qualifies after an explicit handoff request.
                 if client_code in ("suitesmine", "vialterna", "kallistacafe"):
                     self.assertIsNone(response.action)

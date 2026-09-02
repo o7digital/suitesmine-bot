@@ -42,6 +42,16 @@ def is_vague_information_request(message: str) -> bool:
     return normalized in exact_requests
 
 
+def is_vialterna_greeting(message: str) -> bool:
+    """Return True only for a greeting with no business question attached."""
+    normalized = " ".join(message.casefold().strip(" .!?¡¿").split())
+    return bool(re.fullmatch(
+        r"(?:(?:hola|buenas|buen(?:os días|os dias|as tardes|as noches)|qué tal|que tal|"
+        r"hello|hi|hey|good (?:morning|afternoon|evening)|bonjour|bonsoir)[, ]*)+",
+        normalized,
+    ))
+
+
 def vialterna_clarification_reply(language: str) -> str:
     replies = {
         "es": (
@@ -61,18 +71,47 @@ def vialterna_clarification_reply(language: str) -> str:
 
 
 def vialterna_pricing_reply(language: str) -> str:
+    return vialterna_advisor_handoff_reply(language)
+
+
+def is_vialterna_technical_question(message: str) -> bool:
+    """Keep technical consulting and implementation details with human specialists."""
+    normalized = message.casefold()
+    technical_terms = (
+        "sd-wan", "sdwan", "superwan", "failover", "qos", "ipsec", "vpn", "vlan",
+        "apn", "bgp", "mpls", "latencia", "latency", "ancho de banda", "bandwidth",
+        "arquitectura", "architecture", "configur", "implement", "integr", "compatib",
+        "protocolo", "protocol", "router", "firewall", "enrut", "túnel", "tunel",
+        "topología", "topologia", "topology", "frecuencia", "frequency", "especifica",
+        "diagnóst", "diagnost", "cobertura", "coverage", "sla", "sim", "esim", "iot",
+        "lte", "5g", "satel", "fibra", "cómo funciona", "como funciona", "how does",
+        "how do", "recomiend", "recommend", "technical", "técnic", "tecnic",
+    )
+    return any(term in normalized for term in technical_terms)
+
+
+def is_vialterna_explicit_handoff_request(message: str) -> bool:
+    normalized = message.casefold()
+    return any(term in normalized for term in (
+        "hablar con", "contactarme", "me contacte", "me contacten", "contáctenme", "contactenme", "llámenme", "llamenme",
+        "quiero un asesor", "quiero una llamada", "quiero un experto", "whatsapp",
+        "talk to", "speak to", "call me", "contact me", "i want an advisor",
+    ))
+
+
+def vialterna_technical_reply(language: str) -> str:
     replies = {
         "es": (
-            "Claro, con gusto. Para ofrecerle un precio adecuado, le compartiré un formulario "
-            "para que deje sus datos y un asesor de Vialterna prepare su propuesta."
+            "Para asegurar una respuesta correcta, las preguntas técnicas deben ser revisadas por un especialista de Vialterna. "
+            "No puedo dar asesoría técnica desde este chat. Si desea hablar con un especialista, indíquemelo y con gusto le ayudo."
         ),
         "en": (
-            "Of course, with pleasure. To provide the right price, I’ll share a short form where "
-            "you can leave your details so a Vialterna advisor can prepare your proposal."
+            "To ensure an accurate answer, technical questions must be reviewed by a Vialterna specialist. "
+            "I cannot provide technical advice in this chat. If you would like to speak with a specialist, tell me and I will help."
         ),
         "fr": (
-            "Bien sûr, avec plaisir. Pour vous proposer un tarif adapté, je vais vous présenter "
-            "un court formulaire afin qu’un conseiller Vialterna prépare votre proposition."
+            "Pour garantir une réponse exacte, les questions techniques doivent être examinées par un spécialiste Vialterna. "
+            "Je ne peux pas fournir de conseil technique dans ce chat. Si vous souhaitez parler à un spécialiste, dites-le-moi."
         ),
     }
     return replies.get(language, replies["es"])
@@ -483,7 +522,7 @@ async def build_hostess_response(
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
 
-    if client.code == "vialterna" and not request.history:
+    if client.code == "vialterna" and is_vialterna_greeting(request.message):
         return OliviaResponse(
             reply=vialterna_greeting_reply(language, request.message),
             clientCode=client.code,
@@ -497,22 +536,6 @@ async def build_hostess_response(
             rates=[],
             action=None,
             leadForm=None,
-        )
-
-    if client.code == "vialterna" and request.history:
-        return OliviaResponse(
-            reply=vialterna_advisor_handoff_reply(language),
-            clientCode=client.code,
-            language=language,
-            intent="handoff",
-            phase="human_handoff",
-            nextAction="collect_contact_details",
-            handoffRecommended=True,
-            collected=fields,
-            missingFields=[],
-            rates=[],
-            action="show_lead_form",
-            leadForm=build_lead_form(language, request.message, [], client.code),
         )
 
     if client.code == "vialterna" and is_vague_information_request(request.message):
@@ -531,6 +554,25 @@ async def build_hostess_response(
             leadForm=None,
         )
 
+    if client.code == "vialterna" and (
+        is_vialterna_explicit_handoff_request(request.message)
+        or request.metadata.handoffStage == "qualified"
+    ):
+        return OliviaResponse(
+            reply=vialterna_advisor_handoff_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="handoff",
+            phase="human_handoff",
+            nextAction="collect_contact_details",
+            handoffRecommended=True,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action="show_lead_form",
+            leadForm=build_lead_form(language, request.message, [], client.code),
+        )
+
     if client.code == "vialterna" and intent == "pricing":
         return OliviaResponse(
             reply=vialterna_pricing_reply(language),
@@ -544,6 +586,22 @@ async def build_hostess_response(
             missingFields=[],
             rates=[],
             action="show_lead_form",
+            leadForm=build_lead_form(language, request.message, [], client.code),
+        )
+
+    if client.code == "vialterna" and is_vialterna_technical_question(request.message):
+        return OliviaResponse(
+            reply=vialterna_technical_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="faq",
+            phase="answer",
+            nextAction="reply_to_guest",
+            handoffRecommended=False,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action=None,
             leadForm=None,
         )
 
@@ -651,6 +709,7 @@ Mission:
 - use the recent conversation to resolve short follow-ups and references without making the visitor repeat information;
 - answer the visitor's concrete business question before requesting contact or project details;
 {contact_mission}{booking_mission}{property_mission}
+- for Vialterna, never provide prices, technical explanations, technical advice, configurations, specifications, architecture, coverage or SLA details; a price, quote or proposal request must be routed to the commercial contact form, while a technical question must only state calmly that a specialist must validate it without automatically collecting contact details;
 - when missingContactFields are present, end with one brief invitation to provide them; do not make them a condition for answering;
 - if name, email and phone are already present in metadata.lead or collected, do not ask for them again; answer the visitor's business question directly, then ask only for missing project context if needed;
 - answer from approved client context only;
