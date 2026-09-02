@@ -459,16 +459,16 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(service.history, history)
         self.assertIn("parking", response.reply.lower())
 
-    async def test_every_client_profile_answers_before_contact_qualification(self):
+    async def test_every_client_profile_uses_a_natural_exchange_before_contact_form(self):
         for client_code, client in CLIENTS.items():
             with self.subTest(client=client_code):
-                request = ChatRequest(
+                first_request = ChatRequest(
                     clientCode=client_code,
                     language="en",
                     message="What services do you provide?",
                 )
-                response = await build_hostess_response(
-                    request=request,
+                first_response = await build_hostess_response(
+                    request=first_request,
                     client=client,
                     language="en",
                     intent="faq",
@@ -476,14 +476,72 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                     openai_service=BusinessAnswerOpenAIService(),
                 )
 
-                self.assertIn("requested service", response.reply)
-                # suitesmine never qualifies leads; vialterna only qualifies after an explicit handoff request.
-                if client_code in ("suitesmine", "vialterna", "kallistacafe"):
-                    self.assertIsNone(response.action)
+                self.assertIn("requested service", first_response.reply)
+                self.assertIsNone(first_response.action)
+
+                second_request = ChatRequest(
+                    clientCode=client_code,
+                    language="en",
+                    message="Yes, I would like more information",
+                    history=[
+                        ConversationMessage(role="user", content="What services do you provide?"),
+                        ConversationMessage(role="assistant", content=first_response.reply),
+                    ],
+                )
+                second_response = await build_hostess_response(
+                    request=second_request,
+                    client=client,
+                    language="en",
+                    intent="faq",
+                    rates=[],
+                    openai_service=BusinessAnswerOpenAIService(),
+                )
+
+                if client_code in ("suitesmine", "kallistacafe"):
+                    self.assertIsNone(second_response.action)
                 else:
-                    self.assertEqual(response.action, "show_lead_form")
-                    self.assertEqual(response.phase, "qualification")
-                    self.assertEqual(response.missingFields, ["name", "email", "phone"])
+                    self.assertEqual(second_response.action, "show_lead_form")
+                    self.assertEqual(second_response.phase, "human_handoff")
+                    self.assertIn(client.name, second_response.reply)
+                    self.assertEqual(second_response.leadForm["delayMinMs"], 5000)
+                    self.assertEqual(second_response.leadForm["delayMaxMs"], 12000)
+                    self.assertEqual(
+                        second_response.leadForm["fields"][:2],
+                        ["firstName", "lastName"],
+                    )
+
+    async def test_server_configured_site_profiles_use_their_brand_and_industry_form(self):
+        metadata = ChatMetadata(
+            clientName="SECURYTI",
+            clientIndustry="cybersecurity-and-managed-it",
+            clientKnowledge="SECURYTI provides approved managed security services.",
+            clientSiteUrl="https://securyti.mx",
+        )
+        client = resolve_client_profile("securyti", metadata)
+        request = ChatRequest(
+            clientCode="securyti",
+            language="es",
+            message="Busco información sobre sus servicios",
+            metadata=metadata,
+            history=[
+                ConversationMessage(role="user", content="Hola"),
+                ConversationMessage(role="assistant", content="¿En qué podemos ayudarle?"),
+            ],
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=client,
+            language="es",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertIn("SECURYTI", response.reply)
+        self.assertEqual(response.action, "show_lead_form")
+        self.assertIn("company", response.leadForm["fields"])
+        self.assertEqual(response.leadForm["labels"]["details"], "Necesidad de seguridad o TI")
 
     def test_extended_client_languages_are_detected(self):
         self.assertEqual(detect_language("Ciao, vorrei informazioni"), "it")
