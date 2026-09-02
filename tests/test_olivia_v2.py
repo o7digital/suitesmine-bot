@@ -255,7 +255,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.action, "show_lead_form")
         self.assertTrue(response.handoffRecommended)
-        self.assertIn("Claro, con gusto", response.reply)
+        self.assertIn("Claro, con mucho gusto", response.reply)
         self.assertIn("formulario", response.reply)
 
     async def test_vialterna_handoff_qualifies_need_before_requesting_contact_details(self):
@@ -283,6 +283,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.action, "show_lead_form")
         self.assertIsNotNone(response.leadForm)
         self.assertTrue(response.handoffRecommended)
+        self.assertIn("nuestro formulario", response.reply)
 
     async def test_vialterna_requests_complete_contact_details_after_qualification(self):
         request = ChatRequest(

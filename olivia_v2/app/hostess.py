@@ -98,16 +98,16 @@ def vialterna_greeting_reply(language: str, message: str = "") -> str:
 def vialterna_advisor_handoff_reply(language: str) -> str:
     replies = {
         "es": (
-            "Claro, con gusto. Lo canalizo con un asesor. ¿Me puede dejar, por favor, "
-            "su nombre, apellido, empresa, email, teléfono y necesidad en el formulario?"
+            "Claro, con mucho gusto. Le canalizo con uno de nuestros asesores. "
+            "Enseguida le comparto nuestro formulario para que pueda dejarnos sus datos."
         ),
         "en": (
-            "Of course, with pleasure. I’ll connect you with an advisor. Please leave your "
-            "first name, last name, company, email, phone number and request in the form."
+            "Of course, with pleasure. I’ll connect you with one of our advisors. "
+            "I’ll share our form with you now so you can leave your details."
         ),
         "fr": (
-            "Bien sûr, avec plaisir. Je vous mets en relation avec un conseiller. Merci de laisser "
-            "votre prénom, nom, entreprise, email, téléphone et besoin dans le formulaire."
+            "Bien sûr, avec plaisir. Je vous mets en relation avec l’un de nos conseillers. "
+            "Je vous transmets maintenant notre formulaire afin que vous puissiez laisser vos coordonnées."
         ),
     }
     return replies.get(language, replies["es"])
