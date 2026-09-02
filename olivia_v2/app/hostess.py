@@ -605,6 +605,26 @@ async def build_hostess_response(
             leadForm=None,
         )
 
+    # Vialterna policy: after the initial greeting, every visitor request is
+    # handed to a specialist. Olivia must never generate solution details.
+    if client.code == "vialterna":
+        return OliviaResponse(
+            reply=vialterna_technical_reply(language),
+            clientCode=client.code,
+            language=language,
+            intent="handoff",
+            phase="human_handoff",
+            nextAction="collect_contact_details",
+            handoffRecommended=True,
+            collected=fields,
+            missingFields=[],
+            rates=[],
+            action="show_lead_form",
+            leadForm=build_lead_form(
+                language, request.message, contact_missing, client.code, client.industry
+            ),
+        )
+
     if natural_lead_flow and prior_visitor_turns == 0 and is_vague_information_request(request.message):
         return OliviaResponse(
             reply=clarification_reply(language, client),

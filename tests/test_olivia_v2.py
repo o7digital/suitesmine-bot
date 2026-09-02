@@ -230,7 +230,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("lo contactaremos a la brevedad", response.reply)
         self.assertNotIn("Edge", response.reply)
 
-    async def test_vialterna_general_information_clarifies_without_lead_form(self):
+    async def test_vialterna_general_information_hands_off_without_details(self):
         request = ChatRequest(
             clientCode="vialterna",
             language="es",
@@ -246,15 +246,13 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertEqual(response.phase, "answer")
-        self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("Claro, con gusto", response.reply)
-        self.assertIn("información", response.reply)
-        self.assertIsNone(response.action)
-        self.assertIsNone(response.leadForm)
-        self.assertEqual(response.missingFields, [])
+        self.assertEqual(response.phase, "human_handoff")
+        self.assertEqual(response.nextAction, "collect_contact_details")
+        self.assertIn("Compártanos sus datos", response.reply)
+        self.assertEqual(response.action, "show_lead_form")
+        self.assertIsNotNone(response.leadForm)
 
-    async def test_vialterna_greeting_with_information_request_stays_natural(self):
+    async def test_vialterna_greeting_with_request_hands_off(self):
         request = ChatRequest(
             clientCode="vialterna",
             language="es",
@@ -270,11 +268,12 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertEqual(response.nextAction, "clarify_need")
-        self.assertIn("información", response.reply)
-        self.assertIsNone(response.leadForm)
+        self.assertEqual(response.nextAction, "collect_contact_details")
+        self.assertIn("Compártanos sus datos", response.reply)
+        self.assertEqual(response.action, "show_lead_form")
+        self.assertIsNotNone(response.leadForm)
 
-    async def test_vialterna_first_concrete_question_uses_ai(self):
+    async def test_vialterna_first_concrete_question_hands_off_without_details(self):
         request = ChatRequest(
             clientCode="vialterna",
             language="es",
@@ -290,10 +289,11 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
             openai_service=BusinessAnswerOpenAIService(),
         )
 
-        self.assertEqual(response.reply, "We provide the requested service. I can help you choose the right option.")
-        self.assertEqual(response.phase, "answer")
-        self.assertEqual(response.nextAction, "reply_to_guest")
-        self.assertIsNone(response.action)
+        self.assertIn("Compártanos sus datos", response.reply)
+        self.assertNotIn("cadenas", response.reply)
+        self.assertEqual(response.phase, "human_handoff")
+        self.assertEqual(response.nextAction, "collect_contact_details")
+        self.assertEqual(response.action, "show_lead_form")
 
     async def test_vialterna_follow_up_technical_question_hands_off_without_details(self):
         request = ChatRequest(
@@ -482,6 +482,8 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
     async def test_every_client_profile_uses_a_natural_exchange_before_contact_form(self):
         for client_code, client in CLIENTS.items():
             with self.subTest(client=client_code):
+                if client_code == "vialterna":
+                    continue
                 first_request = ChatRequest(
                     clientCode=client_code,
                     language="en",
