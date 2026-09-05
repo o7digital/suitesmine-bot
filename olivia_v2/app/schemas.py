@@ -41,6 +41,9 @@ class ChatMetadata(BaseModel):
     clientIndustry: str | None = None
     clientKnowledge: str | None = Field(default=None, max_length=20000)
     clientSiteUrl: str | None = None
+    dataConsent: bool | None = None
+    dataConsentAt: str | None = None
+    consentVersion: str | None = None
 
 
 class ChatRequest(BaseModel):

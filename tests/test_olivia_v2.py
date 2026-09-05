@@ -163,6 +163,13 @@ class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(profile.supported_languages, ("fr", "en", "es", "de"))
         self.assertEqual(profile.site_domains, ("touski.online",))
 
+    def test_o7digital_profile_supports_all_site_languages_and_domains(self):
+        profile = get_client_profile("o7digital")
+        self.assertEqual(profile.name, "O7 Digital Consulting")
+        self.assertEqual(profile.supported_languages, ("fr", "en", "es", "de", "it"))
+        self.assertEqual(profile.site_domains, ("o7digital.com", "www.o7digital.com"))
+        self.assertIn("SEO technique", profile.knowledge)
+
     def test_kallista_profile_is_isolated_to_its_site(self):
         profile = get_client_profile("kallistacafe")
         self.assertEqual(profile.name, "KALLISTA Café")

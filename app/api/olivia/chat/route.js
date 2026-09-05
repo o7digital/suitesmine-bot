@@ -315,12 +315,14 @@ function leadFormResponse({ language, client, details, message }) {
       en: `Please leave your contact details and request information so a ${client.clientName} expert can follow up.`,
       fr: `Laissez vos coordonnées et les détails de votre demande afin qu'un expert ${client.clientName} puisse assurer le suivi.`,
       es: `Déjenos sus datos de contacto y los detalles de su solicitud para que un experto de ${client.clientName} pueda dar seguimiento.`,
+      de: `Hinterlassen Sie Ihre Kontaktdaten und Angaben zu Ihrer Anfrage, damit ein Experte von ${client.clientName} Sie kontaktieren kann.`,
+      it: `Lasci i suoi recapiti e i dettagli della richiesta affinché un esperto di ${client.clientName} possa ricontattarla.`,
     }[language] ||
     `Déjenos sus datos de contacto y los detalles de su solicitud para que un experto de ${client.clientName} pueda dar seguimiento.`;
 
   const b2bClients = new Set([
     "default", "vialterna", "zevicapital", "gescom", "aoitgroup", "infrasegura",
-    "securyti", "homedesignmarques", "diicsacv", "kabin", "finidi",
+    "securyti", "homedesignmarques", "diicsacv", "kabin", "finidi", "o7digital",
   ]);
   const detailLabels = {
     vialterna: { es: "Necesidad", en: "Request", fr: "Besoin" },
@@ -331,11 +333,14 @@ function leadFormResponse({ language, client, details, message }) {
     eliteridemexico: { es: "Ruta, fecha y pasajeros", en: "Route, date and passengers", fr: "Trajet, date et passagers" },
     goldenhealth: { es: "Motivo de consulta", en: "Reason for consultation", fr: "Motif de consultation" },
     gescom: { es: "Necesidad administrativa", en: "Administrative need", fr: "Besoin administratif" },
+    o7digital: { es: "Proyecto o necesidad digital", en: "Digital project or need", fr: "Projet ou besoin digital", de: "Digitales Projekt oder Anliegen", it: "Progetto o esigenza digitale" },
   };
   const labelsByLanguage = {
     es: { firstName: "Nombre", lastName: "Apellido", company: "Empresa", email: "Email", phone: "Teléfono", details: "Necesidad" },
     en: { firstName: "First name", lastName: "Last name", company: "Company", email: "Email", phone: "Phone", details: "Request" },
     fr: { firstName: "Prénom", lastName: "Nom", company: "Entreprise", email: "Email", phone: "Téléphone", details: "Besoin" },
+    de: { firstName: "Vorname", lastName: "Nachname", company: "Unternehmen", email: "E-Mail", phone: "Telefon", details: "Anfrage" },
+    it: { firstName: "Nome", lastName: "Cognome", company: "Azienda", email: "Email", phone: "Telefono", details: "Richiesta" },
   };
   const labels = { ...(labelsByLanguage[language] || labelsByLanguage.es) };
   labels.details = detailLabels[client.clientCode]?.[language] || labels.details;
@@ -511,6 +516,7 @@ function languageName(language) {
       es: "Spanish",
       fr: "French",
       it: "Italian",
+      de: "German",
     }[language] || "Spanish"
   );
 }

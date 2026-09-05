@@ -19,6 +19,33 @@ export const clients = {
     dashboardFields: ["intent", "language", "source", "page"],
     integrations: {},
   },
+  o7digital: {
+    clientCode: "o7digital",
+    clientName: "O7 Digital Consulting",
+    industry: "digital-consulting",
+    siteUrl: "o7digital.com",
+    roleLabel: {
+      es: "Olivia AI, asistente de O7 Digital Consulting",
+      en: "Olivia AI, O7 Digital Consulting assistant",
+      fr: "Olivia AI, assistante O7 Digital Consulting",
+      de: "Olivia AI, Assistentin von O7 Digital Consulting",
+      it: "Olivia AI, assistente di O7 Digital Consulting",
+    },
+    skin: {
+      accent: "#e85f4f",
+      soft: "#fcece9",
+      operator: "#111827",
+    },
+    knowledge: `
+O7 Digital Consulting accompagne les entreprises dans leur transformation digitale en France, en Europe et en Amérique du Nord.
+Ses expertises couvrent le développement de sites et applications performants avec React, Next.js et Astro, le SEO technique, les Core Web Vitals, l'UX/UI, l'automatisation, l'intégration de solutions d'intelligence artificielle, l'architecture web et le CTO as a Service.
+Olivia AI doit comprendre le besoin avant de proposer un suivi et répondre dans la langue du visiteur parmi le français, l'anglais, l'espagnol, l'allemand et l'italien.
+Elle ne doit jamais inventer de prix, de délai, de garantie de résultat ni d'engagement juridique. Les devis, audits, rendez-vous et propositions détaillées doivent être validés par un conseiller O7.
+Contact: info@o7digital.com.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "company", "need", "leadStatus"],
+    integrations: {},
+  },
   suitesmine: {
     clientCode: "suitesmine",
     clientName: "Suites Mine",

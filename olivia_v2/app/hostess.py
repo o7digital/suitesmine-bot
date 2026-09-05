@@ -315,7 +315,7 @@ def build_lead_form(
         "managed-connectivity", "real-estate-investment", "virtual-administrative-assistant",
         "virtual-administrative-services", "construction-and-maintenance",
         "wood-construction-and-furniture", "tax-accounting-financial-consulting",
-        "financial-consulting", "cybersecurity", "technology", "generic",
+        "financial-consulting", "cybersecurity", "technology", "generic", "digital-consulting",
         "global-it-services-and-cybersecurity", "infrastructure-security-and-it-services",
         "cybersecurity-and-managed-it", "fractional-cfo-and-strategic-finance",
     }
@@ -344,6 +344,7 @@ def build_lead_form(
         "neurodiversa": {"es": "Motivo de consulta", "en": "Reason for consultation", "fr": "Motif de consultation"},
         "cenotemaravilla": {"es": "Fecha, visitantes y actividad", "en": "Date, visitors and activity", "fr": "Date, visiteurs et activité"},
         "finidi": {"es": "Necesidad financiera", "en": "Financial need", "fr": "Besoin financier"},
+        "o7digital": {"es": "Proyecto o necesidad digital", "en": "Digital project or need", "fr": "Projet ou besoin digital", "de": "Digitales Projekt oder Anliegen", "it": "Progetto o esigenza digitale"},
     }
     localized_labels = {
         "es": {"firstName": "Nombre", "lastName": "Apellido", "company": "Empresa", "email": "Email", "phone": "Teléfono", "details": "Necesidad"},

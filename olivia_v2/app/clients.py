@@ -30,6 +30,27 @@ CLIENTS: dict[str, ClientProfile] = {
             "human operator when the request needs manual attention."
         ),
     ),
+    "o7digital": ClientProfile(
+        code="o7digital",
+        name="O7 Digital Consulting",
+        industry="digital-consulting",
+        role_label={
+            "es": "Olivia AI, asistente de O7 Digital Consulting",
+            "en": "Olivia AI, O7 Digital Consulting assistant",
+            "fr": "Olivia AI, assistante O7 Digital Consulting",
+            "de": "Olivia AI, Assistentin von O7 Digital Consulting",
+            "it": "Olivia AI, assistente di O7 Digital Consulting",
+        },
+        supported_languages=("fr", "en", "es", "de", "it"),
+        site_domains=("o7digital.com", "www.o7digital.com"),
+        knowledge="""
+O7 Digital Consulting accompagne les entreprises dans leur transformation digitale en France, en Europe et en Amérique du Nord.
+Ses expertises couvrent le développement de sites et applications performants avec React, Next.js et Astro, le SEO technique, les Core Web Vitals, l'UX/UI, l'automatisation, l'intégration de solutions d'intelligence artificielle, l'architecture web et le CTO as a Service.
+Olivia AI doit comprendre le besoin avant de proposer un suivi et répondre dans la langue du visiteur parmi le français, l'anglais, l'espagnol, l'allemand et l'italien.
+Elle ne doit jamais inventer de prix, de délai, de garantie de résultat ni d'engagement juridique. Les devis, audits, rendez-vous et propositions détaillées doivent être validés par un conseiller O7.
+Contact: info@o7digital.com.
+""".strip(),
+    ),
     "suitesmine": ClientProfile(
         code="suitesmine",
         name="Suites Mine",
