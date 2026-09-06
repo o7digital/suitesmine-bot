@@ -202,6 +202,31 @@ class OpenAIServiceTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
+    async def test_o7digital_answers_follow_up_without_forcing_lead_form(self):
+        request = ChatRequest(
+            clientCode="o7digital",
+            language="fr",
+            message="Pouvez-vous m'expliquer vos services SEO ?",
+            history=[
+                ConversationMessage(role="user", content="Bonjour"),
+                ConversationMessage(role="assistant", content="Comment puis-je vous aider ?"),
+            ],
+        )
+
+        response = await build_hostess_response(
+            request=request,
+            client=get_client_profile("o7digital"),
+            language="fr",
+            intent="faq",
+            rates=[],
+            openai_service=BusinessAnswerOpenAIService(),
+        )
+
+        self.assertIsNone(response.action)
+        self.assertIsNone(response.leadForm)
+        self.assertEqual(response.phase, "answer")
+        self.assertEqual(response.nextAction, "reply_to_guest")
+
     async def test_zevi_and_elite_greetings_match_vialterna_natural_opening(self):
         cases = (("zevicapital", "en", "hello", "Hello!"), ("eliteridemexico", "es", "hola", "¡Hola!"))
         for client_code, language, message, expected in cases:
@@ -532,7 +557,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                     openai_service=BusinessAnswerOpenAIService(),
                 )
 
-                if client_code in ("suitesmine", "kallistacafe"):
+                if client_code in ("suitesmine", "kallistacafe", "o7digital"):
                     self.assertIsNone(second_response.action)
                 else:
                     self.assertEqual(second_response.action, "show_lead_form")

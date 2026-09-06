@@ -129,6 +129,8 @@ def vialterna_greeting_reply(language: str, message: str = "") -> str:
         "es": "¡Hola! ¿En qué podemos ayudarle hoy?",
         "en": "Hello! Of course, happy to help. How can we assist you today?",
         "fr": "Bonjour ! Bien sûr, avec plaisir. Comment pouvons-nous vous aider aujourd’hui ?",
+        "de": "Hallo! Natürlich, gerne. Wie können wir Ihnen heute helfen?",
+        "it": "Ciao! Certamente, con piacere. Come possiamo aiutarla oggi?",
     }
     return replies.get(language, replies["es"])
 
@@ -140,7 +142,7 @@ def visitor_turn_count(request: ChatRequest) -> int:
 
 def uses_natural_lead_handoff(client: ClientProfile) -> bool:
     """Keep transactional and answer-only experiences out of the generic sales handoff."""
-    return client.code not in {"suitesmine", "kallistacafe"}
+    return client.code not in {"suitesmine", "kallistacafe", "o7digital"}
 
 
 def advisor_handoff_reply(language: str, client: ClientProfile) -> str:
@@ -737,7 +739,7 @@ async def build_hostess_response(
 
     zevi_fallback_reply = zevi_property_reply(language) if is_property_request else None
 
-    answer_first_clients = {"kallistacafe"}
+    answer_first_clients = {"kallistacafe", "o7digital"}
     should_collect_contact = (
         not natural_lead_flow
         and client.code != "suitesmine"
