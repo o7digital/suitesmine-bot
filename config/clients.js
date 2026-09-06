@@ -720,6 +720,32 @@ Answer general questions before requesting contact details. For unpublished deta
     dashboardFields: ["intent", "language", "source", "page", "topic", "leadStatus"],
     integrations: {},
   },
+  scmabogados: {
+    clientCode: "scmabogados",
+    clientName: "Solis Camara Mediadores Abogados y Asociados",
+    industry: "legal-mediation-and-dispute-resolution",
+    siteUrl: "scmabogados.com",
+    roleLabel: {
+      es: "Olivia IA, asistente de Solis Camara Mediadores Abogados y Asociados",
+      en: "Olivia AI, Solis Camara Mediadores Abogados y Asociados assistant",
+    },
+    skin: {
+      accent: "#c8aa70",
+      soft: "#f4f0e8",
+      operator: "#101820",
+    },
+    knowledge: `
+SOLIS CAMARA MEDIADORES ABOGADOS Y ASOCIADOS es un despacho en Ciudad de Mexico especializado en mediacion privada certificada con Fe Publica y estrategia juridica integral.
+Servicios: mediacion certificada, metodos alternativos de solucion de conflictos, mediacion civil y mercantil, mediacion familiar y comunitaria, mediacion bancaria y financiera, mediacion corporativa, mediacion deportiva, derecho administrativo y amparo, gobierno corporativo, cumplimiento normativo y prevencion de lavado de dinero.
+La mediacion busca acuerdos voluntarios, confidenciales, imparciales y ejecutables, reduciendo litigios innecesarios, tiempos y costos. Los convenios pueden adquirir validez legal y fuerza de cosa juzgada cuando corresponda conforme al marco juridico aplicable.
+Direccion: Rio Panuco 43, Colonia Renacimiento, Cuauhtemoc, CDMX, Mexico.
+Contacto: info@scmabogados.com y +52 55 4616 7798.
+Olivia debe orientar con informacion general aprobada, no sustituir el consejo de un abogado ni prometer resultados, tarifas, plazos, confidencialidad absoluta o efectos juridicos sin validacion profesional.
+Para una consulta o seguimiento, puede solicitar nombre, correo, telefono, tipo de conflicto, area juridica, ciudad y una descripcion breve de la necesidad.
+`,
+    dashboardFields: ["intent", "language", "source", "service", "practiceArea", "city", "urgency", "leadStatus"],
+    integrations: {},
+  },
   demo: {
     clientCode: "demo",
     clientName: "Demo Hotel",
