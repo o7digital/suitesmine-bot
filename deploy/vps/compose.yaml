@@ -1,0 +1,48 @@
+name: olivia-v2
+
+services:
+  engine:
+    image: olivia-v2:${OLIVIA_RELEASE:-local}
+    build:
+      context: ../..
+      dockerfile: Dockerfile.python
+    container_name: olivia-v2
+    env_file:
+      - ../../.env.vps
+    environment:
+      PORT: "8000"
+      NODE_ENV: production
+    user: "10001:10001"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    mem_limit: 512m
+    cpus: 1.0
+    expose:
+      - "8000"
+    networks:
+      apps:
+        aliases:
+          - olivia-v2
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  apps:
+    external: true
+    name: o7-apps

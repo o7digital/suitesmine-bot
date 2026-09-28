@@ -833,6 +833,8 @@ Live rates, if relevant:
         ensure_ascii=True,
     )
     generated = await openai_service.generate(system, user, request, client, rates)
+    if finidi_demo and not (generated.text and generated.text.strip()):
+        raise RuntimeError("FINIDI demo AI response unavailable")
     if generated.text:
         reply = generated.text.strip()
     elif is_booking_flow:

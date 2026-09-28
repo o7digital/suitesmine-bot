@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import AsyncMock, patch
 
 from olivia_v2.app.clients import resolve_client_profile
 from olivia_v2.app.extraction import detect_intent
@@ -59,6 +60,11 @@ class FinidiDemoTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(service.calls, [])
         self.assertTrue(response.handoffRecommended)
         self.assertIsNotNone(response.leadForm)
+
+    async def test_demo_does_not_replace_failed_ai_with_a_canned_answer(self):
+        with patch.object(DemoAI, "generate", AsyncMock(return_value=AgentResult(None, "test-model", "fast"))):
+            with self.assertRaisesRegex(RuntimeError, "AI response unavailable"):
+                await self.answer()
 
     async def test_other_clients_cannot_select_the_finidi_demo_flow(self):
         response, service = await self.answer(client_code="another-client", history=[ConversationMessage(role="user", content="I need advice.")])

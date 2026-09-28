@@ -147,3 +147,5 @@ The rule is: one Olivia engine, many client profiles, separated integrations.
 Requests authenticated for `clientCode: "finidi"` with `source: "finidiops-demo"` use a financial demonstration conversation. They keep multi-turn AI responses active without the generic second-turn contact form. The word “demo” refers to illustrative dashboard data, rather than a sales demonstration request. Explicit requests to speak with FINIDI still recommend human follow-up.
 
 The caller supplies authoritative California/San Diego page context and illustrative USD figures. This mode does not send leads or confirm appointments. The ordinary FINIDI website and all other client profiles retain their existing lead flows.
+
+For the VPS 1 deployment alongside Olivia v3.5, see [deploy/vps/README.md](../deploy/vps/README.md). The engine is reachable at `https://olivia.o7digitalgroup.com/v2`. The original Railway engine remains available; migration does not delete or stop it. FINIDI calls the VPS engine from its own server function with a fixed FINIDI profile, the selected demo context and the internal token.
