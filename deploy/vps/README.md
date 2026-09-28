@@ -4,7 +4,7 @@ The Python engine runs independently of Olivia v3.5 at `/opt/o7/apps/olivia-v2`,
 on the existing `o7-apps` Docker network. It publishes no host port. Mailcow TLS
 and `o7-proxy` expose it at `https://olivia.o7digitalgroup.com/v2`.
 
-Copy only `Dockerfile.python`, `requirements.txt`, `olivia_v2/` and `deploy/vps/`
+Copy only `Dockerfile.python`, `.dockerignore`, `requirements.txt`, `olivia_v2/` and `deploy/vps/`
 from the reviewed release. Store the existing Railway Python engine variables
 in `.env.vps` with permission `600`; keep `OLIVIA_INTERNAL_TOKEN` identical to
 Railway so existing server callers can use either instance. Do not copy any

@@ -1,0 +1,11 @@
+.git
+.vercel
+.env*
+**/.env*
+.venv
+node_modules
+.next
+__pycache__
+**/__pycache__
+*.log
+.DS_Store
