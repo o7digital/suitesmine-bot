@@ -583,11 +583,14 @@ async def build_hostess_response(
     rates: list[dict],
     openai_service: OpenAIService,
 ) -> OliviaResponse:
-    finidi_demo = client.code == "finidi" and request.source == "finidiops-demo"
-    if finidi_demo and intent == "handoff" and not has_any(request.message, [
+    website_demo = (client.code, request.source) in {
+        ("finidi", "finidiops-demo"), ("estenio", "estenio2-demo"),
+    }
+    if website_demo and intent == "handoff" and not has_any(request.message, [
         "contact finidi", "contactar a finidi", "contactez finidi", "contactez-moi",
         "contact me", "call me", "talk to", "speak to", "hablar con", "llamenme",
         "parler à", "parler avec", "appelez-moi", "human operator", "operador humano",
+        "contact estenio", "contactar a estenio", "contactez estenio", "contactar con",
     ]):
         # The generic sales detector treats "demo" as a request for a sales demo.
         # Here it refers to the illustrative financial figures being analyzed.
@@ -598,7 +601,7 @@ async def build_hostess_response(
     prior_visitor_turns = visitor_turn_count(request)
     contact_missing = missing_contact_fields(fields)
     is_property_request = client.code == "zevicapital" and is_zevi_property_request(request.message)
-    natural_lead_flow = uses_natural_lead_handoff(client) and not is_property_request and not finidi_demo
+    natural_lead_flow = uses_natural_lead_handoff(client) and not is_property_request and not website_demo
     is_vialterna_technical = client.code == "vialterna" and is_vialterna_technical_question(request.message)
     is_raquel_technical = client.code == "raquelhedo" and is_raquel_technical_question(request.message)
 
@@ -752,14 +755,16 @@ async def build_hostess_response(
     answer_first_clients = {"kallistacafe", "o7digital"}
     should_collect_contact = (
         not natural_lead_flow
-        and not finidi_demo
+        and not website_demo
         and client.code != "suitesmine"
         and not (client.code in answer_first_clients and intent != "handoff")
     )
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
     contact_mission = (
         "- this is the FINIDI financial demonstration: answer from the supplied illustrative dashboard and approved CFO services without requesting personal data; the geographic focus is California and San Diego, USA; offer the published FINIDI contact only when useful or explicitly requested; never claim that a message, lead or appointment was sent or confirmed;"
-        if finidi_demo
+        if website_demo and client.code == "finidi"
+        else "- this is Estenio's website demonstration: answer from the approved Estenio business context without requesting personal data; offer Estenio's published contact when human assistance is useful or requested; never claim that a message, lead or appointment was sent or confirmed; do not provide individualized legal, pension, tax or social-security advice, calculations or guarantees; keep the conversation focused on Estenio services in Mexico;"
+        if website_demo and client.code == "estenio"
         else
         "- this is the first visitor exchange: answer briefly from approved information and ask one natural question to understand the need; do not request personal data or mention the form yet;"
         if natural_lead_flow
@@ -833,8 +838,8 @@ Live rates, if relevant:
         ensure_ascii=True,
     )
     generated = await openai_service.generate(system, user, request, client, rates)
-    if finidi_demo and not (generated.text and generated.text.strip()):
-        raise RuntimeError("FINIDI demo AI response unavailable")
+    if website_demo and not (generated.text and generated.text.strip()):
+        raise RuntimeError(f"{client.code} demo AI response unavailable")
     if generated.text:
         reply = generated.text.strip()
     elif is_booking_flow:

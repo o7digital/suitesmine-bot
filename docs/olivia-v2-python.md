@@ -149,3 +149,15 @@ Requests authenticated for `clientCode: "finidi"` with `source: "finidiops-demo"
 The caller supplies authoritative California/San Diego page context and illustrative USD figures. This mode does not send leads or confirm appointments. The ordinary FINIDI website and all other client profiles retain their existing lead flows.
 
 For the VPS 1 deployment alongside Olivia v3.5, see [deploy/vps/README.md](../deploy/vps/README.md). The engine is reachable at `https://olivia.o7digitalgroup.com/v2`. The original Railway engine remains available; migration does not delete or stop it. FINIDI calls the VPS engine from its own server function with a fixed FINIDI profile, the selected demo context and the internal token.
+
+## Estenio 2 demonstration
+
+Authenticated requests for `clientCode: "estenio"` and `source: "estenio2-demo"`
+use the approved Estenio profile supplied by the site's server. They keep AI
+conversation history across follow-ups without opening the generic second-turn
+lead form. Olivia provides general information about Estenio services in Mexico;
+individual legal, pension and social-security matters require a specialist.
+An explicit human request recommends Estenio's published contact. This demo does
+not send leads or confirm appointments. If generation fails, it returns an error
+instead of substituting a canned reply. Other clients and normal sales flows
+retain their existing behavior.
