@@ -7,6 +7,7 @@ from urllib.request import urlopen
 from olivia_v2.app.clients import ClientProfile
 from olivia_v2.app.extraction import (
     extract_fields,
+    has_any,
     is_large_group_request,
     is_multiple_room_request,
     missing_booking_fields,
@@ -582,13 +583,22 @@ async def build_hostess_response(
     rates: list[dict],
     openai_service: OpenAIService,
 ) -> OliviaResponse:
+    finidi_demo = client.code == "finidi" and request.source == "finidiops-demo"
+    if finidi_demo and intent == "handoff" and not has_any(request.message, [
+        "contact finidi", "contactar a finidi", "contactez finidi", "contactez-moi",
+        "contact me", "call me", "talk to", "speak to", "hablar con", "llamenme",
+        "parler à", "parler avec", "appelez-moi", "human operator", "operador humano",
+    ]):
+        # The generic sales detector treats "demo" as a request for a sales demo.
+        # Here it refers to the illustrative financial figures being analyzed.
+        intent = "faq"
     fields = extract_fields(request.message, request.metadata)
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None
     prior_visitor_turns = visitor_turn_count(request)
     contact_missing = missing_contact_fields(fields)
     is_property_request = client.code == "zevicapital" and is_zevi_property_request(request.message)
-    natural_lead_flow = uses_natural_lead_handoff(client) and not is_property_request
+    natural_lead_flow = uses_natural_lead_handoff(client) and not is_property_request and not finidi_demo
     is_vialterna_technical = client.code == "vialterna" and is_vialterna_technical_question(request.message)
     is_raquel_technical = client.code == "raquelhedo" and is_raquel_technical_question(request.message)
 
@@ -742,11 +752,15 @@ async def build_hostess_response(
     answer_first_clients = {"kallistacafe", "o7digital"}
     should_collect_contact = (
         not natural_lead_flow
+        and not finidi_demo
         and client.code != "suitesmine"
         and not (client.code in answer_first_clients and intent != "handoff")
     )
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
     contact_mission = (
+        "- this is the FINIDI financial demonstration: answer from the supplied illustrative dashboard and approved CFO services without requesting personal data; the geographic focus is California and San Diego, USA; offer the published FINIDI contact only when useful or explicitly requested; never claim that a message, lead or appointment was sent or confirmed;"
+        if finidi_demo
+        else
         "- this is the first visitor exchange: answer briefly from approved information and ask one natural question to understand the need; do not request personal data or mention the form yet;"
         if natural_lead_flow
         else "- for KALLISTA Café, never request personal data during ordinary questions; offer the site contact form or Instagram only when the visitor requests human follow-up or needs confirmation of unpublished information;"

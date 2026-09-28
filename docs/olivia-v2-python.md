@@ -141,3 +141,9 @@ Suites Mine is the first implementation. The same engine can support other clien
 - professional firms: qualification, compliance-safe answers, contact handoff.
 
 The rule is: one Olivia engine, many client profiles, separated integrations.
+
+## FINIDI financial demonstration
+
+Requests authenticated for `clientCode: "finidi"` with `source: "finidiops-demo"` use a financial demonstration conversation. They keep multi-turn AI responses active without the generic second-turn contact form. The word “demo” refers to illustrative dashboard data, rather than a sales demonstration request. Explicit requests to speak with FINIDI still recommend human follow-up.
+
+The caller supplies authoritative California/San Diego page context and illustrative USD figures. This mode does not send leads or confirm appointments. The ordinary FINIDI website and all other client profiles retain their existing lead flows.
