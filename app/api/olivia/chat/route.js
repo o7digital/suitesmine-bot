@@ -381,7 +381,8 @@ function isZeviPropertyRequest(message) {
 }
 
 async function fetchZeviProperties() {
-  const url = new URL("https://zevicapital-directus-backend-lc-inmobiliaria.up.railway.app/items/properties");
+  const directusUrl = (process.env.ZEVI_DIRECTUS_URL || "https://zevicapital-directus-backend-lc-inmobiliaria.up.railway.app").replace(/\/$/, "");
+  const url = new URL(`${directusUrl}/items/properties`);
   url.searchParams.set("fields", "id,title,price,price_text,currency,location,address,listing_status,tag,sqft,bedrooms,bathrooms,public_url");
   url.searchParams.set("limit", "6");
   url.searchParams.set("filter[status][_eq]", "published");
