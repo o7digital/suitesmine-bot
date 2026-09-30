@@ -4,7 +4,7 @@
 
 1. Go to https://app.botpress.cloud
 2. Login with: olivier.steineur@gmail.com
-3. Password: 2Ai0n928@!
+3. Use credentials from the password manager. Never store passwords in this repository.
 
 ## Step 2: Create or Select Bot
 
