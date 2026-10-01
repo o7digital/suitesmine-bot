@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -398,7 +399,10 @@ def generic_fallback_reply(language: str, client: ClientProfile, contact_missing
     return reply
 
 
-ZEVI_DIRECTUS_URL = "https://zevicapital-directus-backend-lc-inmobiliaria.up.railway.app"
+ZEVI_DIRECTUS_URL = os.environ.get(
+    "ZEVI_DIRECTUS_URL",
+    "https://zevicapital-directus-backend-lc-inmobiliaria.up.railway.app",
+).rstrip("/")
 ZEVI_SITE_URL = "https://www.zevicapital.com"
 
 
