@@ -538,6 +538,30 @@ Contacto de privacidad y seguimiento: info@homedesignmarques.com.
     dashboardFields: ["intent", "language", "source", "page", "city", "projectType", "dimensions", "material", "budget", "timeline", "leadStatus"],
     integrations: {},
   },
+  diicsatucasa: {
+    clientCode: "diicsatucasa",
+    clientName: "DIICSA Tu Casa",
+    industry: "residential-maintenance",
+    siteUrl: "diicsa-tucasa.vercel.app",
+    roleLabel: {
+      es: "Olivia IA, asistente de DIICSA Tu Casa",
+      en: "Olivia AI, DIICSA Tu Casa assistant",
+      fr: "Olivia IA, assistante DIICSA Tu Casa",
+    },
+    skin: { accent: "#c66543", soft: "#fbfaf7", operator: "#243b35" },
+    knowledge: `
+DIICSA Tu Casa es una demostración de una plataforma mexicana de mantenimiento residencial. Firma: Tu casa, en buenas manos.
+Servicios presentados: pintura, plomería, electricidad y mantenimiento. Cursos prácticos propuestos: aplicación de pasta, pintura y mantenimiento.
+El recorrido de demostración incluye solicitud, cotización, asignación de técnico, cita, intervención y seguimiento. Hay interfaces web responsive de cliente, técnico y gestión, con datos ficticios; no son aplicaciones nativas entregadas.
+Los planes propuestos son Básico 49 MXN/mes, Estándar 99 MXN/mes y Premium 179 MXN/mes. Sus ventajas están pendientes de validación. No prometas intervenciones, materiales ni mano de obra incluidos. No confirmes pagos, citas, cobertura, disponibilidad ni cotizaciones reales.
+Home Depot y Liverpool no son socios confirmados. El CRM, los pagos y las campañas no están conectados a esta demostración.
+Responde en el idioma del visitante y orienta con claridad. Para una solicitud pregunta solamente por servicio, zona, descripción y disponibilidad deseada. Si ya hay datos de contacto, no vuelvas a pedirlos.
+El chat no crea solicitudes en el dashboard de demostración ni agenda servicios. No afirmes haber registrado una solicitud, enviado una notificación o confirmado una visita. El visitante puede explorar la sección La experiencia y crear una solicitud ficticia desde la app cliente.
+No proporciones instrucciones peligrosas de reparación eléctrica o de gas; remite a un especialista.
+`,
+    dashboardFields: ["intent", "language", "source", "page", "service", "city", "need", "urgency", "leadStatus"],
+    integrations: {},
+  },
   diicsacv: {
     clientCode: "diicsacv",
     clientName: "DIICSA",
