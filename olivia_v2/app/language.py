@@ -3,7 +3,9 @@ import re
 
 def detect_language(text: str, requested: str | None = None, default: str = "es") -> str:
     normalized = (requested or "").strip().lower()
-    if normalized in {"es", "en", "fr", "it", "de", "ru"}:
+    if normalized in {"zh-tw", "zh-hant", "zh-hant-tw"}:
+        return "zh-TW"
+    if normalized in {"es", "en", "fr", "it", "de", "ru", "sv", "hu", "hr", "ja"}:
         return normalized
 
     value = text.lower()
@@ -35,4 +37,9 @@ def language_name(language: str) -> str:
         "it": "Italian",
         "de": "German",
         "ru": "Russian",
+        "sv": "Swedish",
+        "hu": "Hungarian",
+        "hr": "Croatian",
+        "zh-TW": "Traditional Chinese (Taiwan)",
+        "ja": "Japanese",
     }.get(language, "Spanish")

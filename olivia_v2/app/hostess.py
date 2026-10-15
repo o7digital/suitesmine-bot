@@ -746,7 +746,7 @@ async def build_hostess_response(
     answer_first_clients = {"kallistacafe", "o7digital"}
     should_collect_contact = (
         not natural_lead_flow
-        and client.code != "suitesmine"
+        and client.code not in {"suitesmine", "nathalie"}
         and not (client.code in answer_first_clients and intent != "handoff")
     )
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
@@ -755,6 +755,8 @@ async def build_hostess_response(
         if natural_lead_flow
         else "- for KALLISTA Café, never request personal data during ordinary questions; offer the site contact form or Instagram only when the visitor requests human follow-up or needs confirmation of unpublished information;"
         if client.code == "kallistacafe"
+        else "- for Nathalie Peña-Comas, answer artistic questions without collecting personal details; for professional follow-up offer the approved representation email, never imply a booking or message has been sent;"
+        if client.code == "nathalie"
         else "- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;"
     )
 

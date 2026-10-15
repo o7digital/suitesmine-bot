@@ -20,7 +20,7 @@ Implemented in `olivia_v2/`:
 - FastAPI app with `GET /health` and `POST /chat`;
 - multi-client profile resolver;
 - Suites Mine hospitality profile;
-- language detection for Spanish, English, French, Italian, German and Russian;
+- explicit language selection for Spanish, English, French, Italian, German, Russian, Swedish, Hungarian, Croatian, Traditional Chinese (Taiwan) and Japanese, with automatic detection for the original six languages;
 - bounded multi-turn memory, restored from persisted conversations when available;
 - answer-first lead qualification shared by every client profile;
 - deterministic booking intake;
@@ -141,3 +141,7 @@ Suites Mine is the first implementation. The same engine can support other clien
 - professional firms: qualification, compliance-safe answers, contact handoff.
 
 The rule is: one Olivia engine, many client profiles, separated integrations.
+
+## Nathalie Peña-Comas
+
+Client `nathalie` is bound to `nathalie-pena-comas.vercel.app`. The server-approved profile contains artistic biography, recordings and representation details; no hospitality connector is enabled. Both API schemas and the language resolver support the site’s eleven locales. Artistic discovery does not trigger personal-data collection. The Astro widget requests a signed identity from `/api/widget/identity`, sends the current locale to `/api/olivia/chat`, and supports conversation persistence and operator replies through `/api/widget/conversations`. All service credentials remain server-side.

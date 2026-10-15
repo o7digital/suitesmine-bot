@@ -2,7 +2,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
-Language = Literal["es", "en", "fr", "it", "de", "ru", "auto"]
+Language = Literal["es", "en", "fr", "it", "de", "ru", "sv", "hu", "hr", "zh-TW", "ja", "auto"]
 Intent = Literal["availability", "pricing", "booking", "faq", "handoff", "lead"]
 ConversationPhase = Literal[
     "greeting",

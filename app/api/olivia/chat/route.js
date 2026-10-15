@@ -518,6 +518,12 @@ function languageName(language) {
       fr: "French",
       it: "Italian",
       de: "German",
+      sv: "Swedish",
+      hu: "Hungarian",
+      hr: "Croatian",
+      ru: "Russian",
+      "zh-TW": "Traditional Chinese (Taiwan)",
+      ja: "Japanese",
     }[language] || "Spanish"
   );
 }
