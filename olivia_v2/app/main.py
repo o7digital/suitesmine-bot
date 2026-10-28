@@ -268,7 +268,7 @@ async def chat(
 
     pms = CloudbedsClient(settings)
     rates = []
-    if client.integrations.get("booking") == "cloudbeds":
+    if client.code != "suitesmine" and client.integrations.get("booking") == "cloudbeds":
         rates = await pms.get_rates(payload.metadata.checkIn, payload.metadata.checkOut)
 
     response = await build_hostess_response(

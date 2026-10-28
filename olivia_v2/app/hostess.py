@@ -586,6 +586,11 @@ async def build_hostess_response(
     rates: list[dict],
     openai_service: OpenAIService,
 ) -> OliviaResponse:
+    if client.code == "suitesmine":
+        from olivia_v2.app.hotel_requests import build_hotel_response
+
+        return await build_hotel_response(request, client, language, openai_service)
+
     fields = extract_fields(request.message, request.metadata)
     missing = missing_booking_fields(fields)
     booking_url = build_booking_url(language, fields) if not missing and client.code == "suitesmine" else None

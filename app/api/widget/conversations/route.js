@@ -1,4 +1,4 @@
-import { isDatabaseConfigured } from "@/lib/db";
+import { isDatabaseConfigured, query } from "@/lib/db";
 import { clients } from "@/config/clients";
 import { resolveRequestClient } from "@/lib/client-identity.mjs";
 import { addMessage, findVisitorConversation, upsertConversation } from "@/lib/conversations";
@@ -59,6 +59,7 @@ export async function GET(request) {
     configured: true,
     status: conversation?.status || "ai",
     messages: conversation?.messages || [],
+    metadata: conversation?.metadata || {},
   });
 }
 
@@ -133,6 +134,21 @@ export async function PATCH(request) {
   if (!conversation) return json({ error: "Conversation not found" }, 404);
   if (conversation.status !== "ai") return json({ skipped: true, status: conversation.status });
 
+  if (clientCode === "suitesmine" && payload.metadata) {
+    const metadata = {
+      lead: payload.metadata.lead || {},
+      hotelRequestSummary: clean(payload.metadata.hotelRequestSummary).slice(0, 6000),
+      hotelRequestStatus: clean(payload.metadata.hotelRequestStatus),
+    };
+    await query(
+      `update conversations set metadata = metadata || $2::jsonb,
+        visitor_name = coalesce(nullif($3, ''), visitor_name),
+        email = coalesce(nullif($4, ''), email),
+        phone = coalesce(nullif($5, ''), phone), updated_at = now() where id = $1`,
+      [conversation.id, JSON.stringify(metadata), clean(metadata.lead.name),
+        clean(metadata.lead.email), clean(metadata.lead.phone)],
+    );
+  }
   const message = await addMessage({
     conversationId: conversation.id,
     role: "ai",

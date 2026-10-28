@@ -36,12 +36,16 @@ class RecordingOpenAIService:
 
     async def generate(self, system, user, request, client_profile, rates=None):
         self.history = request.history
-        return AgentResult("Le parking est gratuit, sous réserve de disponibilité.", "gpt-5.6-luna", "fast")
+        return AgentResult('{"reply":"Le parking est gratuit, sous réserve de disponibilité.","collected":{},"requestSummary":"","offerHandoff":false}', "gpt-5.6-luna", "fast")
 
 
 class BusinessAnswerOpenAIService:
     async def generate(self, system, user, request, client_profile, rates=None):
-        return AgentResult("We provide the requested service. I can help you choose the right option.", "gpt-5.6-luna", "fast")
+        answer = "We provide the requested service. I can help you choose the right option."
+        if client_profile.code == "suitesmine":
+            import json
+            answer = json.dumps({"reply": answer, "collected": {}, "offerHandoff": False})
+        return AgentResult(answer, "gpt-5.6-luna", "fast")
 
 
 class JsonAnswerOpenAIService:

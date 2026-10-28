@@ -128,7 +128,9 @@ Invoices: most reservations can be invoiced with Mexican SAT tax details.
       "bookingUrl",
     ],
     integrations: {
-      booking: "cloudbeds",
+      leads: "formspree",
+      formId: "xlggvkgp",
+      notificationEmail: "contacto@suitesmine.com",
     },
   },
   cusi: {

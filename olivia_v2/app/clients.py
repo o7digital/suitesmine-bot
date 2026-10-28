@@ -66,6 +66,7 @@ Contact: info@o7digitalgroup.com.
     ),
     "suitesmine": ClientProfile(
         code="suitesmine",
+        supported_languages=("es", "en", "fr", "zh"),
         name="Suites Mine",
         industry="hospitality",
         role_label={
@@ -73,8 +74,8 @@ Contact: info@o7digitalgroup.com.
             "en": "Olivia AI Hostess for Suites Mine",
             "fr": "Olivia IA Hotesse de Suites Mine",
         },
-        booking_categories=("Estudio", "Suite", "Suite Doble"),
-        integrations={"booking": "cloudbeds"},
+        booking_categories=(),
+        integrations={"leads": "hotel-email"},
         knowledge="""
 Suites Mine is an aparthotel in Rio Ebro 64, Colonia Cuauhtemoc, CDMX 06500, Mexico.
 Contact: contacto@suitesmine.com, +52 55 3666 8535.

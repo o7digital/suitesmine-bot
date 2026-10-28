@@ -67,7 +67,10 @@ class OpenAIService:
             *[{"role": message.role, "content": message.content} for message in request.history[-24:]],
             {"role": "user", "content": self._user_content(request, user)},
         ]
-        tools: list[dict] = [*FUNCTION_TOOLS]
+        tools: list[dict] = [
+            tool for tool in FUNCTION_TOOLS
+            if client_profile.code != "suitesmine" or tool["name"] != "check_business_availability"
+        ]
         include: list[str] = []
         if plan.use_files and vector_store_id:
             tools.append({"type": "file_search", "vector_store_ids": [vector_store_id], "max_num_results": 5})

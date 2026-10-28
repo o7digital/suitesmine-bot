@@ -542,24 +542,7 @@ export async function POST(request) {
     payload.history = await resolveConversationHistory(payload, requestedClientCode);
     const requestedLanguage = clean(payload.language) || "es";
 
-    if (requestedClientCode === "suitesmine" && isSpecialBookingRequest(payload)) {
-      const replies = {
-        en: "For special requests, please contact the hotel directly via WhatsApp or by phone at +52 55 36 66 85 35.",
-        fr: "Pour les demandes particulieres, contactez directement l'hotel via WhatsApp ou par telephone au +52 55 36 66 85 35.",
-        es: "Para solicitudes especiales, contacte directamente al hotel via WhatsApp o por telefono al +52 55 36 66 85 35.",
-      };
-      return json({
-        reply: replies[requestedLanguage] || replies.es,
-        mode: "handoff",
-        handoffRecommended: true,
-        clientCode: requestedClientCode,
-        rates: [],
-      });
-    }
-
-    // Booking-flow messages are no longer answered here with a fixed template: they go to
-    // Olivia v2 first so the AI drafts the reply from live Cloudbeds data. The identical
-    // template below only runs as a fallback if the v2 call fails (see catch block).
+    // Suites Mine uses the generative concierge, never the legacy booking flow.
     try {
       const v2Response = await callOliviaV2(payload);
       const v2ClientCode = clean(v2Response?.clientCode);
@@ -574,6 +557,13 @@ export async function POST(request) {
       }
     } catch (error) {
       console.error("[olivia] v2 fallback to legacy route", error);
+    }
+
+    if (requestedClientCode === "suitesmine") {
+      return json({
+        error: "Olivia is temporarily unavailable. Please contact contacto@suitesmine.com or +52 55 3666 8535.",
+        bookingUrl: null,
+      }, 503);
     }
 
     const language = clean(payload.language) || "es";

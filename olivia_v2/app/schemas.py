@@ -2,7 +2,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
-Language = Literal["es", "en", "fr", "it", "de", "ru", "sv", "hu", "hr", "zh-TW", "ja", "auto"]
+Language = Literal["es", "en", "fr", "it", "de", "ru", "sv", "hu", "hr", "zh-TW", "ja", "zh", "auto"]
 Intent = Literal["availability", "pricing", "booking", "faq", "handoff", "lead"]
 ConversationPhase = Literal[
     "greeting",
@@ -44,6 +44,8 @@ class ChatMetadata(BaseModel):
     dataConsent: bool | None = None
     dataConsentAt: str | None = None
     consentVersion: str | None = None
+    hotelRequestStatus: str | None = None
+    hotelRequestSummary: str | None = None
 
 
 class ChatRequest(BaseModel):
@@ -82,6 +84,7 @@ class OliviaResponse(BaseModel):
     rates: list[dict[str, Any]] = Field(default_factory=list)
     action: str | None = None
     leadForm: dict[str, Any] | None = None
+    hotelRequestSummary: str | None = None
     mode: str = "olivia-v2"
     model: str | None = None
     reasoningTier: Literal["fast", "balanced", "powerful"] | None = None
