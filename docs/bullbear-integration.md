@@ -1,6 +1,6 @@
 # Bull & Bear Academy
 
-The `bullbear` client connects the academy's Astro website to the existing Olivia engine and inbox. The visitor interface is branded Carlos IA v3.5; the Python API continues to return its existing `olivia-v2` mode.
+The `bullbear` client connects the academy's Astro website to the existing Olivia engine and inbox. The visitor interface is branded Charly IA v3.5; the Python API continues to return its existing `olivia-v2` mode.
 
 - Registered site: `https://bullbear-academy-preview.vercel.app`.
 - The chat follows the site language automatically, without a separate language menu.
