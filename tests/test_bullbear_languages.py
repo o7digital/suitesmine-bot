@@ -15,7 +15,7 @@ class BullBearLanguages(unittest.IsolatedAsyncioTestCase):
                 return AgentResult('Academy course information.', 'test-model', 'fast')
 
         client = get_client_profile('bullbear')
-        self.assertEqual(client.supported_languages, ('es', 'en', 'ru', 'zh'))
+        self.assertEqual(client.supported_languages, ('es', 'en', 'ru', 'zh', 'de', 'it', 'fr', 'pt'))
         for language in client.supported_languages:
             with self.subTest(language=language):
                 service = Service()

@@ -9,7 +9,7 @@ process.env.OLIVIA_WIDGET_SIGNING_SECRET = 'test-only-bullbear-key';
 test('BullBear identity stays bound to its academy site and profile', () => {
   const origin = 'https://bullbear-academy-preview.vercel.app';
   assert.equal(clientCodeForSiteHost(origin, clients), 'bullbear');
-  assert.deepEqual(clients.bullbear.languages, ['es', 'en', 'ru', 'zh']);
+  assert.deepEqual(clients.bullbear.languages, ['es', 'en', 'ru', 'zh', 'de', 'it', 'fr', 'pt']);
   assert.equal(clients.bullbear.integrations.booking, undefined);
   const identity = issueWidgetIdentity('bullbear', origin, clients);
   const request = (host) => new Request('https://olivia-ai.o7digital.com/api/olivia/chat', {
