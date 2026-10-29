@@ -18,3 +18,13 @@ test('BullBear identity stays bound to its academy site and profile', () => {
   assert.equal(resolveRequestClient(request(origin), 'suitesmine', clients), 'bullbear');
   assert.throws(() => resolveRequestClient(request('https://suitesmine.com'), 'bullbear', clients));
 });
+
+test('BullBear model identity is Carlos in every supported language', () => {
+  for (const language of clients.bullbear.languages) {
+    assert.match(clients.bullbear.roleLabel[language], /Carlos/);
+    assert.doesNotMatch(clients.bullbear.roleLabel[language], /Olivia/);
+  }
+  assert.match(clients.bullbear.knowledge, /Your name is Carlos IA/);
+  assert.doesNotMatch(clients.bullbear.knowledge, /Olivia/);
+  assert.match(clients.nathalie.roleLabel.es, /Olivia/);
+});

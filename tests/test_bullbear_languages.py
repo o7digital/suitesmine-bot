@@ -34,6 +34,9 @@ class BullBearLanguages(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(response.missingFields, [])
                 self.assertEqual(response.rates, [])
                 self.assertIn('Speak in ' + language_name(language), service.system)
+                self.assertIn('Your name is Carlos IA', service.system)
+                self.assertIn('Carlos', client.role_label[language])
+                self.assertNotIn('Olivia', service.system)
                 self.assertIn('Never give personalized financial', service.system)
                 self.assertEqual(len(service.request.history), 2)
 

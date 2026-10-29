@@ -1,8 +1,9 @@
 # Bull & Bear Academy
 
-The `bullbear` client connects the academy's Astro website to the existing Olivia engine and inbox. The visitor interface is branded Olivia IA v3.5; the Python API continues to return its existing `olivia-v2` mode.
+The `bullbear` client connects the academy's Astro website to the existing Olivia engine and inbox. The visitor interface is branded Carlos IA v3.5; the Python API continues to return its existing `olivia-v2` mode.
 
 - Registered site: `https://bullbear-academy-preview.vercel.app`.
+- The chat follows the site language automatically, without a separate language menu.
 - Languages: Spanish (`es`), English (`en`), Russian (`ru`), simplified Chinese (`zh`), German (`de`), Italian (`it`), French (`fr`) and Brazilian Portuguese (`pt`).
 - Approved context: twelve published courses, durations and official course links, mentoring, Trading Club, archived sessions and the academy's published contact details.
 - Ordinary course questions continue across turns and languages without a mandatory lead form. Enrollment, unpublished prices/schedules and personal financial questions go to the published academy contact. No booking/payment connector is enabled.
