@@ -561,7 +561,7 @@ class ConversationContinuityTests(unittest.IsolatedAsyncioTestCase):
                     openai_service=BusinessAnswerOpenAIService(),
                 )
 
-                if client_code in ("suitesmine", "kallistacafe", "o7digital"):
+                if client_code in ("suitesmine", "kallistacafe", "o7digital", "bullbear"):
                     self.assertIsNone(second_response.action)
                 else:
                     self.assertEqual(second_response.action, "show_lead_form")

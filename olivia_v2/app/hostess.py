@@ -143,7 +143,7 @@ def visitor_turn_count(request: ChatRequest) -> int:
 
 def uses_natural_lead_handoff(client: ClientProfile) -> bool:
     """Keep transactional and answer-only experiences out of the generic sales handoff."""
-    return client.code not in {"suitesmine", "kallistacafe", "o7digital"}
+    return client.code not in {"suitesmine", "kallistacafe", "o7digital", "bullbear"}
 
 
 def advisor_handoff_reply(language: str, client: ClientProfile) -> str:
@@ -751,7 +751,7 @@ async def build_hostess_response(
     answer_first_clients = {"kallistacafe", "o7digital"}
     should_collect_contact = (
         not natural_lead_flow
-        and client.code not in {"suitesmine", "nathalie"}
+        and client.code not in {"suitesmine", "nathalie", "bullbear"}
         and not (client.code in answer_first_clients and intent != "handoff")
     )
     contact_missing = missing_contact_fields(fields) if should_collect_contact else []
@@ -762,6 +762,8 @@ async def build_hostess_response(
         if client.code == "kallistacafe"
         else "- for Nathalie Peña-Comas, answer artistic questions without collecting personal details; for professional follow-up offer the approved representation email, never imply a booking or message has been sent;"
         if client.code == "nathalie"
+        else "- for Bull & Bear Academy, answer course questions in the selected language without collecting personal data; offer the published academy contact for enrollment or unpublished information; never provide personalized investment advice;"
+        if client.code == "bullbear"
         else "- collect first and last name, email and phone for every non-hotel lead, then collect only useful missing project details;"
     )
 

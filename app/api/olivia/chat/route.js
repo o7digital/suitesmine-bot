@@ -546,7 +546,7 @@ export async function POST(request) {
     try {
       const v2Response = await callOliviaV2(payload);
       const v2ClientCode = clean(v2Response?.clientCode);
-      if (v2Response && (!requestedClientCode || requestedClientCode === "default" || v2ClientCode === requestedClientCode)) {
+      if (v2Response && (requestedClientCode !== "bullbear" || (v2Response.language === requestedLanguage && v2Response.model)) && (!requestedClientCode || requestedClientCode === "default" || v2ClientCode === requestedClientCode)) {
         return json(v2Response);
       }
       if (v2Response) {
@@ -564,6 +564,11 @@ export async function POST(request) {
         error: "Olivia is temporarily unavailable. Please contact contacto@suitesmine.com or +52 55 3666 8535.",
         bookingUrl: null,
       }, 503);
+    }
+
+    // This education widget requires the isolated multilingual engine, never a generic reply.
+    if (requestedClientCode === "bullbear") {
+      return json({ error: "BullBear Olivia engine is unavailable" }, 503);
     }
 
     const language = clean(payload.language) || "es";
