@@ -1,4 +1,5 @@
 import unittest
+import json
 from olivia_v2.app.clients import get_client_profile, resolve_client_profile
 from olivia_v2.app.language import detect_language, language_name
 from olivia_v2.app.schemas import ChatRequest
@@ -9,10 +10,10 @@ from olivia_v2.app.hostess import build_hostess_response
 class BullBearLanguages(unittest.IsolatedAsyncioTestCase):
     async def test_language_changes_keep_course_follow_ups_out_of_hotel_and_lead_intake(self):
         class Service:
-            async def generate(self, system, user, request, client_profile, rates=None):
+            async def generate(self, system, user, request, client_profile, rates=None, **kwargs):
                 self.system = system
                 self.request = request
-                return AgentResult('Academy course information.', 'test-model', 'fast')
+                return AgentResult(json.dumps(dict(reply='Academy course information.', stage='discuss', interest='Criptomonedas', requestSummary='Course information', firstName='', lastName='', email='', phone='')), 'test-model', 'fast')
 
         client = get_client_profile('bullbear')
         self.assertEqual(client.supported_languages, ('es', 'en', 'ru', 'zh', 'de', 'it', 'fr', 'pt'))
@@ -37,7 +38,7 @@ class BullBearLanguages(unittest.IsolatedAsyncioTestCase):
                 self.assertIn('Your name is Charly IA', service.system)
                 self.assertIn('Charly', client.role_label[language])
                 self.assertNotIn('Olivia', service.system)
-                self.assertIn('Never give personalized financial', service.system)
+                self.assertIn('No personalized financial', service.system)
                 self.assertEqual(len(service.request.history), 2)
 
     def test_browser_metadata_cannot_replace_the_academy_knowledge(self):

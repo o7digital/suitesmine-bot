@@ -50,6 +50,8 @@ const selectableClientCodes = Object.keys(clients).filter(
 
 const translations = {
   fr: {
+    academyLeadTitle: "Demande de contact reçue",
+    academyLeadIntro: "Coordonnées et demande transmises par le formulaire du chat.",
     nav: ["Boîte de réception", "Automatisations IA", "Clients", "Statistiques", "Copilote IA"],
     settings: "Paramètres et sécurité",
     views: ["Non assigné", "Ouvert", "Résolue"],
@@ -153,6 +155,8 @@ const translations = {
     logout: "Se déconnecter",
   },
   en: {
+    academyLeadTitle: "Contact request received",
+    academyLeadIntro: "Contact details and request submitted through the chat form.",
     nav: ["Inbox", "AI automations", "Customers", "Analytics", "AI copilot"],
     settings: "Settings and security",
     views: ["Unassigned", "Open", "Solved"],
@@ -185,6 +189,8 @@ const translations = {
     logout: "Sign out",
   },
   es: {
+    academyLeadTitle: "Solicitud de contacto recibida",
+    academyLeadIntro: "Datos y solicitud enviados desde el formulario del chat.",
     nav: ["Bandeja de entrada", "Automatizaciones IA", "Clientes", "Estadísticas", "Copiloto IA"],
     settings: "Configuración y seguridad",
     views: ["Sin asignar", "Abiertas", "Resueltas"],
@@ -1377,6 +1383,15 @@ export default function InboxPage() {
               {formatConversationDate(selected.createdAt, language)}
               <div className="h-px flex-1 bg-[#dfe5f1]" />
             </div>
+            {selected.clientCode === "bullbear" && selected.metadata?.academyRequestStatus === "received" && (
+              <section className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-[#53452f]">
+                <h3 className="font-semibold">{copy.academyLeadTitle}</h3>
+                <p className="mt-1 text-xs">{copy.academyLeadIntro}</p>
+                <p className="mt-3 font-medium">{selected.guest}</p>
+                <p>{selected.email} · {selected.phone}</p>
+                <p className="mt-3 whitespace-pre-wrap">{selected.metadata.lead?.details || selected.metadata.academyRequestSummary}</p>
+              </section>
+            )}
             <div className="space-y-6">
               {selected.messages.map((message, index) => (
                 <MessageBlock key={`${message.role}-${index}`} message={message} guest={selected} skin={skin} copy={copy} />

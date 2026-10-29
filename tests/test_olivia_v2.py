@@ -40,11 +40,14 @@ class RecordingOpenAIService:
 
 
 class BusinessAnswerOpenAIService:
-    async def generate(self, system, user, request, client_profile, rates=None):
+    async def generate(self, system, user, request, client_profile, rates=None, **kwargs):
         answer = "We provide the requested service. I can help you choose the right option."
         if client_profile.code == "suitesmine":
             import json
             answer = json.dumps({"reply": answer, "collected": {}, "offerHandoff": False})
+        if client_profile.code == "bullbear":
+            import json
+            answer = json.dumps(dict(reply=answer, stage='discuss', interest='', requestSummary='', firstName='', lastName='', email='', phone=''))
         return AgentResult(answer, "gpt-5.6-luna", "fast")
 
 

@@ -3,6 +3,7 @@ import { clients } from "@/config/clients";
 import { resolveRequestClient } from "@/lib/client-identity.mjs";
 import { addMessage, findVisitorConversation, upsertConversation } from "@/lib/conversations";
 import { translateVisitorMessageForOperator } from "@/lib/operator-translation";
+import { academyChatMetadata } from "@/lib/academy-lead.mjs";
 
 export const runtime = "nodejs";
 
@@ -81,6 +82,7 @@ export async function POST(request) {
     return json({ error: "visitorId and content are required" }, 400);
   }
 
+  if (clientCode === "bullbear") payload.metadata = academyChatMetadata(payload.metadata);
   const extracted = extractContactDetails(content, payload.metadata);
   const conversation = await upsertConversation({
     clientCode,

@@ -56,7 +56,7 @@ class OpenAIService:
         visit(payload.get("output", []))
         return list(found.values())[:8]
 
-    async def generate(self, system: str, user: str, request: ChatRequest, client_profile: ClientProfile, rates: list[dict] | None = None) -> AgentResult:
+    async def generate(self, system: str, user: str, request: ChatRequest, client_profile: ClientProfile, rates: list[dict] | None = None, *, response_schema: dict | None = None) -> AgentResult:
         if not self.client:
             return AgentResult(None)
 
@@ -71,15 +71,20 @@ class OpenAIService:
             tool for tool in FUNCTION_TOOLS
             if client_profile.code != "suitesmine" or tool["name"] != "check_business_availability"
         ]
+        if response_schema is not None:
+            tools = []
         include: list[str] = []
-        if plan.use_files and vector_store_id:
+        if response_schema is None and plan.use_files and vector_store_id:
             tools.append({"type": "file_search", "vector_store_ids": [vector_store_id], "max_num_results": 5})
             include.append("file_search_call.results")
-        if plan.use_web and client_profile.site_domains:
+        if response_schema is None and plan.use_web and client_profile.site_domains:
             tools.append({"type": "web_search", "filters": {"allowed_domains": list(client_profile.site_domains)}})
             include.append("web_search_call.action.sources")
 
         options = {"model": plan.model, "input": input_items, "tools": tools, "reasoning": {"effort": plan.reasoning_effort}, "max_output_tokens": 1000}
+        if response_schema is not None:
+            options["text"] = {"format": {"type": "json_schema", "name": "academy_conversation", "strict": True, "schema": response_schema}}
+            options["max_output_tokens"] = 1600
         if include:
             options["include"] = include
         if request.visitorId:

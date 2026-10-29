@@ -44,6 +44,9 @@ class ChatMetadata(BaseModel):
     dataConsent: bool | None = None
     dataConsentAt: str | None = None
     consentVersion: str | None = None
+    academyRequestStatus: str | None = None
+    academyRequestSummary: str | None = None
+    academyInterest: str | None = None
     hotelRequestStatus: str | None = None
     hotelRequestSummary: str | None = None
 
@@ -84,6 +87,8 @@ class OliviaResponse(BaseModel):
     rates: list[dict[str, Any]] = Field(default_factory=list)
     action: str | None = None
     leadForm: dict[str, Any] | None = None
+    academyRequestSummary: str | None = None
+    academyInterest: str | None = None
     hotelRequestSummary: str | None = None
     mode: str = "olivia-v2"
     model: str | None = None

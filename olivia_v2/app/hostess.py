@@ -586,6 +586,9 @@ async def build_hostess_response(
     rates: list[dict],
     openai_service: OpenAIService,
 ) -> OliviaResponse:
+    if client.code == "bullbear":
+        from olivia_v2.app.bullbear import build_academy_response
+        return await build_academy_response(request, client, language, openai_service)
     if client.code == "suitesmine":
         from olivia_v2.app.hotel_requests import build_hotel_response
 

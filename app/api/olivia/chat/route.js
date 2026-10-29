@@ -540,6 +540,17 @@ export async function POST(request) {
     payload.clientCode = requestedClientCode;
     delete payload.clientId;
     payload.history = await resolveConversationHistory(payload, requestedClientCode);
+    if (requestedClientCode === "bullbear") {
+      payload.metadata = { ...(payload.metadata || {}), academyRequestStatus: "" };
+      if (clean(payload.visitorId) && isDatabaseConfigured()) {
+        const stored = await findVisitorConversation(requestedClientCode, payload.visitorId);
+        if (stored?.metadata?.academyRequestStatus === "received") {
+          payload.metadata.academyRequestStatus = "received";
+          payload.metadata.lead = stored.metadata.lead || {};
+          payload.metadata.academyRequestSummary = stored.metadata.academyRequestSummary || "";
+        }
+      }
+    }
     const requestedLanguage = clean(payload.language) || "es";
 
     // Suites Mine uses the generative concierge, never the legacy booking flow.
